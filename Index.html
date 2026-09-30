@@ -205,14 +205,6 @@
         </button>
       </div>
 
-      <!-- エリアフィルタータブ（ドロワー内） -->
-      <div class="px-3 py-2 bg-slate-100 border-b border-slate-200 flex gap-1.5 overflow-x-auto text-xs" id="drawerFilterTabs">
-        <button onclick="setAreaFilter('ALL')" id="tab-ALL" class="area-tab-btn px-3 py-1.5 rounded-lg font-bold transition shrink-0 bg-blue-600 text-white shadow-sm">すべて</button>
-        <button onclick="setAreaFilter('此花区')" id="tab-此花区" class="area-tab-btn px-3 py-1.5 rounded-lg font-bold transition shrink-0 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">此花区</button>
-        <button onclick="setAreaFilter('福島区')" id="tab-福島区" class="area-tab-btn px-3 py-1.5 rounded-lg font-bold transition shrink-0 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">福島区</button>
-        <button onclick="setAreaFilter('急ぎ・優先')" id="tab-急ぎ・優先" class="area-tab-btn px-3 py-1.5 rounded-lg font-bold transition shrink-0 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100">⚠️ 急ぎ・優先</button>
-      </div>
-
       <div id="drawerContent" class="flex-1 overflow-y-auto p-3 space-y-2">
         <!-- JSで動的挿入 -->
       </div>
@@ -273,16 +265,6 @@
             headerTab.className = "header-filter-btn flex-1 md:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-sm";
           } else {
             headerTab.className = "header-filter-btn flex-1 md:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-300 hover:text-white hover:bg-slate-800";
-          }
-        }
-
-        // ドロワー内のボタンのハイライト更新
-        const tab = document.getElementById(`tab-${a}`);
-        if (tab) {
-          if (a === currentAreaFilter) {
-            tab.className = "area-tab-btn px-3 py-1.5 rounded-lg font-bold transition shrink-0 bg-blue-600 text-white shadow-sm";
-          } else {
-            tab.className = "area-tab-btn px-3 py-1.5 rounded-lg font-bold transition shrink-0 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50";
           }
         }
       });
