@@ -114,15 +114,11 @@
     </div>
 
     <!-- ハンバーガーメニュー ドロップダウン -->
-    <div id="hamburgerDropdown" class="hidden absolute right-3 top-11 z-50 bg-slate-900/95 border border-slate-700 rounded-xl shadow-2xl p-1.5 w-44 flex flex-col gap-1 backdrop-blur-md">
-      <button onclick="loadMansionData(); closeHamburgerMenu();" class="w-full text-left px-3 py-2 text-xs text-slate-200 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition">
-        <i class="fas fa-sync-alt text-blue-400 w-4"></i>
-        <span>データ更新</span>
-      </button>
-      <button onclick="centerToUserLocation(); closeHamburgerMenu();" class="w-full text-left px-3 py-2 text-xs text-slate-200 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition">
-        <i class="fas fa-crosshairs text-blue-400 w-4"></i>
-        <span>現在地に移動</span>
-      </button>
+    <div id="hamburgerDropdown" class="hidden absolute right-3 top-11 z-50 bg-slate-900/95 border border-slate-700 rounded-xl shadow-2xl p-1.5 w-36 flex flex-col gap-1 backdrop-blur-md">
+      <a href="https://docs.google.com/spreadsheets/d/1ht3s0_fMP0_n89zeRYUD0_iUv9cMhdhOmeCyXgr6vbQ/edit?usp=sharing" target="_blank" rel="noopener noreferrer" onclick="closeHamburgerMenu()" class="w-full text-left px-3 py-2 text-xs text-slate-200 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition no-underline">
+        <i class="fas fa-edit text-emerald-400 w-4"></i>
+        <span>登録</span>
+      </a>
       <div class="h-px bg-slate-800 my-0.5"></div>
       <button onclick="logout()" class="w-full text-left px-3 py-2 text-xs text-red-300 hover:bg-red-900/40 rounded-lg flex items-center gap-2 transition">
         <i class="fas fa-sign-out-alt text-red-400 w-4"></i>
@@ -282,6 +278,14 @@
       const menu = document.getElementById("hamburgerDropdown");
       if (menu && !menu.classList.contains("hidden")) {
         menu.classList.add("hidden");
+      }
+    }
+
+    function toggleHamburgerMenu(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById("hamburgerDropdown");
+      if (menu) {
+        menu.classList.toggle("hidden");
       }
     }
 
