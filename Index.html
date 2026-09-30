@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>此花マンション区域</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Leaflet GIS Map Library -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    /* 全画面マップスタイル */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    #map {
+      width: 100%;
+      height: calc(100vh - 56px);
+      z-index: 1;
+    }
+
+    /* 現在地マーカーのパルスアニメーション */
+    .user-location-marker {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .user-location-dot {
+      width: 16px;
+      height: 16px;
+      background-color: #2563eb;
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(0,0,0,0.4);
+      position: relative;
+    }
+    .user-location-pulse {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      background-color: rgba(37, 99, 235, 0.35);
+      border-radius: 50%;
+      animation: pulse 2s infinite ease-out;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(0.4);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.3);
+        opacity: 0;
+      }
+    }
+
+    /* カスタムポップアップデザイン */
+    .leaflet-popup-content-wrapper {
+      border-radius: 12px;
+      padding: 4px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+    }
+    .leaflet-popup-content {
+      margin: 12px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 flex flex-col h-screen">
+
+  <!-- ヘッダーバー -->
+  <header class="bg-slate-900 text-white h-[56px] px-4 flex items-center justify-between shadow-md z-10 shrink-0">
+    <div class="flex items-center space-x-2">
+      <i class="fas fa-building text-blue-400 text-lg"></i>
+      <h1 class="text-base sm:text-lg font-bold tracking-wide">此花マンション区域</h1>
+    </div>
+    <div id="headerControls" class="hidden flex items-center space-x-2">
+      <button id="btnRefresh" onclick="loadMansionData()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-sm transition flex items-center gap-1">
+        <i class="fas fa-sync-alt"></i>
+        <span class="hidden sm:inline">更新</span>
+      </button>
+      <button id="btnRecenter" onclick="centerToUserLocation()" class="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition flex items-center gap-1 shadow">
+        <i class="fas fa-crosshairs"></i>
+        <span class="hidden sm:inline">現在地</span>
+      </button>
+      <button onclick="logout()" class="p-2 bg-slate-800 hover:bg-red-900/60 text-slate-300 hover:text-red-200 rounded-lg text-sm transition">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ログイン画面 -->
+  <div id="loginScreen" class="fixed inset-0 z-50 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md border border-slate-200">
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl mb-3">
+          <i class="fas fa-lock text-2xl"></i>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-800">此花マンション区域</h2>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">閲覧するにはパスワードを入力してください</p>
+      </div>
+
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">パスワード</label>
+          <div class="relative">
+            <input type="password" id="passwordInput" required placeholder="••••••••" 
+              class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 text-base">
+            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <i id="eyeIcon" class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="loginError" class="hidden text-red-500 text-xs text-center bg-red-50 py-2 rounded-lg border border-red-200">
+          パスワードが正しくありません
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 transition duration-200 flex items-center justify-center gap-2">
+          <span>ログイン</span>
+          <i class="fas fa-arrow-right text-sm"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- メイン画面（マップエリア） -->
+  <main class="flex-1 relative">
+    <div id="map"></div>
+
+    <!-- ステータスオーバーレイ -->
+    <div id="statusToast" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 bg-slate-900/85 text-white text-xs px-4 py-2.5 rounded-full shadow-lg backdrop-blur-sm flex items-center gap-2 transition-opacity duration-300 pointer-events-none">
+      <i id="statusSpinner" class="fas fa-spinner fa-spin text-blue-400"></i>
+      <span id="statusText">データを読み込んでいます...</span>
+    </div>
+  </main>
+
+  <script>
+    // 定数と状態管理
+    const CORRECT_PASSWORD = "konohana";
+    let map = null;
+    let userMarker = null;
+    let mansionMarkers = [];
+    let watchPositionId = null;
+    let userCoordinates = null;
+
+    // 初期化処理
+    window.onload = function() {
+      // セッションストレージでログイン状態を確認
+      if (sessionStorage.getItem('isLoggedIn') === 'true') {
+        showApp();
+      }
+    };
+
+    // ログイン処理
+    function handleLogin(e) {
+      e.preventDefault();
+      const inputPass = document.getElementById('passwordInput').value;
+      const errorEl = document.getElementById('loginError');
+
+      if (inputPass === CORRECT_PASSWORD) {
+        sessionStorage.setItem('isLoggedIn', 'true');
+        errorEl.classList.add('hidden');
+        showApp();
+      } else {
+        errorEl.classList.remove('hidden');
+        document.getElementById('passwordInput').value = '';
+      }
+    }
+
+    // パスワード表示切り替え
+    function togglePasswordVisibility() {
+      const input = document.getElementById('passwordInput');
+      const icon = document.getElementById('eyeIcon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    }
+
+    // ログアウト処理
+    function logout() {
+      sessionStorage.removeItem('isLoggedIn');
+      if (watchPositionId !== null) {
+        navigator.geolocation.clearWatch(watchPositionId);
+      }
+      location.reload();
+    }
+
+    // アプリメイン画面の起動
+    function showApp() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('headerControls').classList.remove('hidden');
+      
+      initMap();
+      startLocationTracking();
+      loadMansionData();
+    }
+
+    // Leafletマップ初期化（国土地理院 淡色地図）
+    function initMap() {
+      // 初期表示位置（大阪市此花区付近）
+      const defaultLat = 34.6825;
+      const defaultLng = 135.4520;
+
+      map = L.map('map', {
+        zoomControl: false
+      }).setView([defaultLat, defaultLng], 14);
+
+      // ズームコントロールの位置を変更（右下）
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+      // 国土地理院 淡色地図タイルレイヤー
+      L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        minZoom: 10,
+        attribution: '&copy; <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>'
+      }).addTo(map);
+    }
+
+    // リアルタイム位置情報の監視
+    function startLocationTracking() {
+      if (!('geolocation' in navigator)) {
+        showStatus('お使いのブラウザは位置情報に対応していません', false);
+        return;
+      }
+
+      watchPositionId = navigator.geolocation.watchPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          userCoordinates = [lat, lng];
+
+          updateUserLocationMarker(lat, lng);
+        },
+        (error) => {
+          console.warn('Geolocation error:', error.message);
+          showStatus('現在地の取得に失敗しました', false);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    }
+
+    // 現在地マーカーの更新
+    function updateUserLocationMarker(lat, lng) {
+      const customIcon = L.divIcon({
+        className: 'user-location-marker',
+        html: '<div class="user-location-pulse"></div><div class="user-location-dot"></div>',
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
+      });
+
+      if (userMarker) {
+        userMarker.setLatLng([lat, lng]);
+      } else {
+        userMarker = L.marker([lat, lng], { icon: customIcon, zIndexOffset: 1000 }).addTo(map);
+        // 初回位置取得時はマップの中心を現在地へ動かす
+        map.setView([lat, lng], 15);
+      }
+    }
+
+    // 現在地へ視点移動
+    function centerToUserLocation() {
+      if (userCoordinates) {
+        map.flyTo(userCoordinates, 16, { animate: true, duration: 1 });
+      } else {
+        showStatus('現在地を取得中です...', true);
+      }
+    }
+
+    // スプレッドシートからデータ読み込み
+    function loadMansionData() {
+      showStatus('マンションデータを取得中...', true);
+
+      // GASバックエンド関数呼出
+      google.script.run
+        .withSuccessHandler(onDataLoaded)
+        .withFailureHandler(onDataError)
+        .getMansionData();
+    }
+
+    function onDataLoaded(response) {
+      if (!response.success) {
+        showStatus(response.error || 'データ読み込みエラー', false);
+        return;
+      }
+
+      const mansions = response.data;
+      clearMansionMarkers();
+
+      // マーカーの追加
+      mansions.forEach(mansion => {
+        // カスタムピンアイコン（ビジネス向けブルーピン）
+        const mansionIcon = L.divIcon({
+          className: 'custom-mansion-pin',
+          html: `
+            <div class="flex items-center justify-center w-8 h-8 bg-slate-900 text-blue-400 rounded-full border-2 border-white shadow-md transform hover:scale-110 transition">
+              <i class="fas fa-building text-xs"></i>
+            </div>
+          `,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+          popupAnchor: [0, -16]
+        });
+
+        const marker = L.marker([mansion.lat, mansion.lng], { icon: mansionIcon }).addTo(map);
+
+        // ポップアップHTML作成
+        const popupContent = `
+          <div class="p-1 max-w-[240px]">
+            <h3 class="font-bold text-sm text-slate-800 mb-1 leading-tight">${escapeHtml(mansion.name)}</h3>
+            <p class="text-xs text-slate-500 mb-3 flex items-start gap-1">
+              <i class="fas fa-map-marker-alt text-red-500 text-xs mt-0.5"></i>
+              <span>${escapeHtml(mansion.address || '住所未登録')}</span>
+            </p>
+            ${mansion.roomLink ? `
+              <a href="${escapeHtml(mansion.roomLink)}" target="_blank" rel="noopener noreferrer" 
+                 class="w-full inline-flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs py-2 px-3 rounded-lg shadow transition">
+                <i class="fas fa-door-open"></i>
+                <span>部屋番号一覧を開く</span>
+                <i class="fas fa-external-link-alt text-[10px] ml-0.5 opacity-80"></i>
+              </a>
+            ` : `
+              <span class="block text-center text-xs text-slate-400 bg-slate-100 py-1.5 rounded">リンク未設定</span>
+            `}
+          </div>
+        `;
+
+        marker.bindPopup(popupContent);
+        mansionMarkers.push(marker);
+      });
+
+      showStatus(`${mansions.length}件のマンションを表示中`, false, 3000);
+    }
+
+    function onDataError(error) {
+      showStatus('データの通信エラーが発生しました', false);
+      console.error(error);
+    }
+
+    // 既存マーカーのクリア
+    function clearMansionMarkers() {
+      mansionMarkers.forEach(marker => map.removeLayer(marker));
+      mansionMarkers = [];
+    }
+
+    // Toastステータス表示
+    function showStatus(message, isLoading = false, autoHideMs = 0) {
+      const toast = document.getElementById('statusToast');
+      const text = document.getElementById('statusText');
+      const spinner = document.getElementById('statusSpinner');
+
+      text.textContent = message;
+      if (isLoading) {
+        spinner.classList.remove('hidden');
+      } else {
+        spinner.classList.add('hidden');
+      }
+
+      toast.classList.remove('opacity-0');
+
+      if (autoHideMs > 0) {
+        setTimeout(() => {
+          toast.classList.add('opacity-0');
+        }, autoHideMs);
+      }
+    }
+
+    // エスケープ処理（XSS対策）
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
