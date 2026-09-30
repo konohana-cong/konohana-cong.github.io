@@ -95,8 +95,8 @@
 <body class="bg-slate-100 flex flex-col h-screen select-none">
 
   <!-- 上部ヘッダー（エリアフィルターボタンを内部に統合・拡張） -->
-  <header class="bg-slate-900 text-white px-3 sm:px-4 py-1.5 flex flex-col md:flex-row md:items-center justify-between gap-1.5 shadow-md z-10 shrink-0">
-    <!-- タイトル行 兼 操作ボタン群（同じ行に配置して縦幅を削減） -->
+  <header class="bg-slate-900 text-white px-3 sm:px-4 py-1.5 flex flex-col md:flex-row md:items-center justify-between gap-1.5 shadow-md z-10 shrink-0 relative">
+    <!-- タイトル行 兼 ハンバーガーメニューボタン -->
     <div class="flex items-center justify-between w-full md:w-auto gap-2">
       <div class="flex items-center space-x-2 shrink-0">
         <div class="w-7 h-7 rounded-lg bg-blue-600/30 border border-blue-500/50 flex items-center justify-center">
@@ -105,27 +105,36 @@
         <h1 class="text-sm sm:text-base font-bold tracking-wide whitespace-nowrap">此花マンション区域</h1>
       </div>
 
-      <!-- ヘッダー右側アクションボタン群（タイトルの横へ移動） -->
-      <div id="headerControls" class="hidden flex items-center space-x-1.5 justify-end">
-        <button id="btnList" onclick="toggleMansionListDrawer()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs transition flex items-center gap-1 border border-slate-700" title="一覧">
-          <i class="fas fa-list text-xs"></i>
-          <span class="hidden md:inline">一覧</span>
-        </button>
-        <button id="btnRefresh" onclick="loadMansionData()" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs transition flex items-center border border-slate-700" title="データ更新">
-          <i class="fas fa-sync-alt text-xs"></i>
-        </button>
-        <button id="btnRecenter" onclick="centerToUserLocation()" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition flex items-center gap-1 shadow" title="現在地">
-          <i class="fas fa-crosshairs text-xs"></i>
-          <span class="hidden md:inline">現在地</span>
-        </button>
-        <button onclick="logout()" class="p-1.5 bg-slate-800 hover:bg-red-900/60 text-slate-400 hover:text-red-200 rounded-lg text-xs transition border border-slate-700" title="ログアウト">
-          <i class="fas fa-sign-out-alt text-xs"></i>
+      <!-- ハンバーガーメニューボタン（上部右側） -->
+      <div id="headerControls" class="hidden flex items-center justify-end">
+        <button id="btnHamburger" onclick="toggleHamburgerMenu(event)" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs transition flex items-center justify-center border border-slate-700" title="メニュー">
+          <i class="fas fa-bars text-sm"></i>
         </button>
       </div>
     </div>
 
-    <!-- 濃い紺色背景内に配置した区エリア切り替えフィルター -->
+    <!-- ハンバーガーメニュー ドロップダウン -->
+    <div id="hamburgerDropdown" class="hidden absolute right-3 top-11 z-50 bg-slate-900/95 border border-slate-700 rounded-xl shadow-2xl p-1.5 w-44 flex flex-col gap-1 backdrop-blur-md">
+      <button onclick="loadMansionData(); closeHamburgerMenu();" class="w-full text-left px-3 py-2 text-xs text-slate-200 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition">
+        <i class="fas fa-sync-alt text-blue-400 w-4"></i>
+        <span>データ更新</span>
+      </button>
+      <button onclick="centerToUserLocation(); closeHamburgerMenu();" class="w-full text-left px-3 py-2 text-xs text-slate-200 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition">
+        <i class="fas fa-crosshairs text-blue-400 w-4"></i>
+        <span>現在地に移動</span>
+      </button>
+      <div class="h-px bg-slate-800 my-0.5"></div>
+      <button onclick="logout()" class="w-full text-left px-3 py-2 text-xs text-red-300 hover:bg-red-900/40 rounded-lg flex items-center gap-2 transition">
+        <i class="fas fa-sign-out-alt text-red-400 w-4"></i>
+        <span>ログアウト</span>
+      </button>
+    </div>
+
+    <!-- 下段：一覧ボタン ＋ 区エリア切り替えフィルター -->
     <div id="headerAreaFilter" class="hidden flex items-center justify-center bg-slate-950/60 p-1 rounded-xl border border-slate-800 gap-1 w-full md:w-auto">
+      <button onclick="toggleMansionListDrawer()" id="btnList" class="header-filter-btn flex-1 md:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition text-slate-300 hover:text-white hover:bg-slate-800 whitespace-nowrap">
+        <i class="fas fa-list mr-1 text-[10px]"></i>一覧
+      </button>
       <button onclick="setAreaFilter('ALL')" id="header-tab-ALL" class="header-filter-btn flex-1 md:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-sm whitespace-nowrap">
         <i class="fas fa-layer-group mr-1 text-[10px]"></i>すべて
       </button>
@@ -179,15 +188,6 @@
   <main class="flex-1 relative overflow-hidden">
     <div id="map"></div>
 
-    <!-- シート別凡例（レジェンド） -->
-    <div id="sheetLegendContainer" class="hidden absolute top-3 left-3 z-20 bg-white/90 backdrop-blur-md p-2.5 rounded-xl shadow-lg border border-slate-200 max-w-[200px] sm:max-w-[240px] text-xs">
-      <div class="font-bold text-slate-700 mb-1.5 text-[11px] flex items-center gap-1.5 border-b border-slate-200 pb-1">
-        <i class="fas fa-layer-group text-blue-500"></i>
-        <span>シート別エリア凡例</span>
-      </div>
-      <div id="sheetLegendList" class="space-y-1 max-h-36 overflow-y-auto pr-1 text-[11px]"></div>
-    </div>
-
     <!-- ステータス表示（Toast） -->
     <div id="statusToast" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 bg-slate-900/90 text-white text-xs px-4 py-2.5 rounded-full shadow-lg backdrop-blur-sm flex items-center gap-2 transition-all duration-300 pointer-events-none opacity-0">
       <i id="statusSpinner" class="fas fa-circle-notch fa-spin text-blue-400"></i>
@@ -206,6 +206,21 @@
         </button>
       </div>
 
+      <!-- 検索窓 ＆ 該当数・更新エリア -->
+      <div class="p-3 bg-slate-50/90 border-b border-slate-200 flex flex-col gap-2 shrink-0">
+        <div class="relative">
+          <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <input type="text" id="mansionSearchInput" oninput="handleSearchInput()" placeholder="マンション名・住所・エリアで検索..." class="w-full pl-8 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-700 shadow-sm">
+        </div>
+        <div class="flex items-center justify-between text-xs text-slate-600 px-1 pt-0.5">
+          <div>該当数: <span id="mansionSearchCount" class="font-bold text-slate-900">0</span> 件</div>
+          <button onclick="loadMansionData()" class="text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 transition">
+            <i class="fas fa-sync-alt text-xs"></i>
+            <span>更新</span>
+          </button>
+        </div>
+      </div>
+
       <div id="drawerContent" class="flex-1 overflow-y-auto p-3 space-y-2">
         <!-- JSで動的挿入 -->
       </div>
@@ -221,6 +236,63 @@
     let watchPositionId = null;
     let userCoordinates = null;
     let currentAreaFilter = 'ALL'; // 現在選択中のエリア ('ALL', '此花区', '福島区', '急ぎ・優先')
+    let searchKeyword = ''; // リアルタイム検索用キーワード
+
+    function handleSearchInput() {
+      const input = document.getElementById("mansionSearchInput");
+      searchKeyword = input ? input.value.trim().toLowerCase() : '';
+      renderMarkers();
+      renderDrawerList();
+    }
+
+    function getMansionArea(m) {
+      if (m.address && m.address.includes('此花区')) return '此花区';
+      if (m.address && m.address.includes('福島区')) return '福島区';
+      if (m.sheetName && m.sheetName.includes('海老江')) return '福島区';
+      return 'その他';
+    }
+
+    function getFilteredMansionList() {
+      let list = mansionDataList;
+
+      // エリアフィルター
+      if (currentAreaFilter === '急ぎ・優先') {
+        list = list.filter(m => 
+          m.name && (m.name.includes('急ぎ') || m.name.includes('優先'))
+        );
+      } else if (currentAreaFilter !== 'ALL') {
+        list = list.filter(m => getMansionArea(m) === currentAreaFilter);
+      }
+
+      // 検索キーワードフィルター（マンション名・住所・エリア・シート名でヒット）
+      if (searchKeyword) {
+        list = list.filter(m => {
+          const name = (m.name || '').toLowerCase();
+          const addr = (m.address || '').toLowerCase();
+          const sheet = (m.sheetName || '').toLowerCase();
+          const area = (getMansionArea(m) || '').toLowerCase();
+          return name.includes(searchKeyword) || addr.includes(searchKeyword) || sheet.includes(searchKeyword) || area.includes(searchKeyword);
+        });
+      }
+
+      return list;
+    }
+
+    function closeHamburgerMenu() {
+      const menu = document.getElementById("hamburgerDropdown");
+      if (menu && !menu.classList.contains("hidden")) {
+        menu.classList.add("hidden");
+      }
+    }
+
+    // ドロップダウン外クリック時の自動閉じ処理
+    document.addEventListener("click", function(e) {
+      const menu = document.getElementById("hamburgerDropdown");
+      const btn = document.getElementById("btnHamburger");
+      if (menu && !menu.contains(e.target) && btn && !btn.contains(e.target)) {
+        closeHamburgerMenu();
+      }
+    });
 
     function getMansionArea(m) {
       if (m.address && m.address.includes('此花区')) return '此花区';
@@ -246,7 +318,6 @@
       updateFilterUI();
       renderMarkers();
       renderDrawerList();
-      renderLegend();
 
       // 絞り込んだマンションが存在する場合はマップ表示領域をフィットさせる
       const filtered = getFilteredMansionList();
@@ -415,7 +486,6 @@
 
       renderMarkers();
       renderDrawerList();
-      renderLegend();
       showToast(`${mansionDataList.length}件のマンションを取得しました`, false);
     }
 
@@ -478,42 +548,17 @@
       });
     }
 
-    function renderLegend() {
-      const legendContainer = document.getElementById("sheetLegendContainer");
-      const legendList = document.getElementById("sheetLegendList");
-      
-      const filteredList = getFilteredMansionList();
-      const uniqueSheets = [...new Set(filteredList.map(m => m.sheetName))];
-      if (uniqueSheets.length === 0) {
-        legendContainer.classList.add("hidden");
-        return;
-      }
-
-      legendList.innerHTML = "";
-      uniqueSheets.forEach(sheetName => {
-        const color = getSheetColor(sheetName);
-        const count = filteredList.filter(m => m.sheetName === sheetName).length;
-        
-        const item = document.createElement("div");
-        item.className = "flex items-center justify-between gap-2 py-0.5";
-        item.innerHTML = `
-          <div class="flex items-center gap-1.5 truncate">
-            <span class="w-3 h-3 rounded-full shrink-0 shadow-sm" style="background-color: ${color.bg};"></span>
-            <span class="truncate text-slate-700 font-medium">${sheetName}</span>
-          </div>
-          <span class="text-[10px] font-bold px-1.5 py-0.2 rounded-full" style="background-color: ${color.badgeBg}; color: ${color.badgeText};">${count}</span>
-        `;
-        legendList.appendChild(item);
-      });
-
-      legendContainer.classList.remove("hidden");
-    }
-
     function renderDrawerList() {
       const container = document.getElementById("drawerContent");
       container.innerHTML = "";
 
       const filteredList = getFilteredMansionList();
+
+      // 該当件数の更新表示
+      const countEl = document.getElementById("mansionSearchCount");
+      if (countEl) {
+        countEl.textContent = filteredList.length;
+      }
 
       if (filteredList.length === 0) {
         container.innerHTML = `<div class="text-center text-xs text-slate-400 py-8">該当するマンションが見つかりません</div>`;
