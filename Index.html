@@ -24,7 +24,7 @@
 
     #map {
       width: 100%;
-      height: calc(100vh - 56px);
+      height: 100%;
       z-index: 1;
     }
 
@@ -84,18 +84,45 @@
       margin: 12px;
       line-height: 1.5;
     }
+    /* ポップアップ内ボタンの文字色競合を強制防止 */
+    .leaflet-popup-content a.room-link-btn,
+    .leaflet-popup-content a.room-link-btn * {
+      color: #ffffff !important;
+      text-decoration: none !important;
+    }
   </style>
 </head>
 <body class="bg-slate-100 flex flex-col h-screen select-none">
 
-  <header class="bg-slate-900 text-white h-[56px] px-4 flex items-center justify-between shadow-md z-10 shrink-0">
-    <div class="flex items-center space-x-2">
-      <div class="w-8 h-8 rounded-lg bg-blue-600/30 border border-blue-500/50 flex items-center justify-center">
-        <i class="fas fa-building text-blue-400 text-sm"></i>
+  <!-- 上部ヘッダー（エリアフィルターボタンを内部に統合・拡張） -->
+  <header class="bg-slate-900 text-white px-3 sm:px-4 py-2 flex flex-col md:flex-row md:items-center justify-between gap-2 shadow-md z-10 shrink-0">
+    <div class="flex items-center justify-between w-full md:w-auto">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-lg bg-blue-600/30 border border-blue-500/50 flex items-center justify-center">
+          <i class="fas fa-building text-blue-400 text-sm"></i>
+        </div>
+        <h1 class="text-base sm:text-lg font-bold tracking-wide">此花マンション区域</h1>
       </div>
-      <h1 class="text-base sm:text-lg font-bold tracking-wide">此花マンション区域</h1>
     </div>
-    <div id="headerControls" class="hidden flex items-center space-x-2">
+
+    <!-- 濃い紺色背景内に配置した区エリア切り替えフィルター -->
+    <div id="headerAreaFilter" class="hidden flex items-center justify-center bg-slate-950/60 p-1 rounded-xl border border-slate-800 gap-1 w-full md:w-auto">
+      <button onclick="setAreaFilter('ALL')" id="header-tab-ALL" class="header-filter-btn flex-1 md:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-sm">
+        <i class="fas fa-layer-group mr-1 text-[10px]"></i>すべて
+      </button>
+      <button onclick="setAreaFilter('此花区')" id="header-tab-此花区" class="header-filter-btn flex-1 md:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-300 hover:text-white hover:bg-slate-800">
+        此花区
+      </button>
+      <button onclick="setAreaFilter('福島区')" id="header-tab-福島区" class="header-filter-btn flex-1 md:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-300 hover:text-white hover:bg-slate-800">
+        福島区
+      </button>
+      <button onclick="setAreaFilter('急ぎ・優先')" id="header-tab-急ぎ・優先" class="header-filter-btn flex-1 md:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition text-amber-300 hover:text-white hover:bg-slate-800">
+        <i class="fas fa-exclamation-triangle mr-1 text-[10px]"></i>急ぎ・優先
+      </button>
+    </div>
+
+    <!-- ヘッダー右側アクションボタン群 -->
+    <div id="headerControls" class="hidden flex items-center space-x-2 justify-end w-full md:w-auto">
       <button id="btnList" onclick="toggleMansionListDrawer()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs sm:text-sm transition flex items-center gap-1.5 border border-slate-700">
         <i class="fas fa-list"></i>
         <span class="hidden sm:inline">一覧</span>
@@ -177,6 +204,15 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
+
+      <!-- エリアフィルタータブ（ドロワー内） -->
+      <div class="px-3 py-2 bg-slate-100 border-b border-slate-200 flex gap-1.5 overflow-x-auto text-xs" id="drawerFilterTabs">
+        <button onclick="setAreaFilter('ALL')" id="tab-ALL" class="area-tab-btn px-3 py-1.5 rounded-lg font-bold transition shrink-0 bg-blue-600 text-white shadow-sm">すべて</button>
+        <button onclick="setAreaFilter('此花区')" id="tab-此花区" class="area-tab-btn px-3 py-1.5 rounded-lg font-bold transition shrink-0 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">此花区</button>
+        <button onclick="setAreaFilter('福島区')" id="tab-福島区" class="area-tab-btn px-3 py-1.5 rounded-lg font-bold transition shrink-0 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">福島区</button>
+        <button onclick="setAreaFilter('急ぎ・優先')" id="tab-急ぎ・優先" class="area-tab-btn px-3 py-1.5 rounded-lg font-bold transition shrink-0 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100">⚠️ 急ぎ・優先</button>
+      </div>
+
       <div id="drawerContent" class="flex-1 overflow-y-auto p-3 space-y-2">
         <!-- JSで動的挿入 -->
       </div>
@@ -191,6 +227,66 @@
     let mansionDataList = [];
     let watchPositionId = null;
     let userCoordinates = null;
+    let currentAreaFilter = 'ALL'; // 現在選択中のエリア ('ALL', '此花区', '福島区', '急ぎ・優先')
+
+    function getMansionArea(m) {
+      if (m.address && m.address.includes('此花区')) return '此花区';
+      if (m.address && m.address.includes('福島区')) return '福島区';
+      if (m.sheetName && m.sheetName.includes('海老江')) return '福島区';
+      return 'その他';
+    }
+
+    function getFilteredMansionList() {
+      if (currentAreaFilter === 'ALL') {
+        return mansionDataList;
+      }
+      if (currentAreaFilter === '急ぎ・優先') {
+        return mansionDataList.filter(m => 
+          m.name && (m.name.includes('急ぎ') || m.name.includes('優先'))
+        );
+      }
+      return mansionDataList.filter(m => getMansionArea(m) === currentAreaFilter);
+    }
+
+    function setAreaFilter(area) {
+      currentAreaFilter = area;
+      updateFilterUI();
+      renderMarkers();
+      renderDrawerList();
+      renderLegend();
+
+      // 絞り込んだマンションが存在する場合はマップ表示領域をフィットさせる
+      const filtered = getFilteredMansionList();
+      if (filtered.length > 0 && map) {
+        const bounds = L.latLngBounds(filtered.map(m => [m.lat, m.lng]));
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+      }
+    }
+
+    function updateFilterUI() {
+      const areas = ['ALL', '此花区', '福島区', '急ぎ・優先'];
+      areas.forEach(a => {
+        // ヘッダー内の切り替えボタンのハイライト更新
+        const headerTab = document.getElementById(`header-tab-${a}`);
+        if (headerTab) {
+          if (a === currentAreaFilter) {
+            headerTab.className = "header-filter-btn flex-1 md:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-sm";
+          } else {
+            headerTab.className = "header-filter-btn flex-1 md:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-300 hover:text-white hover:bg-slate-800";
+          }
+        }
+
+        // ドロワー内のボタンのハイライト更新
+        const tab = document.getElementById(`tab-${a}`);
+        if (tab) {
+          if (a === currentAreaFilter) {
+            tab.className = "area-tab-btn px-3 py-1.5 rounded-lg font-bold transition shrink-0 bg-blue-600 text-white shadow-sm";
+          } else {
+            tab.className = "area-tab-btn px-3 py-1.5 rounded-lg font-bold transition shrink-0 bg-white text-slate-600 border border-slate-200 hover:bg-slate-50";
+          }
+        }
+      });
+    }
 
     // シートごとの割り当てカラーパレット定義（20色）
     const PRESET_COLORS = [
@@ -241,6 +337,7 @@
       if (savedAuth === "true") {
         document.getElementById("loginScreen").classList.add("hidden");
         document.getElementById("headerControls").classList.remove("hidden");
+        document.getElementById("headerAreaFilter").classList.remove("hidden");
         initMap();
         loadMansionData();
         startLocationTracking();
@@ -254,6 +351,7 @@
         sessionStorage.setItem("konohana_auth", "true");
         document.getElementById("loginScreen").classList.add("hidden");
         document.getElementById("headerControls").classList.remove("hidden");
+        document.getElementById("headerAreaFilter").classList.remove("hidden");
         initMap();
         loadMansionData();
         startLocationTracking();
@@ -319,22 +417,23 @@
       }
     }
 
+    function onDataError(err) {
+      console.error("GAS Execution Error: ", err);
+      showToast("通信エラー: " + (err.message || err.toString()), false);
+    }
+
     function onDataLoaded(res) {
-      if (!res.success) {
-        showToast("データ取得失敗: " + (res.error || "不明なエラー"), false);
+      if (!res || !res.success) {
+        showToast("データ取得失敗: " + (res ? res.error : "不明なエラー"), false);
         return;
       }
 
       mansionDataList = res.data;
+
       renderMarkers();
       renderDrawerList();
       renderLegend();
       showToast(`${mansionDataList.length}件のマンションを取得しました`, false);
-    }
-
-    function onDataError(err) {
-      showToast("通信エラーが発生しました", false);
-      console.error(err);
     }
 
     function renderMarkers() {
@@ -342,7 +441,9 @@
       mansionMarkers.forEach(m => map.removeLayer(m));
       mansionMarkers = [];
 
-      mansionDataList.forEach(m => {
+      const filteredList = getFilteredMansionList();
+
+      filteredList.forEach(m => {
         const color = getSheetColor(m.sheetName);
 
         // カスタムHTMLピンアイコン作成
@@ -363,17 +464,20 @@
         });
 
         const roomBtn = m.roomLink && m.roomLink.length > 5
-          ? `<a href="${m.roomLink}" target="_blank" rel="noopener noreferrer" class="mt-2.5 inline-flex items-center justify-center w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs transition shadow-sm gap-1.5 no-underline">
-              <span>部屋番号一覧を見る</span>
-              <i class="fas fa-external-link-alt text-[10px]"></i>
+          ? `<a href="${m.roomLink}" target="_blank" rel="noopener noreferrer" class="room-link-btn mt-2.5 inline-flex items-center justify-center w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 !text-white font-bold rounded-lg text-xs transition shadow-sm gap-1.5 no-underline" style="color: #ffffff !important;">
+              <span style="color: #ffffff !important;">部屋番号一覧を見る</span>
+              <i class="fas fa-external-link-alt text-[10px]" style="color: #ffffff !important;"></i>
              </a>`
           : `<div class="mt-2 text-xs text-slate-400 italic">リンク未登録</div>`;
 
         const popupContent = `
           <div class="p-1 min-w-[200px]">
-            <div class="mb-1">
-              <span style="background-color: ${color.badgeBg}; color: ${color.badgeText};" class="px-2 py-0.5 rounded-full text-[10px] font-bold inline-block mb-1">
+            <div class="mb-1 flex items-center gap-1">
+              <span style="background-color: ${color.badgeBg}; color: ${color.badgeText};" class="px-2 py-0.5 rounded-full text-[10px] font-bold inline-block">
                 ${m.sheetName}
+              </span>
+              <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[10px] font-bold inline-block border border-slate-200">
+                ${getMansionArea(m)}
               </span>
             </div>
             <h4 class="font-bold text-slate-900 text-sm border-b pb-1 mb-1 border-slate-200">${m.name}</h4>
@@ -395,7 +499,8 @@
       const legendContainer = document.getElementById("sheetLegendContainer");
       const legendList = document.getElementById("sheetLegendList");
       
-      const uniqueSheets = [...new Set(mansionDataList.map(m => m.sheetName))];
+      const filteredList = getFilteredMansionList();
+      const uniqueSheets = [...new Set(filteredList.map(m => m.sheetName))];
       if (uniqueSheets.length === 0) {
         legendContainer.classList.add("hidden");
         return;
@@ -404,7 +509,7 @@
       legendList.innerHTML = "";
       uniqueSheets.forEach(sheetName => {
         const color = getSheetColor(sheetName);
-        const count = mansionDataList.filter(m => m.sheetName === sheetName).length;
+        const count = filteredList.filter(m => m.sheetName === sheetName).length;
         
         const item = document.createElement("div");
         item.className = "flex items-center justify-between gap-2 py-0.5";
@@ -425,19 +530,22 @@
       const container = document.getElementById("drawerContent");
       container.innerHTML = "";
 
-      if (mansionDataList.length === 0) {
-        container.innerHTML = `<div class="text-center text-xs text-slate-400 py-8">データが見つかりません</div>`;
+      const filteredList = getFilteredMansionList();
+
+      if (filteredList.length === 0) {
+        container.innerHTML = `<div class="text-center text-xs text-slate-400 py-8">該当するマンションが見つかりません</div>`;
         return;
       }
 
-      mansionDataList.forEach(m => {
+      filteredList.forEach(m => {
         const color = getSheetColor(m.sheetName);
+        const areaName = getMansionArea(m);
         const card = document.createElement("div");
         card.className = "p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 cursor-pointer transition shadow-sm";
         card.onclick = () => {
           toggleMansionListDrawer();
           map.setView([m.lat, m.lng], 17);
-          const index = mansionDataList.findIndex(item => item.id === m.id);
+          const index = filteredList.findIndex(item => item.id === m.id);
           if (index !== -1 && mansionMarkers[index]) {
             mansionMarkers[index].openPopup();
           }
@@ -445,9 +553,14 @@
 
         card.innerHTML = `
           <div class="flex items-center justify-between mb-1">
-            <span style="background-color: ${color.badgeBg}; color: ${color.badgeText};" class="px-2 py-0.5 rounded-full text-[10px] font-bold">
-              ${m.sheetName}
-            </span>
+            <div class="flex items-center gap-1">
+              <span style="background-color: ${color.badgeBg}; color: ${color.badgeText};" class="px-2 py-0.5 rounded-full text-[10px] font-bold">
+                ${m.sheetName}
+              </span>
+              <span class="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded-full text-[9px] font-semibold">
+                ${areaName}
+              </span>
+            </div>
             <i class="fas fa-chevron-right text-xs text-slate-400"></i>
           </div>
           <div class="font-bold text-slate-800 text-xs mb-1">${m.name}</div>

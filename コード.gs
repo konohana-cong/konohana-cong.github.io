@@ -24,12 +24,24 @@ function getMansionData() {
       ss = null;
     }
     if (!ss) {
-      ss = SpreadsheetApp.openById(spreadsheetId);
+      try {
+        ss = SpreadsheetApp.openById(spreadsheetId);
+      } catch (e) {
+        return { success: false, error: 'スプレッドシートを開けませんでした。アクセス権限またはIDを確認してください: ' + e.toString() };
+      }
     }
 
     const sheets = ss.getSheets(); // すべてのシートを取得
     const mansions = [];
     let globalId = 1;
+
+    // 全角数字・全角記号を半角に変換する補助関数
+    const parseCoord = (val) => {
+      if (val === null || val === undefined || val === '') return NaN;
+      if (typeof val === 'number') return val;
+      const str = String(val).replace(/[Ａ-Ｚａ-ｚ０-９．,]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0)).trim();
+      return parseFloat(str);
+    };
 
     sheets.forEach(sheet => {
       const sheetName = sheet.getName();
@@ -57,15 +69,15 @@ function getMansionData() {
         const row = data[i];
         if (!row || !row[nameIdx] || String(row[nameIdx]).trim() === '') continue;
 
-        let lat = parseFloat(row[latIdx]);
-        let lng = parseFloat(row[lngIdx]);
+        let lat = parseCoord(row[latIdx]);
+        let lng = parseCoord(row[lngIdx]);
 
         // カンマ区切りセル（例: "34.682, 135.452"）の解析処理
         if ((isNaN(lat) || isNaN(lng)) && row[latIdx]) {
-          const parts = String(row[latIdx]).split(',');
+          const parts = String(row[latIdx]).split(/[,，]/);
           if (parts.length === 2) {
-            lat = parseFloat(parts[0].trim());
-            lng = parseFloat(parts[1].trim());
+            lat = parseCoord(parts[0]);
+            lng = parseCoord(parts[1]);
           }
         }
 
