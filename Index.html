@@ -298,25 +298,6 @@
       }
     });
 
-    function getMansionArea(m) {
-      if (m.address && m.address.includes('此花区')) return '此花区';
-      if (m.address && m.address.includes('福島区')) return '福島区';
-      if (m.sheetName && m.sheetName.includes('海老江')) return '福島区';
-      return 'その他';
-    }
-
-    function getFilteredMansionList() {
-      if (currentAreaFilter === 'ALL') {
-        return mansionDataList;
-      }
-      if (currentAreaFilter === '急ぎ・優先') {
-        return mansionDataList.filter(m => 
-          m.name && (m.name.includes('急ぎ') || m.name.includes('優先'))
-        );
-      }
-      return mansionDataList.filter(m => getMansionArea(m) === currentAreaFilter);
-    }
-
     function setAreaFilter(area) {
       currentAreaFilter = area;
       updateFilterUI();
