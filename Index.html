@@ -221,12 +221,12 @@
 
     <!-- マンション一覧ドロワー -->
     <div id="listDrawer" class="absolute top-0 right-0 h-full w-full sm:w-80 bg-white/95 backdrop-blur-md shadow-2xl z-30 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-l border-slate-200">
-      <div class="p-4 bg-blue-600 text-white flex items-center justify-between">
+      <div class="p-4 bg-[#13685e] text-white flex items-center justify-between">
         <h3 class="font-bold text-sm flex items-center gap-2">
-          <i class="fas fa-building text-blue-200"></i>
+          <i class="fas fa-building text-emerald-200"></i>
           <span>登録マンション一覧</span>
         </h3>
-        <button onclick="toggleMansionListDrawer()" class="text-blue-100 hover:text-white p-1">
+        <button onclick="toggleMansionListDrawer()" class="text-emerald-100 hover:text-white p-1">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -235,11 +235,11 @@
       <div class="p-3 bg-slate-50/90 border-b border-slate-200 flex flex-col gap-2 shrink-0">
         <div class="relative">
           <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-          <input type="text" id="mansionSearchInput" oninput="handleSearchInput()" placeholder="マンション名・住所・エリアで検索..." class="w-full pl-8 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-700 shadow-sm">
+          <input type="text" id="mansionSearchInput" oninput="handleSearchInput()" placeholder="マンション名・住所・エリアで検索..." class="w-full pl-8 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#13685e] focus:border-transparent text-slate-700 shadow-sm">
         </div>
         <div class="flex items-center justify-between text-xs text-slate-600 px-1 pt-0.5">
           <div>該当数: <span id="mansionSearchCount" class="font-bold text-slate-900">0</span> 件</div>
-          <button onclick="loadMansionData()" class="text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 transition">
+          <button onclick="loadMansionData()" class="text-[#13685e] hover:text-[#0a3f39] font-semibold flex items-center gap-1 transition">
             <i class="fas fa-sync-alt text-xs"></i>
             <span>更新</span>
           </button>
@@ -652,7 +652,7 @@
         });
 
         const roomBtn = m.roomLink && m.roomLink.length > 5
-          ? `<a href="${m.roomLink}" target="_blank" rel="noopener noreferrer" class="room-link-btn mt-2.5 inline-flex items-center justify-center w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 !text-white font-bold rounded-lg text-xs transition shadow-sm gap-1.5 no-underline" style="color: #ffffff !important;">
+          ? `<a href="${m.roomLink}" target="_blank" rel="noopener noreferrer" class="room-link-btn mt-2.5 inline-flex items-center justify-center w-full px-3 py-2 bg-[#13685e] hover:bg-[#0e524a] !text-white font-bold rounded-xl text-xs transition shadow-sm gap-1.5 no-underline" style="color: #ffffff !important;">
               <span style="color: #ffffff !important;">部屋番号一覧を見る</span>
               <i class="fas fa-external-link-alt text-[10px]" style="color: #ffffff !important;"></i>
              </a>`
@@ -717,14 +717,14 @@
         const color = getSheetColor(m.sheetName);
         const area = getMansionArea(m);
         const roomBtn = m.roomLink && m.roomLink.length > 5
-          ? `<a href="${m.roomLink}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="mt-2 inline-flex items-center justify-center w-full px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs transition shadow-sm gap-1 no-underline">
+          ? `<a href="${m.roomLink}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="mt-2 inline-flex items-center justify-center w-full px-3 py-2 bg-[#13685e] hover:bg-[#0e524a] text-white font-bold rounded-xl text-xs transition shadow-sm gap-1.5 no-underline">
               <span>部屋番号一覧を見る</span>
               <i class="fas fa-external-link-alt text-[10px]"></i>
              </a>`
           : `<div class="mt-1.5 text-[11px] text-slate-400 italic">リンク未登録</div>`;
 
         return `
-          <div onclick="focusMansionOnMap(${m.id})" class="p-3 bg-white hover:bg-blue-50/50 rounded-2xl border border-slate-200 shadow-sm transition cursor-pointer flex flex-col gap-1">
+          <div onclick="focusMansionOnMap(${m.id})" class="p-3 bg-white hover:bg-emerald-50/40 rounded-2xl border border-slate-200 shadow-sm transition cursor-pointer flex flex-col gap-1">
             <div class="flex items-center gap-1.5">
               <span style="background-color: ${color.badgeBg}; color: ${color.badgeText};" class="px-2 py-0.5 rounded-full text-[10px] font-bold">
                 ${m.sheetName}
