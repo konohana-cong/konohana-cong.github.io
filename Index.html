@@ -253,16 +253,16 @@
             項目を選択 <span class="text-red-500">*</span>
           </label>
           <div class="relative">
-            <select id="reportCategory" required class="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 appearance-none shadow-sm transition cursor-pointer pr-10">
-              <option value="" disabled selected>選択してください</option>
+            <select id="reportCategory" onchange="handleReportCategoryChange()" required class="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 appearance-none shadow-sm transition cursor-pointer pr-10">
+              <option value="" disabled selected>▼ 選択してください</option>
               <option value="新規マンション追加">新規マンション追加</option>
-              <option value="住所・情報の修正">住所・情報の修正</option>
-              <option value="部屋番号リンクの更新">部屋番号リンクの更新</option>
-              <option value="優先・急ぎ指定の変更">優先・急ぎ指定の変更</option>
+              <option value="登録情報の修正">登録情報の修正</option>
+              <option value="訪問拒否情報">訪問拒否情報</option>
+              <option value="外国人情報">外国人情報</option>
               <option value="その他">その他</option>
             </select>
             <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
-              <i class="fas fa-chevron-up-down"></i>
+              <i class="fas fa-chevron-down"></i>
             </div>
           </div>
         </div>
@@ -271,14 +271,7 @@
           <label class="block text-xs font-bold text-slate-700 mb-1.5">
             詳細内容
           </label>
-          <input type="text" id="reportDetails" placeholder="詳細を入力してください（任意）" class="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 placeholder-slate-400 shadow-sm transition">
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1.5">
-            住所/マンション名
-          </label>
-          <input type="text" id="reportLocation" placeholder="対象の住所またはマンション名を入力" class="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 placeholder-slate-400 shadow-sm transition">
+          <textarea id="reportDetails" rows="3" placeholder="詳細を入力" class="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 placeholder-slate-400 shadow-sm transition resize-none"></textarea>
         </div>
 
         <button type="submit" id="reportSubmitBtn" class="w-full mt-2 py-3.5 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-bold rounded-2xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
@@ -416,20 +409,31 @@
       if (modal) modal.classList.add("hidden");
     }
 
+    function handleReportCategoryChange() {
+      const category = document.getElementById("reportCategory").value;
+      const detailsInput = document.getElementById("reportDetails");
+      if (!detailsInput) return;
+
+      if (category === "新規マンション追加") {
+        detailsInput.placeholder = "住所・マンション名・部屋番号を入力";
+      } else {
+        detailsInput.placeholder = "詳細を入力";
+      }
+    }
+
     function handleReportSubmit(e) {
       e.preventDefault();
       const submitBtn = document.getElementById("reportSubmitBtn");
       const name = document.getElementById("reportName").value.trim();
       const category = document.getElementById("reportCategory").value;
       const details = document.getElementById("reportDetails").value.trim();
-      const location = document.getElementById("reportLocation").value.trim();
 
       if (!name || !category) return;
 
       submitBtn.disabled = true;
       submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin text-xs"></i> <span>送信中...</span>`;
 
-      const reportData = { reporterName: name, category: category, details: details, location: location };
+      const reportData = { reporterName: name, category: category, details: details, location: '' };
 
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
@@ -442,7 +446,7 @@
               document.getElementById("reportName").value = "";
               document.getElementById("reportCategory").value = "";
               document.getElementById("reportDetails").value = "";
-              document.getElementById("reportLocation").value = "";
+              document.getElementById("reportDetails").placeholder = "詳細を入力";
             } else {
               showToast("送信失敗: " + (res ? res.error : "エラーが発生しました"), false);
             }
