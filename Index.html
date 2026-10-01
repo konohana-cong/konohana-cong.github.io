@@ -95,62 +95,63 @@
 <body class="bg-slate-100 flex flex-col h-screen select-none">
 
   <!-- 上部ヘッダー -->
-  <header class="bg-blue-600 text-white px-3 sm:px-4 py-2 flex flex-col gap-2 shadow-md z-10 shrink-0 relative">
+  <header class="bg-blue-950 text-white px-3 sm:px-4 py-2.5 flex flex-col gap-2 shadow-lg z-10 shrink-0 relative border-b border-blue-900/60">
     <!-- 1行目：タイトル（左） ＆ 操作ボタン（右：現在地 ＋ ハンバーガー） -->
     <div class="flex items-center justify-between w-full gap-2">
-      <div class="flex items-center space-x-2 shrink-0">
-        <div class="w-8 h-8 rounded-lg bg-white/20 border border-white/30 flex items-center justify-center">
-          <i class="fas fa-building text-white text-sm"></i>
+      <div class="flex items-center space-x-2.5 shrink-0">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-md border border-blue-400/30">
+          <i class="fas fa-building text-sm"></i>
         </div>
         <h1 class="text-base sm:text-lg font-bold tracking-tight text-white whitespace-nowrap">此花マンション区域</h1>
       </div>
 
       <!-- 右端：現在地ボタン ＆ ハンバーガーメニュー -->
       <div id="headerControls" class="hidden flex items-center justify-end gap-1.5">
-        <button onclick="moveToCurrentLocation()" class="p-2 bg-blue-700/80 hover:bg-blue-800 active:bg-blue-900 text-white rounded-lg text-xs transition flex items-center justify-center border border-blue-400/40 shadow-sm" title="現在地に移動">
+        <button onclick="moveToCurrentLocation()" class="p-2 bg-blue-900/80 hover:bg-blue-800 active:bg-blue-700 text-blue-100 hover:text-white rounded-xl text-xs transition flex items-center justify-center border border-blue-700/60 shadow-sm" title="現在地に移動">
           <i class="fas fa-location-crosshairs text-sm"></i>
         </button>
-        <button id="btnHamburger" onclick="toggleHamburgerMenu(event)" class="p-2 bg-blue-700/80 hover:bg-blue-800 active:bg-blue-900 text-white rounded-lg text-xs transition flex items-center justify-center border border-blue-400/40 shadow-sm" title="メニュー">
+        <button id="btnHamburger" onclick="toggleHamburgerMenu(event)" class="p-2 bg-blue-900/80 hover:bg-blue-800 active:bg-blue-700 text-blue-100 hover:text-white rounded-xl text-xs transition flex items-center justify-center border border-blue-700/60 shadow-sm" title="メニュー">
           <i class="fas fa-bars text-sm"></i>
         </button>
       </div>
     </div>
 
     <!-- ハンバーガーメニュー ドロップダウン -->
-    <div id="hamburgerDropdown" class="hidden absolute right-3 top-12 z-50 bg-white text-slate-800 border border-slate-200 rounded-xl shadow-2xl p-1.5 w-36 flex flex-col gap-1 backdrop-blur-md">
-      <button onclick="openReportModal()" class="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-slate-100 rounded-lg flex items-center gap-2 transition">
+    <div id="hamburgerDropdown" class="hidden absolute right-3 top-13 z-50 bg-white text-slate-800 border border-slate-200 rounded-2xl shadow-2xl p-1.5 w-36 flex flex-col gap-1 backdrop-blur-md">
+      <button onclick="openReportModal()" class="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-blue-50 hover:text-blue-700 rounded-xl flex items-center gap-2 transition font-semibold">
         <i class="fas fa-pen-to-square text-blue-600 w-4"></i>
         <span>報告</span>
       </button>
-      <div class="h-px bg-slate-200 my-0.5"></div>
-      <button onclick="logout()" class="w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-2 transition">
+      <div class="h-px bg-slate-100 my-0.5"></div>
+      <button onclick="logout()" class="w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 rounded-xl flex items-center gap-2 transition font-semibold">
         <i class="fas fa-sign-out-alt text-red-500 w-4"></i>
         <span>ログアウト</span>
       </button>
     </div>
 
     <!-- 2行目：エリアフィルター（左） ＋ マンション一覧切り替えボタン（右） -->
-    <div id="headerAreaFilter" class="hidden items-center justify-between bg-blue-800/40 p-1 rounded-xl border border-blue-400/30 gap-1 w-full shadow-inner">
+    <div id="headerAreaFilter" class="hidden items-center justify-between bg-blue-900/80 p-1.5 rounded-xl border border-blue-700/50 gap-1.5 w-full shadow-inner">
       <div class="flex items-center gap-1 overflow-x-auto no-scrollbar flex-1">
-        <button onclick="setAreaFilter('ALL')" id="header-tab-ALL" class="header-filter-btn px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-blue-700 shadow-md whitespace-nowrap text-center">
+        <button onclick="setAreaFilter('ALL')" id="header-tab-ALL" class="header-filter-btn px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-blue-950 shadow-md whitespace-nowrap text-center">
           すべて
         </button>
-        <button onclick="setAreaFilter('此花区')" id="header-tab-此花区" class="header-filter-btn px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-blue-100 hover:text-white hover:bg-blue-700/60 active:bg-blue-700 whitespace-nowrap text-center">
+        <button onclick="setAreaFilter('此花区')" id="header-tab-此花区" class="header-filter-btn px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-blue-200 hover:text-white hover:bg-white/10 whitespace-nowrap text-center">
           此花区
         </button>
-        <button onclick="setAreaFilter('福島区')" id="header-tab-福島区" class="header-filter-btn px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-blue-100 hover:text-white hover:bg-blue-700/60 active:bg-blue-700 whitespace-nowrap text-center">
+        <button onclick="setAreaFilter('福島区')" id="header-tab-福島区" class="header-filter-btn px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-blue-200 hover:text-white hover:bg-white/10 whitespace-nowrap text-center">
           福島区
         </button>
-        <button onclick="setAreaFilter('急ぎ・優先')" id="header-tab-急ぎ・優先" class="header-filter-btn px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-amber-300 hover:text-amber-200 hover:bg-blue-700/60 active:bg-blue-700 whitespace-nowrap text-center">
+        <button onclick="setAreaFilter('急ぎ・優先')" id="header-tab-急ぎ・優先" class="header-filter-btn px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-amber-300 hover:text-amber-200 hover:bg-white/10 whitespace-nowrap text-center">
           急ぎ・優先
         </button>
       </div>
 
-      <div class="w-px h-4 bg-blue-400/30 shrink-0 mx-0.5"></div>
+      <div class="w-px h-4 bg-blue-700/50 shrink-0 mx-0.5"></div>
 
-      <!-- 右端：一覧ドロワー切り替えボタン -->
-      <button onclick="toggleMansionListDrawer()" id="btnList" class="header-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-blue-100 hover:text-white hover:bg-blue-700/60 active:bg-blue-700 whitespace-nowrap text-center shrink-0 border border-blue-400/20 bg-blue-700/40">
-        一覧
+      <!-- 右端：一覧/地図ドロワー切り替えボタン -->
+      <button onclick="toggleMansionListDrawer()" id="btnList" class="header-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-white bg-blue-600 hover:bg-blue-500 active:bg-blue-700 whitespace-nowrap text-center shrink-0 border border-blue-400/40 shadow-sm flex items-center gap-1.5">
+        <i class="fas fa-list text-[11px]"></i>
+        <span>一覧</span>
       </button>
     </div>
   </header>
@@ -577,15 +578,15 @@
         if (!btn) return;
         if (f === currentAreaFilter) {
           if (f === '急ぎ・優先') {
-            btn.className = "header-filter-btn flex-1 md:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-400 text-slate-900 shadow-md whitespace-nowrap text-center";
+            btn.className = "header-filter-btn px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-400 text-slate-950 shadow-md whitespace-nowrap text-center";
           } else {
-            btn.className = "header-filter-btn flex-1 md:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-blue-700 shadow-md whitespace-nowrap text-center";
+            btn.className = "header-filter-btn px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-blue-950 shadow-md whitespace-nowrap text-center";
           }
         } else {
           if (f === '急ぎ・優先') {
-            btn.className = "header-filter-btn flex-1 md:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-amber-300 hover:text-amber-200 hover:bg-blue-700/60 active:bg-blue-700 whitespace-nowrap text-center";
+            btn.className = "header-filter-btn px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-amber-300 hover:text-amber-200 hover:bg-white/10 whitespace-nowrap text-center";
           } else {
-            btn.className = "header-filter-btn flex-1 md:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-blue-100 hover:text-white hover:bg-blue-700/60 active:bg-blue-700 whitespace-nowrap text-center";
+            btn.className = "header-filter-btn px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-blue-200 hover:text-white hover:bg-white/10 whitespace-nowrap text-center";
           }
         }
       });
@@ -737,7 +738,21 @@
 
     function toggleMansionListDrawer() {
       const drawer = document.getElementById("listDrawer");
-      if (drawer) drawer.classList.toggle("translate-x-full");
+      const btnList = document.getElementById("btnList");
+      if (!drawer) return;
+
+      drawer.classList.toggle("translate-x-full");
+      const isOpen = !drawer.classList.contains("translate-x-full");
+
+      if (btnList) {
+        if (isOpen) {
+          btnList.innerHTML = `<i class="fas fa-map text-[11px]"></i><span>地図</span>`;
+          btnList.className = "header-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-blue-950 bg-white hover:bg-blue-50 whitespace-nowrap text-center shrink-0 border border-white shadow-md flex items-center gap-1.5";
+        } else {
+          btnList.innerHTML = `<i class="fas fa-list text-[11px]"></i><span>一覧</span>`;
+          btnList.className = "header-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-white bg-blue-600 hover:bg-blue-500 whitespace-nowrap text-center shrink-0 border border-blue-400/40 shadow-sm flex items-center gap-1.5";
+        }
+      }
     }
 
     function moveToCurrentLocation() {
