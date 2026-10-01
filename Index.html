@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>此花マンション区域</title>
-  
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome Icons -->
@@ -94,7 +94,7 @@
 </head>
 <body class="bg-slate-100 flex flex-col h-screen select-none">
 
-  <!-- 上部ヘッダー（エリアフィルターボタンを内部に統合・拡張） -->
+  <!-- 上部ヘッダー -->
   <header class="bg-slate-900 text-white px-3 sm:px-4 py-1.5 flex flex-col md:flex-row md:items-center justify-between gap-1.5 shadow-md z-10 shrink-0 relative">
     <!-- タイトル行 兼 ハンバーガーメニューボタン -->
     <div class="flex items-center justify-between w-full md:w-auto gap-2">
@@ -105,7 +105,7 @@
         <h1 class="text-sm sm:text-base font-bold tracking-wide whitespace-nowrap">此花マンション区域</h1>
       </div>
 
-      <!-- ハンバーガーメニューボタン（上部右側） -->
+      <!-- ハンバーガーメニューボタン -->
       <div id="headerControls" class="hidden flex items-center justify-end">
         <button id="btnHamburger" onclick="toggleHamburgerMenu(event)" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs transition flex items-center justify-center border border-slate-700" title="メニュー">
           <i class="fas fa-bars text-sm"></i>
@@ -115,10 +115,10 @@
 
     <!-- ハンバーガーメニュー ドロップダウン -->
     <div id="hamburgerDropdown" class="hidden absolute right-3 top-11 z-50 bg-slate-900/95 border border-slate-700 rounded-xl shadow-2xl p-1.5 w-36 flex flex-col gap-1 backdrop-blur-md">
-      <a href="https://docs.google.com/spreadsheets/d/1ht3s0_fMP0_n89zeRYUD0_iUv9cMhdhOmeCyXgr6vbQ/edit?usp=sharing" target="_blank" rel="noopener noreferrer" onclick="closeHamburgerMenu()" class="w-full text-left px-3 py-2 text-xs text-slate-200 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition no-underline">
-        <i class="fas fa-edit text-emerald-400 w-4"></i>
-        <span>登録</span>
-      </a>
+      <button onclick="openReportModal()" class="w-full text-left px-3 py-2 text-xs text-slate-200 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition">
+        <i class="fas fa-pen-to-square text-blue-400 w-4"></i>
+        <span>報告</span>
+      </button>
       <div class="h-px bg-slate-800 my-0.5"></div>
       <button onclick="logout()" class="w-full text-left px-3 py-2 text-xs text-red-300 hover:bg-red-900/40 rounded-lg flex items-center gap-2 transition">
         <i class="fas fa-sign-out-alt text-red-400 w-4"></i>
@@ -146,6 +146,7 @@
     </div>
   </header>
 
+  <!-- ログイン画面 -->
   <div id="loginScreen" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md border border-slate-100">
       <div class="text-center mb-6">
@@ -181,6 +182,7 @@
     </div>
   </div>
 
+  <!-- メイン表示領域 -->
   <main class="flex-1 relative overflow-hidden">
     <div id="map"></div>
 
@@ -223,6 +225,70 @@
     </div>
   </main>
 
+  <!-- 報告モーダルダイアログ -->
+  <div id="reportModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-200">
+      <!-- モーダルヘッダー -->
+      <div class="p-5 sm:p-6 pb-2 flex items-center justify-between">
+        <div class="flex items-center gap-2 text-slate-800 font-bold text-lg sm:text-xl">
+          <i class="fas fa-pen-to-square text-blue-600"></i>
+          <span>報告</span>
+        </div>
+        <button type="button" onclick="closeReportModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+
+      <!-- モーダルフォーム -->
+      <form onsubmit="handleReportSubmit(event)" class="p-5 sm:p-6 pt-3 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">
+            奉仕者名 <span class="text-red-500">*</span>
+          </label>
+          <input type="text" id="reportName" required placeholder="奉仕者名を入力" class="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 placeholder-slate-400 shadow-sm transition">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">
+            項目を選択 <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <select id="reportCategory" required class="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 appearance-none shadow-sm transition cursor-pointer pr-10">
+              <option value="" disabled selected>選択してください</option>
+              <option value="新規マンション追加">新規マンション追加</option>
+              <option value="住所・情報の修正">住所・情報の修正</option>
+              <option value="部屋番号リンクの更新">部屋番号リンクの更新</option>
+              <option value="優先・急ぎ指定の変更">優先・急ぎ指定の変更</option>
+              <option value="その他">その他</option>
+            </select>
+            <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
+              <i class="fas fa-chevron-up-down"></i>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">
+            詳細内容
+          </label>
+          <input type="text" id="reportDetails" placeholder="詳細を入力してください（任意）" class="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 placeholder-slate-400 shadow-sm transition">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">
+            住所/マンション名
+          </label>
+          <input type="text" id="reportLocation" placeholder="対象の住所またはマンション名を入力" class="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 placeholder-slate-400 shadow-sm transition">
+        </div>
+
+        <button type="submit" id="reportSubmitBtn" class="w-full mt-2 py-3.5 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-bold rounded-2xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
+          <i class="fas fa-paper-plane text-xs"></i>
+          <span>送信</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
   <script>
     const CORRECT_PASSWORD = "konohana";
     let map = null;
@@ -231,47 +297,97 @@
     let mansionDataList = [];
     let watchPositionId = null;
     let userCoordinates = null;
-    let currentAreaFilter = 'ALL'; // 現在選択中のエリア ('ALL', '此花区', '福島区', '急ぎ・優先')
-    let searchKeyword = ''; // リアルタイム検索用キーワード
+    let currentAreaFilter = 'ALL';
+    let searchKeyword = '';
 
-    function handleSearchInput() {
-      const input = document.getElementById("mansionSearchInput");
-      searchKeyword = input ? input.value.trim().toLowerCase() : '';
-      renderMarkers();
-      renderDrawerList();
+    // カラーパレット定義（16シート識別用）
+    const sheetColors = [
+      { bg: '#2563eb', text: '#ffffff', badgeBg: '#dbeafe', badgeText: '#1e40af' },
+      { bg: '#dc2626', text: '#ffffff', badgeBg: '#fee2e2', badgeText: '#991b1b' },
+      { bg: '#059669', text: '#ffffff', badgeBg: '#d1fae5', badgeText: '#065f46' },
+      { bg: '#d97706', text: '#ffffff', badgeBg: '#fef3c7', badgeText: '#92400e' },
+      { bg: '#7c3aed', text: '#ffffff', badgeBg: '#ede9fe', badgeText: '#5b21b6' },
+      { bg: '#db2777', text: '#ffffff', badgeBg: '#fce7f3', badgeText: '#9d174d' },
+      { bg: '#0891b2', text: '#ffffff', badgeBg: '#cffaff', badgeText: '#155e75' },
+      { bg: '#65a30d', text: '#ffffff', badgeBg: '#ecfccb', badgeText: '#3f6212' },
+      { bg: '#ea580c', text: '#ffffff', badgeBg: '#ffedd5', badgeText: '#9a3412' },
+      { bg: '#4f46e5', text: '#ffffff', badgeBg: '#e0e7ff', badgeText: '#3730a3' },
+      { bg: '#0284c7', text: '#ffffff', badgeBg: '#e0f2fe', badgeText: '#075985' },
+      { bg: '#16a34a', text: '#ffffff', badgeBg: '#dcfce7', badgeText: '#166534' },
+      { bg: '#9333ea', text: '#ffffff', badgeBg: '#f3e8ff', badgeText: '#6b21a8' },
+      { bg: '#c026d3', text: '#ffffff', badgeBg: '#fae8ff', badgeText: '#86198f' },
+      { bg: '#e11d48', text: '#ffffff', badgeBg: '#ffe4e6', badgeText: '#9f1239' },
+      { bg: '#475569', text: '#ffffff', badgeBg: '#f1f5f9', badgeText: '#334155' }
+    ];
+    const sheetColorMap = {};
+    let colorIndex = 0;
+
+    function getSheetColor(sheetName) {
+      if (!sheetName) sheetName = 'その他';
+      if (!sheetColorMap[sheetName]) {
+        sheetColorMap[sheetName] = sheetColors[colorIndex % sheetColors.length];
+        colorIndex++;
+      }
+      return sheetColorMap[sheetName];
     }
 
-    function getMansionArea(m) {
-      if (m.address && m.address.includes('此花区')) return '此花区';
-      if (m.address && m.address.includes('福島区')) return '福島区';
-      if (m.sheetName && m.sheetName.includes('海老江')) return '福島区';
-      return 'その他';
+    function handleLogin(e) {
+      if (e) e.preventDefault();
+      const pwdInput = document.getElementById("passwordInput");
+      const errDiv = document.getElementById("loginError");
+
+      if (pwdInput.value === CORRECT_PASSWORD) {
+        document.getElementById("loginScreen").classList.add("hidden");
+        
+        const controls = document.getElementById("headerControls");
+        const areaFilter = document.getElementById("headerAreaFilter");
+        if (controls) {
+          controls.classList.remove("hidden");
+          controls.classList.add("flex");
+        }
+        if (areaFilter) {
+          areaFilter.classList.remove("hidden");
+          areaFilter.classList.add("flex");
+        }
+
+        setTimeout(() => {
+          initMap();
+          if (map) map.invalidateSize();
+          loadMansionData();
+          startLocationTracking();
+        }, 100);
+      } else {
+        if (errDiv) errDiv.classList.remove("hidden");
+      }
     }
 
-    function getFilteredMansionList() {
-      let list = mansionDataList;
-
-      // エリアフィルター
-      if (currentAreaFilter === '急ぎ・優先') {
-        list = list.filter(m => 
-          m.name && (m.name.includes('急ぎ') || m.name.includes('優先'))
-        );
-      } else if (currentAreaFilter !== 'ALL') {
-        list = list.filter(m => getMansionArea(m) === currentAreaFilter);
+    function togglePasswordVisibility() {
+      const pwdInput = document.getElementById("passwordInput");
+      const eyeIcon = document.getElementById("eyeIcon");
+      if (pwdInput.type === "password") {
+        pwdInput.type = "text";
+        eyeIcon.classList.remove("fa-eye");
+        eyeIcon.classList.add("fa-eye-slash");
+      } else {
+        pwdInput.type = "password";
+        eyeIcon.classList.remove("fa-eye-slash");
+        eyeIcon.classList.add("fa-eye");
       }
+    }
 
-      // 検索キーワードフィルター（マンション名・住所・エリア・シート名でヒット）
-      if (searchKeyword) {
-        list = list.filter(m => {
-          const name = (m.name || '').toLowerCase();
-          const addr = (m.address || '').toLowerCase();
-          const sheet = (m.sheetName || '').toLowerCase();
-          const area = (getMansionArea(m) || '').toLowerCase();
-          return name.includes(searchKeyword) || addr.includes(searchKeyword) || sheet.includes(searchKeyword) || area.includes(searchKeyword);
-        });
-      }
+    function logout() {
+      closeHamburgerMenu();
+      document.getElementById("passwordInput").value = "";
+      document.getElementById("loginError").classList.add("hidden");
+      document.getElementById("loginScreen").classList.remove("hidden");
+      document.getElementById("headerControls").classList.add("hidden");
+      document.getElementById("headerAreaFilter").classList.add("hidden");
+    }
 
-      return list;
+    function toggleHamburgerMenu(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById("hamburgerDropdown");
+      if (menu) menu.classList.toggle("hidden");
     }
 
     function closeHamburgerMenu() {
@@ -281,157 +397,82 @@
       }
     }
 
-    function toggleHamburgerMenu(e) {
-      if (e) e.stopPropagation();
-      const menu = document.getElementById("hamburgerDropdown");
-      if (menu) {
-        menu.classList.toggle("hidden");
-      }
-    }
-
-    // ドロップダウン外クリック時の自動閉じ処理
-    document.addEventListener("click", function(e) {
-      const menu = document.getElementById("hamburgerDropdown");
+    window.addEventListener('click', (e) => {
       const btn = document.getElementById("btnHamburger");
-      if (menu && !menu.contains(e.target) && btn && !btn.contains(e.target)) {
+      const dropdown = document.getElementById("hamburgerDropdown");
+      if (dropdown && !dropdown.classList.contains("hidden") && btn && !btn.contains(e.target) && !dropdown.contains(e.target)) {
         closeHamburgerMenu();
       }
     });
 
-    function setAreaFilter(area) {
-      currentAreaFilter = area;
-      updateFilterUI();
-      renderMarkers();
-      renderDrawerList();
-
-      // 絞り込んだマンションが存在する場合はマップ表示領域をフィットさせる
-      const filtered = getFilteredMansionList();
-      if (filtered.length > 0 && map) {
-        const bounds = L.latLngBounds(filtered.map(m => [m.lat, m.lng]));
-        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
-      }
+    function openReportModal() {
+      closeHamburgerMenu();
+      const modal = document.getElementById("reportModal");
+      if (modal) modal.classList.remove("hidden");
     }
 
-    function updateFilterUI() {
-      const areas = ['ALL', '此花区', '福島区', '急ぎ・優先'];
-      areas.forEach(a => {
-        // ヘッダー内の切り替えボタンのハイライト更新
-        const headerTab = document.getElementById(`header-tab-${a}`);
-        if (headerTab) {
-          if (a === currentAreaFilter) {
-            headerTab.className = "header-filter-btn flex-1 md:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-sm whitespace-nowrap";
-          } else {
-            headerTab.className = "header-filter-btn flex-1 md:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition text-slate-300 hover:text-white hover:bg-slate-800 whitespace-nowrap";
-          }
-        }
-      });
+    function closeReportModal() {
+      const modal = document.getElementById("reportModal");
+      if (modal) modal.classList.add("hidden");
     }
 
-    // シートごとの割り当てカラーパレット定義（20色）
-    const PRESET_COLORS = [
-      { bg: '#2563eb', text: '#ffffff', badgeBg: '#dbeafe', badgeText: '#1e40af' }, // 1. Blue
-      { bg: '#dc2626', text: '#ffffff', badgeBg: '#fee2e2', badgeText: '#991b1b' }, // 2. Red
-      { bg: '#059669', text: '#ffffff', badgeBg: '#d1fae5', badgeText: '#065f46' }, // 3. Emerald
-      { bg: '#d97706', text: '#ffffff', badgeBg: '#fef3c7', badgeText: '#92400e' }, // 4. Amber
-      { bg: '#7c3aed', text: '#ffffff', badgeBg: '#ede9fe', badgeText: '#5b21b6' }, // 5. Purple
-      { bg: '#db2777', text: '#ffffff', badgeBg: '#fce7f3', badgeText: '#9d174d' }, // 6. Pink
-      { bg: '#0891b2', text: '#ffffff', badgeBg: '#cffaff', badgeText: '#155e75' }, // 7. Cyan
-      { bg: '#ea580c', text: '#ffffff', badgeBg: '#ffedd5', badgeText: '#9a3412' }, // 8. Orange
-      { bg: '#4f46e5', text: '#ffffff', badgeBg: '#e0e7ff', badgeText: '#3730a3' }, // 9. Indigo
-      { bg: '#65a30d', text: '#ffffff', badgeBg: '#ecfccb', badgeText: '#3f6212' }, // 10. Lime
-      { bg: '#e11d48', text: '#ffffff', badgeBg: '#ffe4e6', badgeText: '#9f1239' }, // 11. Rose
-      { bg: '#0d9488', text: '#ffffff', badgeBg: '#ccfbf1', badgeText: '#115e59' }, // 12. Teal
-      { bg: '#9333ea', text: '#ffffff', badgeBg: '#f3e8ff', badgeText: '#6b21a8' }, // 13. Violet
-      { bg: '#0284c7', text: '#ffffff', badgeBg: '#e0f2fe', badgeText: '#075985' }, // 14. Sky Blue
-      { bg: '#c026d3', text: '#ffffff', badgeBg: '#fae8ff', badgeText: '#86198f' }, // 15. Fuchsia
-      { bg: '#475569', text: '#ffffff', badgeBg: '#f1f5f9', badgeText: '#1e293b' }, // 16. Slate
-      { bg: '#b45309', text: '#ffffff', badgeBg: '#fef3c7', badgeText: '#78350f' }, // 17. Brown
-      { bg: '#15803d', text: '#ffffff', badgeBg: '#dcfce7', badgeText: '#14532d' }, // 18. Green Dark
-      { bg: '#be123c', text: '#ffffff', badgeBg: '#ffe4e6', badgeText: '#881337' }, // 19. Crimson
-      { bg: '#0369a1', text: '#ffffff', badgeBg: '#e0f2fe', badgeText: '#0c4a6e' }  // 20. Ocean
-    ];
-    let sheetColorMap = {};
-
-    function getSheetColor(sheetName) {
-      const name = sheetName || 'その他';
-      if (!sheetColorMap[name]) {
-        const index = Object.keys(sheetColorMap).length;
-        if (index < PRESET_COLORS.length) {
-          sheetColorMap[name] = PRESET_COLORS[index];
-        } else {
-          const hue = (index * 137.5) % 360;
-          sheetColorMap[name] = {
-            bg: `hsl(${hue}, 70%, 45%)`,
-            text: '#ffffff',
-            badgeBg: `hsl(${hue}, 80%, 92%)`,
-            badgeText: `hsl(${hue}, 80%, 25%)`
-          };
-        }
-      }
-      return sheetColorMap[name];
-    }
-
-    window.onload = function() {
-      const savedAuth = sessionStorage.getItem("konohana_auth");
-      if (savedAuth === "true") {
-        document.getElementById("loginScreen").classList.add("hidden");
-        document.getElementById("headerControls").classList.remove("hidden");
-        document.getElementById("headerAreaFilter").classList.remove("hidden");
-        initMap();
-        loadMansionData();
-        startLocationTracking();
-      }
-    };
-
-    function handleLogin(e) {
+    function handleReportSubmit(e) {
       e.preventDefault();
-      const pwd = document.getElementById("passwordInput").value;
-      if (pwd === CORRECT_PASSWORD) {
-        sessionStorage.setItem("konohana_auth", "true");
-        document.getElementById("loginScreen").classList.add("hidden");
-        document.getElementById("headerControls").classList.remove("hidden");
-        document.getElementById("headerAreaFilter").classList.remove("hidden");
-        initMap();
-        loadMansionData();
-        startLocationTracking();
-      } else {
-        document.getElementById("loginError").classList.remove("hidden");
-      }
-    }
+      const submitBtn = document.getElementById("reportSubmitBtn");
+      const name = document.getElementById("reportName").value.trim();
+      const category = document.getElementById("reportCategory").value;
+      const details = document.getElementById("reportDetails").value.trim();
+      const location = document.getElementById("reportLocation").value.trim();
 
-    function togglePasswordVisibility() {
-      const input = document.getElementById("passwordInput");
-      const icon = document.getElementById("eyeIcon");
-      if (input.type === "password") {
-        input.type = "text";
-        icon.classList.remove("fa-eye");
-        icon.classList.add("fa-eye-slash");
-      } else {
-        input.type = "password";
-        icon.classList.remove("fa-eye-slash");
-        icon.classList.add("fa-eye");
-      }
-    }
+      if (!name || !category) return;
 
-    function logout() {
-      sessionStorage.removeItem("konohana_auth");
-      location.reload();
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin text-xs"></i> <span>送信中...</span>`;
+
+      const reportData = { reporterName: name, category: category, details: details, location: location };
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler((res) => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<i class="fas fa-paper-plane text-xs"></i> <span>送信</span>`;
+            if (res && res.success) {
+              closeReportModal();
+              showToast("報告を送信しました", false);
+              document.getElementById("reportName").value = "";
+              document.getElementById("reportCategory").value = "";
+              document.getElementById("reportDetails").value = "";
+              document.getElementById("reportLocation").value = "";
+            } else {
+              showToast("送信失敗: " + (res ? res.error : "エラーが発生しました"), false);
+            }
+          })
+          .withFailureHandler((err) => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<i class="fas fa-paper-plane text-xs"></i> <span>送信</span>`;
+            showToast("通信エラー: " + (err.message || err.toString()), false);
+          })
+          .submitReport(reportData);
+      } else {
+        setTimeout(() => {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<i class="fas fa-paper-plane text-xs"></i> <span>送信</span>`;
+          closeReportModal();
+          showToast("報告を送信しました（テスト動作）", false);
+        }, 800);
+      }
     }
 
     function initMap() {
       if (map) return;
-      // 此花区周辺をデフォルト中心座標に設定
-      map = L.map('map', {
-        zoomControl: false
-      }).setView([34.682, 135.452], 14);
+      map = L.map('map', { zoomControl: false }).setView([34.682, 135.452], 14);
 
-      L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-      // OpenStreetMap タイル設定
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
       }).addTo(map);
+
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
     }
 
     function loadMansionData() {
@@ -443,13 +484,13 @@
           .withFailureHandler(onDataError)
           .getMansionData();
       } else {
-        // GAS外でのテスト用サンプルデータ
+        // テスト環境フォールバック
         setTimeout(() => {
           onDataLoaded({
             success: true,
             data: [
-              { id: 1, name: "サンプル此花マンション", address: "大阪府大阪市此花区四貫島1-1-1", roomLink: "https://example.com", lat: 34.682, lng: 135.452, sheetName: "フロタン" },
-              { id: 2, name: "サンプル海老江レジデンス", address: "大阪府大阪市福島区海老江2-1-1", roomLink: "https://example.com", lat: 34.690, lng: 135.460, sheetName: "海老江" }
+              { id: 1, name: "サンプルプレサンス此花 (急ぎ)", address: "大阪市此花区四貫島1-1", roomLink: "https://example.com", lat: 34.682, lng: 135.452, sheetName: "フロタン" },
+              { id: 2, name: "福島グランドハイツ", address: "大阪市福島区海老江2-1", roomLink: "https://example.com", lat: 34.690, lng: 135.465, sheetName: "海老江" }
             ]
           });
         }, 800);
@@ -468,14 +509,69 @@
       }
 
       mansionDataList = res.data;
-
       renderMarkers();
       renderDrawerList();
       showToast(`${mansionDataList.length}件のマンションを取得しました`, false);
     }
 
+    function handleSearchInput() {
+      const input = document.getElementById("mansionSearchInput");
+      searchKeyword = input ? input.value.trim().toLowerCase() : '';
+      renderMarkers();
+      renderDrawerList();
+    }
+
+    function getMansionArea(m) {
+      if (m.address && m.address.includes('此花区')) return '此花区';
+      if (m.address && m.address.includes('福島区')) return '福島区';
+      if (m.sheetName && m.sheetName.includes('海老江')) return '福島区';
+      return 'その他';
+    }
+
+    function getFilteredMansionList() {
+      let list = mansionDataList;
+
+      if (currentAreaFilter === '急ぎ・優先') {
+        list = list.filter(m => m.name && (m.name.includes('急ぎ') || m.name.includes('優先')));
+      } else if (currentAreaFilter !== 'ALL') {
+        list = list.filter(m => getMansionArea(m) === currentAreaFilter);
+      }
+
+      if (searchKeyword) {
+        list = list.filter(m => {
+          const name = (m.name || '').toLowerCase();
+          const addr = (m.address || '').toLowerCase();
+          const sheet = (m.sheetName || '').toLowerCase();
+          const area = (getMansionArea(m) || '').toLowerCase();
+          return name.includes(searchKeyword) || addr.includes(searchKeyword) || sheet.includes(searchKeyword) || area.includes(searchKeyword);
+        });
+      }
+
+      return list;
+    }
+
+    function setAreaFilter(area) {
+      currentAreaFilter = area;
+      updateFilterUI();
+      renderMarkers();
+      renderDrawerList();
+    }
+
+    function updateFilterUI() {
+      const filters = ['ALL', '此花区', '福島区', '急ぎ・優先'];
+      filters.forEach(f => {
+        const btn = document.getElementById(`header-tab-${f}`);
+        if (!btn) return;
+        if (f === currentAreaFilter) {
+          btn.className = "header-filter-btn flex-1 md:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-sm whitespace-nowrap";
+        } else {
+          btn.className = "header-filter-btn flex-1 md:flex-none px-2.5 py-1 rounded-lg text-xs font-bold transition text-slate-300 hover:text-white hover:bg-slate-800 whitespace-nowrap";
+        }
+      });
+    }
+
     function renderMarkers() {
-      // 既存マーカークリア
+      if (!map) return;
       mansionMarkers.forEach(m => map.removeLayer(m));
       mansionMarkers = [];
 
@@ -484,7 +580,6 @@
       filteredList.forEach(m => {
         const color = getSheetColor(m.sheetName);
 
-        // カスタムHTMLピンアイコン作成
         const pinHtml = `
           <div class="custom-mansion-pin">
             <div style="background-color: ${color.bg}; color: ${color.text}; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid #ffffff;">
@@ -535,15 +630,13 @@
 
     function renderDrawerList() {
       const container = document.getElementById("drawerContent");
+      if (!container) return;
       container.innerHTML = "";
 
       const filteredList = getFilteredMansionList();
 
-      // 該当件数の更新表示
       const countEl = document.getElementById("mansionSearchCount");
-      if (countEl) {
-        countEl.textContent = filteredList.length;
-      }
+      if (countEl) countEl.textContent = filteredList.length;
 
       if (filteredList.length === 0) {
         container.innerHTML = `<div class="text-center text-xs text-slate-400 py-8">該当するマンションが見つかりません</div>`;
@@ -557,7 +650,7 @@
         card.className = "p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 cursor-pointer transition shadow-sm";
         card.onclick = () => {
           toggleMansionListDrawer();
-          map.setView([m.lat, m.lng], 17);
+          if (map) map.setView([m.lat, m.lng], 17);
           const index = filteredList.findIndex(item => item.id === m.id);
           if (index !== -1 && mansionMarkers[index]) {
             mansionMarkers[index].openPopup();
@@ -596,7 +689,7 @@
           const lng = pos.coords.longitude;
           userCoordinates = [lat, lng];
 
-          if (!userMarker) {
+          if (!userMarker && map) {
             const userIcon = L.divIcon({
               className: 'user-location-marker',
               html: `<div class="user-location-pulse"></div><div class="user-location-dot"></div>`,
@@ -606,7 +699,7 @@
 
             userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
             userMarker.bindPopup("<b>あなたの現在地</b>");
-          } else {
+          } else if (userMarker) {
             userMarker.setLatLng([lat, lng]);
           }
         },
@@ -621,18 +714,9 @@
       );
     }
 
-    function centerToUserLocation() {
-      if (userCoordinates && map) {
-        map.setView(userCoordinates, 16);
-        if (userMarker) userMarker.openPopup();
-      } else {
-        showToast("現在地を取得中、または位置情報の使用が許可されていません", false);
-      }
-    }
-
     function toggleMansionListDrawer() {
       const drawer = document.getElementById("listDrawer");
-      drawer.classList.toggle("translate-x-full");
+      if (drawer) drawer.classList.toggle("translate-x-full");
     }
 
     function showToast(message, isSpinning = false) {
@@ -640,11 +724,12 @@
       const text = document.getElementById("statusText");
       const spinner = document.getElementById("statusSpinner");
 
+      if (!toast || !text) return;
+
       text.textContent = message;
-      if (isSpinning) {
-        spinner.classList.remove("hidden");
-      } else {
-        spinner.classList.add("hidden");
+      if (spinner) {
+        if (isSpinning) spinner.classList.remove("hidden");
+        else spinner.classList.add("hidden");
       }
 
       toast.classList.remove("opacity-0");

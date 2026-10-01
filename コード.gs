@@ -100,3 +100,40 @@ function getMansionData() {
     return { success: false, error: e.toString() };
   }
 }
+
+/**
+ * ユーザーからの「報告」フォームデータをスプレッドシートの「報告」シートに追記保存する関数
+ * @param {Object} data - { reporterName, category, details, location }
+ * @return {Object} 処理結果オブジェクト
+ */
+function submitReport(data) {
+  try {
+    const spreadsheetId = '1ht3s0_fMP0_n89zeRYUD0_iUv9cMhdhOmeCyXgr6vbQ';
+    let ss;
+    try {
+      ss = SpreadsheetApp.openById(spreadsheetId);
+    } catch (e) {
+      return { success: false, error: 'スプレッドシートを開けませんでした: ' + e.toString() };
+    }
+
+    let reportSheet = ss.getSheetByName('報告');
+    if (!reportSheet) {
+      reportSheet = ss.insertSheet('報告');
+      reportSheet.appendRow(['送信日時', '奉仕者名', '項目', '詳細内容', '住所/マンション名']);
+      reportSheet.getRange(1, 1, 1, 5).setFontWeight('bold').setBackground('#f1f5f9');
+    }
+
+    const timestamp = Utilities.formatDate(new Date(), 'JST', 'yyyy-MM-dd HH:mm:ss');
+    reportSheet.appendRow([
+      timestamp,
+      data.reporterName || '',
+      data.category || '',
+      data.details || '',
+      data.location || ''
+    ]);
+
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.toString() };
+  }
+}
