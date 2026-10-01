@@ -15,7 +15,7 @@
 
   <style>
     html, body {
-      height: 100%;
+      height: 100dvh;
       margin: 0;
       padding: 0;
       overflow: hidden;
@@ -26,6 +26,12 @@
       width: 100%;
       height: 100%;
       z-index: 1;
+    }
+
+    /* UI操作領域のテキスト選択無効化（マップや一覧本文のコピーは許可） */
+    .btn-touch-ui {
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     /* 現在地パルスアニメーション */
@@ -53,14 +59,8 @@
     }
 
     @keyframes pulse {
-      0% {
-        transform: scale(0.3);
-        opacity: 1;
-      }
-      100% {
-        transform: scale(1.4);
-        opacity: 0;
-      }
+      0% { transform: scale(0.3); opacity: 1; }
+      100% { transform: scale(1.4); opacity: 0; }
     }
 
     /* ピンマーカーのスタイリング */
@@ -80,6 +80,7 @@
       padding: 6px;
       box-shadow: 0 12px 28px -5px rgba(0, 0, 0, 0.22);
       max-width: calc(100vw - 40px) !important;
+      overflow: hidden;
     }
     .leaflet-popup-content {
       margin: 12px 14px 14px 14px !important;
@@ -104,7 +105,6 @@
       background-color: #f1f5f9 !important;
       color: #0f172a !important;
     }
-    /* ポップアップ内ボタンの文字色競合を強制防止 */
     .leaflet-popup-content a.room-link-btn,
     .leaflet-popup-content a.room-link-btn * {
       color: #ffffff !important;
@@ -123,90 +123,78 @@
     }
 
     @keyframes urgentPulse {
-      0% {
-        transform: scale(0.6);
-        opacity: 0.9;
-      }
-      100% {
-        transform: scale(1.6);
-        opacity: 0;
-      }
+      0% { transform: scale(0.6); opacity: 0.9; }
+      100% { transform: scale(1.6); opacity: 0; }
     }
 
     /* スクロールバー非表示スタイル */
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="bg-slate-100 flex flex-col h-screen select-none">
+<body class="bg-slate-100 flex flex-col h-[100dvh]">
 
-  <!-- 上部ヘッダー（スクショデザイン反映：クリーンホワイト ＋ エメラルドグリーン） -->
-  <header class="bg-white text-slate-800 px-3.5 sm:px-4 pt-3 pb-2.5 flex flex-col gap-2.5 shadow-sm z-[9999] shrink-0 relative border-b border-slate-100">
+  <!-- 上部ヘッダー（クリーンホワイト ＋ エメラルドグリーン） -->
+  <header class="bg-white text-slate-800 px-3.5 sm:px-4 pt-3 pb-2.5 flex flex-col gap-2.5 shadow-sm z-[9999] shrink-0 relative border-b border-slate-100 btn-touch-ui">
     <!-- 1行目：タイトル（左） ＆ 操作ボタン（右：現在地 ＋ ハンバーガー） -->
     <div class="flex items-center justify-between w-full gap-2">
       <div class="flex items-center gap-2.5 shrink-0">
-        <!-- ディープグリーンのマンションアイコン -->
         <div class="w-9 h-9 rounded-xl bg-[#13685e] flex items-center justify-center text-white shadow-sm shrink-0">
           <i class="fas fa-building text-base"></i>
         </div>
         <div class="flex flex-col shrink-0">
           <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-800 whitespace-nowrap leading-tight">此花マンション区域</h1>
-          <span id="headerTotalCount" class="hidden">--</span>
         </div>
       </div>
 
       <!-- 右端：現在地ボタン ＆ ハンバーガーメニュー -->
-      <div id="headerControls" class="hidden flex items-center justify-end gap-1.5">
-        <button onclick="moveToCurrentLocation()" class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 rounded-xl text-sm transition flex items-center justify-center w-9 h-9 border border-slate-200 bg-white shadow-sm" title="現在地に移動">
+      <div id="headerControls" class="hidden flex items-center justify-end gap-2">
+        <button onclick="moveToCurrentLocation()" aria-label="現在地に移動" title="現在地に移動"
+          class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 rounded-xl text-base transition flex items-center justify-center w-10 h-10 border border-slate-200 bg-white shadow-sm">
           <i class="fas fa-crosshairs"></i>
         </button>
-        <button id="btnHamburger" onclick="toggleHamburgerMenu(event)" class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 rounded-xl text-sm transition flex items-center justify-center w-9 h-9 border border-slate-200 bg-white shadow-sm" title="メニュー">
+        <button id="btnHamburger" onclick="toggleHamburgerMenu(event)" aria-label="メニューを開く" title="メニュー"
+          class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 rounded-xl text-base transition flex items-center justify-center w-10 h-10 border border-slate-200 bg-white shadow-sm">
           <i class="fas fa-bars"></i>
         </button>
       </div>
     </div>
 
     <!-- ハンバーガーメニュー ドロップダウン -->
-    <div id="hamburgerDropdown" class="hidden absolute right-3 top-14 z-[10000] bg-white text-slate-800 border border-slate-200 rounded-2xl shadow-xl p-1.5 w-36 flex flex-col gap-1 backdrop-blur-md">
-      <button onclick="openReportModal()" class="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2 transition font-semibold">
+    <div id="hamburgerDropdown" class="hidden absolute right-3 top-16 z-[10000] bg-white text-slate-800 border border-slate-200 rounded-2xl shadow-xl p-1.5 w-40 flex flex-col gap-1 backdrop-blur-md">
+      <button onclick="openReportModal()" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2 transition font-semibold">
         <i class="fas fa-pen-to-square text-emerald-600 w-4"></i>
         <span>報告</span>
       </button>
       <div class="h-px bg-slate-100 my-0.5"></div>
-      <button onclick="logout()" class="w-full text-left px-3 py-2 text-xs text-red-500 hover:bg-red-50 rounded-xl flex items-center gap-2 transition font-semibold">
+      <button onclick="logout()" class="w-full text-left px-3.5 py-2.5 text-xs text-red-500 hover:bg-red-50 rounded-xl flex items-center gap-2 transition font-semibold">
         <i class="fas fa-sign-out-alt text-red-500 w-4"></i>
         <span>ログアウト</span>
       </button>
     </div>
 
-    <!-- 2行目：エリアフィルター（カプセル・ピル型タブ） -->
+    <!-- 2行目：エリアフィルター（カプセル・ピル型タブ ＆ 件数バッジ） -->
     <div id="headerAreaFilter" class="hidden items-center justify-between gap-1 w-full pt-0.5">
       <div class="flex items-center gap-2 overflow-x-auto no-scrollbar flex-1">
         <button onclick="setAreaFilter('ALL')" id="header-tab-ALL" class="header-filter-btn px-3 py-1.5 rounded-full text-xs font-bold transition-all text-white bg-[#1e293b] shadow-sm whitespace-nowrap text-center">
-          すべて
+          すべて <span id="count-ALL" class="opacity-80 ml-0.5 text-[11px]">(0)</span>
         </button>
         <button onclick="setAreaFilter('此花区')" id="header-tab-此花区" class="header-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center">
-          此花区
+          此花区 <span id="count-此花区" class="opacity-80 ml-0.5 text-[11px]">(0)</span>
         </button>
         <button onclick="setAreaFilter('福島区')" id="header-tab-福島区" class="header-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center">
-          福島区
+          福島区 <span id="count-福島区" class="opacity-80 ml-0.5 text-[11px]">(0)</span>
         </button>
-        <!-- 急ぎボタン（クリームイエロー背景 ＋ 炎アイコン） -->
         <button onclick="setAreaFilter('急ぎ・優先')" id="header-tab-急ぎ・優先" class="header-filter-btn px-3 py-1.5 rounded-full text-xs font-bold transition-all text-[#854d0e] bg-[#fef3c7] hover:bg-[#fde68a] whitespace-nowrap text-center shrink-0 flex items-center gap-1">
           <i class="fas fa-fire text-[#854d0e] text-[11px]"></i>
-          <span>急ぎ・優先</span>
+          <span>急ぎ・優先 <span id="count-急ぎ・優先" class="opacity-90 ml-0.5 text-[11px]">(0)</span></span>
         </button>
       </div>
     </div>
   </header>
 
   <!-- ログイン画面 -->
-  <div id="loginScreen" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+  <div id="loginScreen" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 btn-touch-ui">
     <div class="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-md border border-slate-100">
       <div class="text-center mb-6">
         <div class="flex items-center justify-center gap-2.5 mb-2">
@@ -220,11 +208,11 @@
 
       <form onsubmit="handleLogin(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">パスワード</label>
+          <label for="passwordInput" class="block text-xs font-semibold text-slate-600 mb-1">パスワード</label>
           <div class="relative">
-            <input type="password" id="passwordInput" oninput="checkAutoLogin()" onchange="checkAutoLogin()" required placeholder="••••••••" autocomplete="current-password"
+            <input type="password" id="passwordInput" required placeholder="••••••••" autocomplete="current-password"
               class="w-full px-4 py-3 rounded-2xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#13685e] focus:border-transparent text-slate-800 text-base">
-            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+            <button type="button" onclick="togglePasswordVisibility()" aria-label="パスワードの表示切替" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-2">
               <i id="eyeIcon" class="fas fa-eye"></i>
             </button>
           </div>
@@ -232,11 +220,11 @@
 
         <div id="loginError" class="hidden text-red-600 text-xs text-center bg-red-50 py-2.5 rounded-lg border border-red-200 flex items-center justify-center gap-1.5">
           <i class="fas fa-exclamation-circle"></i>
-          <span>パスワードが正しくありません</span>
+          <span id="loginErrorMsg">パスワードが正しくありません</span>
         </div>
 
-        <button type="submit" class="w-full py-3.5 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] text-white font-bold rounded-2xl shadow-lg shadow-emerald-900/20 transition duration-200 flex items-center justify-center gap-2">
-          <span>ログイン</span>
+        <button type="submit" id="btnLoginSubmit" class="w-full py-3.5 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] text-white font-bold rounded-2xl shadow-lg shadow-emerald-900/20 transition duration-200 flex items-center justify-center gap-2">
+          <span id="loginBtnText">ログイン</span>
           <i class="fas fa-arrow-right text-sm"></i>
         </button>
       </form>
@@ -247,9 +235,9 @@
   <main class="flex-1 relative overflow-hidden">
     <div id="map"></div>
 
-    <!-- フローティング「一覧」切り替えボタン（地図右上配置へ移動） -->
-    <div class="absolute top-4 right-4 z-20">
-      <button onclick="toggleMansionListDrawer()" id="btnList" class="px-4 py-2.5 rounded-full text-xs font-bold transition-all text-white bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] whitespace-nowrap text-center shrink-0 shadow-lg border border-white/20 flex items-center justify-center gap-1.5">
+    <!-- フローティング「一覧」切り替えボタン -->
+    <div class="absolute top-4 right-4 z-20 btn-touch-ui">
+      <button onclick="toggleMansionListDrawer()" id="btnList" aria-label="マンション一覧を開く" class="px-4 py-2.5 rounded-full text-xs font-bold transition-all text-white bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] whitespace-nowrap text-center shrink-0 shadow-lg border border-white/20 flex items-center justify-center gap-1.5">
         <i class="fas fa-list text-xs"></i>
         <span>一覧</span>
       </button>
@@ -263,12 +251,12 @@
 
     <!-- マンション一覧ドロワー -->
     <div id="listDrawer" class="absolute top-0 right-0 h-full w-full sm:w-80 bg-white/95 backdrop-blur-md shadow-2xl z-30 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-l border-slate-200">
-      <div class="p-4 bg-[#13685e] text-white flex items-center justify-between">
+      <div class="p-4 bg-[#13685e] text-white flex items-center justify-between btn-touch-ui">
         <h3 class="font-bold text-sm flex items-center gap-2">
           <i class="fas fa-building text-emerald-200"></i>
           <span>マンション一覧</span>
         </h3>
-        <button onclick="toggleMansionListDrawer()" class="text-emerald-100 hover:text-white p-1">
+        <button onclick="toggleMansionListDrawer()" aria-label="一覧を閉じる" class="text-emerald-100 hover:text-white p-2">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -277,9 +265,9 @@
       <div class="p-3 bg-slate-50/90 border-b border-slate-200 flex flex-col gap-2 shrink-0">
         <div class="relative">
           <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-          <input type="text" id="mansionSearchInput" oninput="handleSearchInput()" placeholder="マンション名・住所・エリアで検索..." class="w-full pl-8 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#13685e] focus:border-transparent text-slate-700 shadow-sm">
+          <input type="text" id="mansionSearchInput" oninput="debouncedSearchInput()" placeholder="マンション名・住所・エリアで検索..." class="w-full pl-8 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#13685e] focus:border-transparent text-slate-700 shadow-sm">
         </div>
-        <div class="flex items-center justify-between text-xs text-slate-600 px-1 pt-0.5">
+        <div class="flex items-center justify-between text-xs text-slate-600 px-1 pt-0.5 btn-touch-ui">
           <div>該当数: <span id="mansionSearchCount" class="font-bold text-slate-900">0</span> 件</div>
           <button onclick="loadMansionData()" class="text-[#13685e] hover:text-[#0a3f39] font-semibold flex items-center gap-1 transition">
             <i class="fas fa-sync-alt text-xs"></i>
@@ -296,14 +284,14 @@
 
   <!-- 報告モーダルダイアログ -->
   <div id="reportModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-200">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100">
       <!-- モーダルヘッダー -->
-      <div class="p-5 sm:p-6 pb-2 flex items-center justify-between">
+      <div class="p-5 sm:p-6 pb-2 flex items-center justify-between btn-touch-ui">
         <div class="flex items-center gap-2 text-slate-800 font-bold text-lg sm:text-xl">
-          <i class="fas fa-pen-to-square text-blue-600"></i>
+          <i class="fas fa-pen-to-square text-emerald-600"></i>
           <span>報告</span>
         </div>
-        <button type="button" onclick="closeReportModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition">
+        <button type="button" onclick="closeReportModal()" aria-label="報告モーダルを閉じる" class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition">
           <i class="fas fa-times text-lg"></i>
         </button>
       </div>
@@ -311,18 +299,18 @@
       <!-- モーダルフォーム -->
       <form onsubmit="handleReportSubmit(event)" class="p-5 sm:p-6 pt-3 space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1.5">
+          <label for="reportName" class="block text-xs font-bold text-slate-700 mb-1.5">
             奉仕者名 <span class="text-red-500">*</span>
           </label>
-          <input type="text" id="reportName" required placeholder="奉仕者名を入力" class="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 placeholder-slate-400 shadow-sm transition">
+          <input type="text" id="reportName" required placeholder="奉仕者名を入力" class="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#13685e] focus:border-transparent text-slate-800 placeholder-slate-400 shadow-sm transition">
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1.5">
+          <label for="reportCategory" class="block text-xs font-bold text-slate-700 mb-1.5">
             項目を選択 <span class="text-red-500">*</span>
           </label>
           <div class="relative">
-            <select id="reportCategory" onchange="handleReportCategoryChange()" required class="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 appearance-none shadow-sm transition cursor-pointer pr-10">
+            <select id="reportCategory" onchange="handleReportCategoryChange()" required class="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#13685e] focus:border-transparent text-slate-800 appearance-none shadow-sm transition cursor-pointer pr-10">
               <option value="" disabled selected>▼ 選択してください</option>
               <option value="新規マンション追加">新規マンション追加</option>
               <option value="登録情報の修正">登録情報の修正</option>
@@ -337,13 +325,13 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1.5">
+          <label for="reportDetails" class="block text-xs font-bold text-slate-700 mb-1.5">
             詳細内容
           </label>
-          <textarea id="reportDetails" rows="3" placeholder="詳細を入力" class="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 placeholder-slate-400 shadow-sm transition resize-none"></textarea>
+          <textarea id="reportDetails" rows="3" placeholder="詳細を入力" class="w-full px-4 py-3 text-sm bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#13685e] focus:border-transparent text-slate-800 placeholder-slate-400 shadow-sm transition resize-none"></textarea>
         </div>
 
-        <button type="submit" id="reportSubmitBtn" class="w-full mt-2 py-3.5 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-bold rounded-2xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
+        <button type="submit" id="reportSubmitBtn" class="w-full mt-2 py-3.5 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] text-white font-bold rounded-2xl shadow-lg transition flex items-center justify-center gap-2 text-sm btn-touch-ui">
           <i class="fas fa-paper-plane text-xs"></i>
           <span>送信</span>
         </button>
@@ -352,16 +340,19 @@
   </div>
 
   <script>
-    const CORRECT_PASSWORD = "konohana";
+    // セッション認証状態（サーバー検証後に保持）
+    let userAuthPassword = "";
+
     let map = null;
     let userMarker = null;
-    let mansionMarkers = [];
+    let mansionMarkersMap = {};
     let mansionDataList = [];
     let watchPositionId = null;
     let userCoordinates = null;
     let currentAreaFilter = 'ALL';
     let searchKeyword = '';
     let isDrawerOpen = false;
+    let searchDebounceTimer = null;
 
     // カラーパレット定義（16シート識別用）
     const sheetColors = [
@@ -385,6 +376,23 @@
     const sheetColorMap = {};
     let colorIndex = 0;
 
+    // XSSサニタイズヘルパー
+    function esc(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // 安全なURLバリデーションヘルパー
+    function safeUrl(url) {
+      if (!url) return '';
+      const trimmed = String(url).trim();
+      return /^https?:\/\//i.test(trimmed) ? trimmed : '';
+    }
+
     function getSheetColor(sheetName) {
       if (!sheetName) sheetName = 'その他';
       if (!sheetColorMap[sheetName]) {
@@ -394,41 +402,76 @@
       return sheetColorMap[sheetName];
     }
 
-    function checkAutoLogin() {
-      const pwdInput = document.getElementById("passwordInput");
-      if (pwdInput && pwdInput.value === CORRECT_PASSWORD) {
-        handleLogin();
-      }
-    }
-
+    // サーバー認証付きログイン処理
     function handleLogin(e) {
       if (e) e.preventDefault();
       const pwdInput = document.getElementById("passwordInput");
       const errDiv = document.getElementById("loginError");
+      const errMsg = document.getElementById("loginErrorMsg");
+      const submitBtn = document.getElementById("btnLoginSubmit");
+      const pwd = pwdInput.value.trim();
 
-      if (pwdInput.value === CORRECT_PASSWORD) {
-        document.getElementById("loginScreen").classList.add("hidden");
-        
-        const controls = document.getElementById("headerControls");
-        const areaFilter = document.getElementById("headerAreaFilter");
-        if (controls) {
-          controls.classList.remove("hidden");
-          controls.classList.add("flex");
-        }
-        if (areaFilter) {
-          areaFilter.classList.remove("hidden");
-          areaFilter.classList.add("flex");
-        }
+      if (!pwd) return;
 
-        setTimeout(() => {
-          initMap();
-          if (map) map.invalidateSize();
-          loadMansionData();
-          startLocationTracking();
-        }, 100);
+      submitBtn.disabled = true;
+      document.getElementById("loginBtnText").textContent = "確認中...";
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler((res) => {
+            submitBtn.disabled = false;
+            document.getElementById("loginBtnText").textContent = "ログイン";
+            if (res && res.success) {
+              userAuthPassword = pwd;
+              onLoginSuccess();
+            } else {
+              if (errDiv) errDiv.classList.remove("hidden");
+              if (errMsg) errMsg.textContent = res ? res.error : "パスワードが正しくありません";
+            }
+          })
+          .withFailureHandler((err) => {
+            submitBtn.disabled = false;
+            document.getElementById("loginBtnText").textContent = "ログイン";
+            if (errDiv) errDiv.classList.remove("hidden");
+            if (errMsg) errMsg.textContent = "通信エラーが発生しました";
+          })
+          .checkPassword(pwd);
       } else {
-        if (errDiv) errDiv.classList.remove("hidden");
+        // テスト環境用フォールバック
+        setTimeout(() => {
+          submitBtn.disabled = false;
+          document.getElementById("loginBtnText").textContent = "ログイン";
+          if (pwd === "konohana") {
+            userAuthPassword = pwd;
+            onLoginSuccess();
+          } else {
+            if (errDiv) errDiv.classList.remove("hidden");
+            if (errMsg) errMsg.textContent = "パスワードが正しくありません";
+          }
+        }, 300);
       }
+    }
+
+    function onLoginSuccess() {
+      document.getElementById("loginScreen").classList.add("hidden");
+      
+      const controls = document.getElementById("headerControls");
+      const areaFilter = document.getElementById("headerAreaFilter");
+      if (controls) {
+        controls.classList.remove("hidden");
+        controls.classList.add("flex");
+      }
+      if (areaFilter) {
+        areaFilter.classList.remove("hidden");
+        areaFilter.classList.add("flex");
+      }
+
+      setTimeout(() => {
+        initMap();
+        if (map) map.invalidateSize();
+        loadMansionData();
+        startLocationTracking();
+      }, 100);
     }
 
     function togglePasswordVisibility() {
@@ -447,6 +490,18 @@
 
     function logout() {
       closeHamburgerMenu();
+      userAuthPassword = "";
+      
+      // GPS位置追跡停止
+      if (watchPositionId && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchPositionId);
+        watchPositionId = null;
+      }
+      if (userMarker && map) {
+        map.removeLayer(userMarker);
+        userMarker = null;
+      }
+
       document.getElementById("passwordInput").value = "";
       document.getElementById("loginError").classList.add("hidden");
       document.getElementById("loginScreen").classList.remove("hidden");
@@ -540,7 +595,7 @@
           submitBtn.innerHTML = `<i class="fas fa-paper-plane text-xs"></i> <span>送信</span>`;
           closeReportModal();
           showToast("報告を送信しました（テスト動作）", false);
-        }, 800);
+        }, 600);
       }
     }
 
@@ -563,18 +618,18 @@
         google.script.run
           .withSuccessHandler(onDataLoaded)
           .withFailureHandler(onDataError)
-          .getMansionData();
+          .getMansionData(userAuthPassword);
       } else {
         // テスト環境フォールバック
         setTimeout(() => {
           onDataLoaded({
             success: true,
             data: [
-              { id: 1, name: "サンプルプレサンス此花 (急ぎ)", address: "大阪市此花区四貫島1-1", roomLink: "https://example.com", lat: 34.682, lng: 135.452, sheetName: "フロタン" },
-              { id: 2, name: "福島グランドハイツ", address: "大阪市福島区海老江2-1", roomLink: "https://example.com", lat: 34.690, lng: 135.465, sheetName: "海老江" }
+              { id: 1, name: "サンプルプレサンス此花 (急ぎ)", address: "大阪市此花区四貫島1-1", roomLink: "https://example.com", lat: 34.682, lng: 135.452, sheetName: "フロタン", isUrgent: true },
+              { id: 2, name: "福島グランドハイツ", address: "大阪市福島区海老江2-1", roomLink: "https://example.com", lat: 34.690, lng: 135.465, sheetName: "海老江", isUrgent: false }
             ]
           });
-        }, 800);
+        }, 600);
       }
     }
 
@@ -589,23 +644,26 @@
         return;
       }
 
-      mansionDataList = res.data;
+      mansionDataList = res.data || [];
       
-      // ヘッダー件数のリアルタイム更新
-      const headerTotalCount = document.getElementById("headerTotalCount");
-      if (headerTotalCount) {
-        headerTotalCount.textContent = `${mansionDataList.length}`;
-      }
-
-      renderMarkers();
+      updateCountsUI();
+      renderMarkers(true); // 初期データロード時のみ fitBounds 実行
       renderDrawerList();
       showToast(`${mansionDataList.length}件のマンションを取得しました`, false);
+    }
+
+    // 検索デバウンス処理（300ms間打鍵がない場合のみ再検索）
+    function debouncedSearchInput() {
+      if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        handleSearchInput();
+      }, 300);
     }
 
     function handleSearchInput() {
       const input = document.getElementById("mansionSearchInput");
       searchKeyword = input ? input.value.trim().toLowerCase() : '';
-      renderMarkers();
+      renderMarkers(false); // 検索入力時は fitBounds せず位置固定
       renderDrawerList();
     }
 
@@ -616,11 +674,16 @@
       return 'その他';
     }
 
+    function isUrgentMansion(m) {
+      if (typeof m.isUrgent === 'boolean') return m.isUrgent;
+      return m.name && (m.name.includes('急ぎ') || m.name.includes('優先'));
+    }
+
     function getFilteredMansionList() {
       let list = mansionDataList;
 
       if (currentAreaFilter === '急ぎ・優先') {
-        list = list.filter(m => m.name && (m.name.includes('急ぎ') || m.name.includes('優先')));
+        list = list.filter(m => isUrgentMansion(m));
       } else if (currentAreaFilter !== 'ALL') {
         list = list.filter(m => getMansionArea(m) === currentAreaFilter);
       }
@@ -638,10 +701,28 @@
       return list;
     }
 
+    // 各カテゴリーの該当件数を計算してUI更新
+    function updateCountsUI() {
+      const countAll = mansionDataList.length;
+      const countKonohana = mansionDataList.filter(m => getMansionArea(m) === '此花区').length;
+      const countFukushima = mansionDataList.filter(m => getMansionArea(m) === '福島区').length;
+      const countUrgent = mansionDataList.filter(m => isUrgentMansion(m)).length;
+
+      const elAll = document.getElementById('count-ALL');
+      const elKonohana = document.getElementById('count-此花区');
+      const elFukushima = document.getElementById('count-福島区');
+      const elUrgent = document.getElementById('count-急ぎ・優先');
+
+      if (elAll) elAll.textContent = `(${countAll})`;
+      if (elKonohana) elKonohana.textContent = `(${countKonohana})`;
+      if (elFukushima) elFukushima.textContent = `(${countFukushima})`;
+      if (elUrgent) elUrgent.textContent = `(${countUrgent})`;
+    }
+
     function setAreaFilter(area) {
       currentAreaFilter = area;
       updateFilterUI();
-      renderMarkers();
+      renderMarkers(true); // エリア切り替え時は該当グループ全体に位置調整（fitBounds）
       renderDrawerList();
     }
 
@@ -650,35 +731,34 @@
       filters.forEach(f => {
         const btn = document.getElementById(`header-tab-${f}`);
         if (!btn) return;
-        if (f === currentAreaFilter) {
-          if (f === '急ぎ・優先') {
-            btn.className = "header-filter-btn px-3 py-1.5 rounded-full text-xs font-bold transition-all text-[#854d0e] bg-[#fef3c7] border border-[#fde68a] shadow-sm whitespace-nowrap text-center shrink-0 flex items-center gap-1";
-          } else {
-            btn.className = "header-filter-btn px-3 py-1.5 rounded-full text-xs font-bold transition-all text-white bg-[#1e293b] shadow-sm whitespace-nowrap text-center";
-          }
+        const isActive = (f === currentAreaFilter);
+
+        if (f === '急ぎ・優先') {
+          btn.className = isActive
+            ? "header-filter-btn px-3 py-1.5 rounded-full text-xs font-bold transition-all text-[#854d0e] bg-[#fef3c7] border border-[#fde68a] shadow-sm whitespace-nowrap text-center shrink-0 flex items-center gap-1"
+            : "header-filter-btn px-3 py-1.5 rounded-full text-xs font-bold transition-all text-[#854d0e] bg-[#fef3c7]/60 hover:bg-[#fef3c7] whitespace-nowrap text-center shrink-0 flex items-center gap-1";
         } else {
-          if (f === '急ぎ・優先') {
-            btn.className = "header-filter-btn px-3 py-1.5 rounded-full text-xs font-bold transition-all text-[#854d0e] bg-[#fef3c7]/60 hover:bg-[#fef3c7] whitespace-nowrap text-center shrink-0 flex items-center gap-1";
-          } else {
-            btn.className = "header-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center";
-          }
+          btn.className = isActive
+            ? "header-filter-btn px-3 py-1.5 rounded-full text-xs font-bold transition-all text-white bg-[#1e293b] shadow-sm whitespace-nowrap text-center"
+            : "header-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center";
         }
       });
     }
 
-    function renderMarkers() {
+    function renderMarkers(shouldFitBounds = false) {
       if (!map) return;
-      mansionMarkers.forEach(m => map.removeLayer(m));
-      mansionMarkers = [];
+
+      // 既存マーカーのクリア
+      Object.values(mansionMarkersMap).forEach(mk => map.removeLayer(mk));
+      mansionMarkersMap = {};
 
       const filteredList = getFilteredMansionList();
       const bounds = [];
 
       filteredList.forEach(m => {
         const color = getSheetColor(m.sheetName);
-        const isUrgent = m.name && (m.name.includes('急ぎ') || m.name.includes('優先'));
+        const isUrgent = isUrgentMansion(m);
 
-        // 急ぎ・優先時の炎バッジおよび波紋リング
         const urgentBadge = isUrgent ? `
           <div style="position: absolute; top: -5px; right: -5px; background: linear-gradient(135deg, #f59e0b, #dc2626); color: #ffffff; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px; border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10;">
             <i class="fas fa-fire"></i>
@@ -705,8 +785,9 @@
           popupAnchor: [0, -32]
         });
 
-        const roomBtn = m.roomLink && m.roomLink.length > 5
-          ? `<a href="${m.roomLink}" target="_blank" rel="noopener noreferrer" class="room-link-btn mt-3 mb-1 inline-flex items-center justify-center w-full px-4 py-3 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] !text-white font-bold rounded-2xl text-xs transition shadow-sm gap-2 no-underline shrink-0" style="color: #ffffff !important;">
+        const validRoomLink = safeUrl(m.roomLink);
+        const roomBtn = validRoomLink
+          ? `<a href="${esc(validRoomLink)}" target="_blank" rel="noopener noreferrer" class="room-link-btn mt-3 mb-1 inline-flex items-center justify-center w-full px-4 py-3 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] !text-white font-bold rounded-2xl text-xs transition shadow-sm gap-2 no-underline shrink-0" style="color: #ffffff !important;">
               <span style="color: #ffffff !important;">部屋番号一覧を見る</span>
               <i class="fas fa-external-link-alt text-[10px]" style="color: #ffffff !important;"></i>
              </a>`
@@ -721,18 +802,18 @@
         const popupContent = `
           <div class="p-1 pb-1.5 min-w-[210px] sm:min-w-[230px]">
             <div class="mb-1.5 flex items-center gap-1 flex-wrap">
-              <span style="background-color: ${color.badgeBg}; color: ${color.badgeText};" class="px-2 py-0.5 rounded-full text-[10px] font-bold inline-block">
-                ${m.sheetName}
+              <span style="background-color: ${esc(color.badgeBg)}; color: ${esc(color.badgeText)};" class="px-2 py-0.5 rounded-full text-[10px] font-bold inline-block">
+                ${esc(m.sheetName)}
               </span>
               <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[10px] font-bold inline-block border border-slate-200">
-                ${getMansionArea(m)}
+                ${esc(getMansionArea(m))}
               </span>
               ${urgentPopupTag}
             </div>
-            <h4 class="font-bold text-slate-900 text-sm border-b pb-1.5 mb-1.5 border-slate-100">${m.name}</h4>
+            <h4 class="font-bold text-slate-900 text-sm border-b pb-1.5 mb-1.5 border-slate-100">${esc(m.name)}</h4>
             <p class="text-xs text-slate-600 flex items-start gap-1 my-1">
               <i class="fas fa-location-dot text-slate-400 mt-0.5 shrink-0"></i>
-              <span>${m.address || '住所未登録'}</span>
+              <span>${esc(m.address || '住所未登録')}</span>
             </p>
             ${roomBtn}
           </div>
@@ -743,14 +824,13 @@
           autoPanPaddingTopLeft: L.point(20, 85),
           autoPanPaddingBottomRight: L.point(20, 20)
         });
-        mansionMarkers.push(marker);
 
-        // バウンディングボックス用座標を追加
+        mansionMarkersMap[m.id] = marker;
         bounds.push([m.lat, m.lng]);
       });
 
-      // 該当するマンションが存在する場合、全体が中央に収まるように縮尺・位置を切り替え
-      if (bounds.length > 0) {
+      // エリア切替や初期表示時のみ地図範囲をフィット
+      if (shouldFitBounds && bounds.length > 0) {
         if (bounds.length === 1) {
           map.setView(bounds[0], 16);
         } else {
@@ -780,7 +860,7 @@
       container.innerHTML = filteredList.map(m => {
         const color = getSheetColor(m.sheetName);
         const area = getMansionArea(m);
-        const isUrgent = m.name && (m.name.includes('急ぎ') || m.name.includes('優先'));
+        const isUrgent = isUrgentMansion(m);
 
         const urgentCardBadge = isUrgent ? `
           <span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
@@ -788,8 +868,9 @@
           </span>
         ` : '';
 
-        const roomBtn = m.roomLink && m.roomLink.length > 5
-          ? `<a href="${m.roomLink}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="mt-2 inline-flex items-center justify-center w-full px-3 py-2 bg-[#13685e] hover:bg-[#0e524a] text-white font-bold rounded-xl text-xs transition shadow-sm gap-1.5 no-underline">
+        const validRoomLink = safeUrl(m.roomLink);
+        const roomBtn = validRoomLink
+          ? `<a href="${esc(validRoomLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="mt-2 inline-flex items-center justify-center w-full px-3 py-2 bg-[#13685e] hover:bg-[#0e524a] text-white font-bold rounded-xl text-xs transition shadow-sm gap-1.5 no-underline">
               <span>部屋番号一覧を見る</span>
               <i class="fas fa-external-link-alt text-[10px]"></i>
              </a>`
@@ -798,20 +879,20 @@
         return `
           <div onclick="focusMansionOnMap(${m.id})" class="p-3 bg-white hover:bg-emerald-50/40 rounded-2xl border ${isUrgent ? 'border-amber-300 ring-1 ring-amber-200' : 'border-slate-200'} shadow-sm transition cursor-pointer flex flex-col gap-1 relative overflow-hidden">
             <div class="flex items-center gap-1.5 flex-wrap">
-              <span style="background-color: ${color.badgeBg}; color: ${color.badgeText};" class="px-2 py-0.5 rounded-full text-[10px] font-bold">
-                ${m.sheetName}
+              <span style="background-color: ${esc(color.badgeBg)}; color: ${esc(color.badgeText)};" class="px-2 py-0.5 rounded-full text-[10px] font-bold">
+                ${esc(m.sheetName)}
               </span>
               <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-200">
-                ${area}
+                ${esc(area)}
               </span>
               ${urgentCardBadge}
             </div>
             <h4 class="font-bold text-slate-900 text-sm mt-0.5 flex items-center gap-1.5">
-              <span>${m.name}</span>
+              <span>${esc(m.name)}</span>
             </h4>
             <p class="text-xs text-slate-500 flex items-center gap-1">
               <i class="fas fa-location-dot text-slate-400 shrink-0"></i>
-              <span>${m.address || '住所未登録'}</span>
+              <span>${esc(m.address || '住所未登録')}</span>
             </p>
             ${roomBtn}
           </div>
@@ -819,6 +900,7 @@
       }).join('');
     }
 
+    // IDによる直接ピン指定（複数同階数・同座標物件にも完全対応）
     function focusMansionOnMap(id) {
       const mansion = mansionDataList.find(m => m.id === id);
       if (!mansion || !map) return;
@@ -828,10 +910,7 @@
       }
 
       map.setView([mansion.lat, mansion.lng], 17);
-      const marker = mansionMarkers.find(mk => {
-        const latLng = mk.getLatLng();
-        return Math.abs(latLng.lat - mansion.lat) < 0.00001 && Math.abs(latLng.lng - mansion.lng) < 0.00001;
-      });
+      const marker = mansionMarkersMap[id];
       if (marker) {
         marker.openPopup();
       }
@@ -848,13 +927,11 @@
         drawer.classList.remove("translate-x-full");
         if (btnList) {
           btnList.innerHTML = `<i class="fas fa-map text-xs"></i><span>地図</span>`;
-          btnList.className = "px-4 py-2.5 rounded-full text-xs font-bold transition-all text-white bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] whitespace-nowrap text-center shrink-0 shadow-lg border border-white/20 flex items-center justify-center gap-1.5";
         }
       } else {
         drawer.classList.add("translate-x-full");
         if (btnList) {
           btnList.innerHTML = `<i class="fas fa-list text-xs"></i><span>一覧</span>`;
-          btnList.className = "px-4 py-2.5 rounded-full text-xs font-bold transition-all text-white bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] whitespace-nowrap text-center shrink-0 shadow-lg border border-white/20 flex items-center justify-center gap-1.5";
         }
       }
     }
