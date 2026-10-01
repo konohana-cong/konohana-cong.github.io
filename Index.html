@@ -104,7 +104,7 @@
 <body class="bg-slate-100 flex flex-col h-screen select-none">
 
   <!-- 上部ヘッダー（スクショデザイン反映：クリーンホワイト ＋ エメラルドグリーン） -->
-  <header class="bg-white text-slate-800 px-3.5 sm:px-4 pt-3 pb-2.5 flex flex-col gap-2.5 shadow-sm z-10 shrink-0 relative border-b border-slate-100">
+  <header class="bg-white text-slate-800 px-3.5 sm:px-4 pt-3 pb-2.5 flex flex-col gap-2.5 shadow-sm z-[9999] shrink-0 relative border-b border-slate-100">
     <!-- 1行目：タイトル（左） ＆ 操作ボタン（右：現在地 ＋ ハンバーガー） -->
     <div class="flex items-center justify-between w-full gap-2">
       <div class="flex items-center gap-2.5 shrink-0">
@@ -130,7 +130,7 @@
     </div>
 
     <!-- ハンバーガーメニュー ドロップダウン -->
-    <div id="hamburgerDropdown" class="hidden absolute right-3 top-14 z-50 bg-white text-slate-800 border border-slate-200 rounded-2xl shadow-xl p-1.5 w-36 flex flex-col gap-1 backdrop-blur-md">
+    <div id="hamburgerDropdown" class="hidden absolute right-3 top-14 z-[10000] bg-white text-slate-800 border border-slate-200 rounded-2xl shadow-xl p-1.5 w-36 flex flex-col gap-1 backdrop-blur-md">
       <button onclick="openReportModal()" class="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2 transition font-semibold">
         <i class="fas fa-pen-to-square text-emerald-600 w-4"></i>
         <span>報告</span>
@@ -205,8 +205,8 @@
   <main class="flex-1 relative overflow-hidden">
     <div id="map"></div>
 
-    <!-- フローティング「一覧」切り替えボタン（スクショ位置：地図右下） -->
-    <div class="absolute bottom-6 right-4 z-20">
+    <!-- フローティング「一覧」切り替えボタン（地図右上配置へ移動） -->
+    <div class="absolute top-4 right-4 z-20">
       <button onclick="toggleMansionListDrawer()" id="btnList" class="px-4 py-2.5 rounded-full text-xs font-bold transition-all text-white bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] whitespace-nowrap text-center shrink-0 shadow-lg border border-white/20 flex items-center justify-center gap-1.5">
         <i class="fas fa-list text-xs"></i>
         <span>一覧</span>
