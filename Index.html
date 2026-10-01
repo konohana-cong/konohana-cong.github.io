@@ -76,13 +76,33 @@
     }
 
     .leaflet-popup-content-wrapper {
-      border-radius: 12px;
-      padding: 2px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+      border-radius: 24px;
+      padding: 6px;
+      box-shadow: 0 12px 28px -5px rgba(0, 0, 0, 0.22);
+      max-width: calc(100vw - 40px) !important;
     }
     .leaflet-popup-content {
-      margin: 12px;
+      margin: 12px 14px 14px 14px !important;
       line-height: 1.5;
+    }
+    /* ポップアップ内「✕」ボタンの位置とスタイリング調整 */
+    .leaflet-container a.leaflet-popup-close-button {
+      top: 12px !important;
+      right: 12px !important;
+      padding: 4px !important;
+      color: #64748b !important;
+      font-size: 16px !important;
+      width: 26px !important;
+      height: 26px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 50% !important;
+      transition: background-color 0.2s ease, color 0.2s ease !important;
+    }
+    .leaflet-container a.leaflet-popup-close-button:hover {
+      background-color: #f1f5f9 !important;
+      color: #0f172a !important;
     }
     /* ポップアップ内ボタンの文字色競合を強制防止 */
     .leaflet-popup-content a.room-link-btn,
@@ -686,11 +706,11 @@
         });
 
         const roomBtn = m.roomLink && m.roomLink.length > 5
-          ? `<a href="${m.roomLink}" target="_blank" rel="noopener noreferrer" class="room-link-btn mt-2.5 inline-flex items-center justify-center w-full px-3 py-2 bg-[#13685e] hover:bg-[#0e524a] !text-white font-bold rounded-xl text-xs transition shadow-sm gap-1.5 no-underline" style="color: #ffffff !important;">
+          ? `<a href="${m.roomLink}" target="_blank" rel="noopener noreferrer" class="room-link-btn mt-3 mb-1 inline-flex items-center justify-center w-full px-4 py-3 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] !text-white font-bold rounded-2xl text-xs transition shadow-sm gap-2 no-underline shrink-0" style="color: #ffffff !important;">
               <span style="color: #ffffff !important;">部屋番号一覧を見る</span>
               <i class="fas fa-external-link-alt text-[10px]" style="color: #ffffff !important;"></i>
              </a>`
-          : `<div class="mt-2 text-xs text-slate-400 italic">リンク未登録</div>`;
+          : `<div class="mt-2.5 pb-1 text-xs text-slate-400 italic">リンク未登録</div>`;
 
         const urgentPopupTag = isUrgent ? `
           <span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
@@ -699,8 +719,8 @@
         ` : '';
 
         const popupContent = `
-          <div class="p-1 min-w-[200px]">
-            <div class="mb-1 flex items-center gap-1 flex-wrap">
+          <div class="p-1 pb-1.5 min-w-[210px] sm:min-w-[230px]">
+            <div class="mb-1.5 flex items-center gap-1 flex-wrap">
               <span style="background-color: ${color.badgeBg}; color: ${color.badgeText};" class="px-2 py-0.5 rounded-full text-[10px] font-bold inline-block">
                 ${m.sheetName}
               </span>
@@ -709,7 +729,7 @@
               </span>
               ${urgentPopupTag}
             </div>
-            <h4 class="font-bold text-slate-900 text-sm border-b pb-1 mb-1 border-slate-200">${m.name}</h4>
+            <h4 class="font-bold text-slate-900 text-sm border-b pb-1.5 mb-1.5 border-slate-100">${m.name}</h4>
             <p class="text-xs text-slate-600 flex items-start gap-1 my-1">
               <i class="fas fa-location-dot text-slate-400 mt-0.5 shrink-0"></i>
               <span>${m.address || '住所未登録'}</span>
@@ -719,7 +739,10 @@
         `;
 
         const marker = L.marker([m.lat, m.lng], { icon: customIcon }).addTo(map);
-        marker.bindPopup(popupContent);
+        marker.bindPopup(popupContent, {
+          autoPanPaddingTopLeft: L.point(20, 85),
+          autoPanPaddingBottomRight: L.point(20, 20)
+        });
         mansionMarkers.push(marker);
 
         // バウンディングボックス用座標を追加
