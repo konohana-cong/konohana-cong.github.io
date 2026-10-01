@@ -175,19 +175,19 @@
 
     <!-- 2行目：エリアフィルター（カプセル・ピル型タブ ＆ 件数バッジ） -->
     <div id="headerAreaFilter" class="hidden items-center justify-between gap-1 w-full pt-0.5">
-      <div class="flex items-center gap-2 overflow-x-auto no-scrollbar flex-1">
-        <button onclick="setAreaFilter('ALL')" id="header-tab-ALL" class="header-filter-btn px-3 py-1.5 rounded-full text-xs font-bold transition-all text-white bg-[#1e293b] shadow-sm whitespace-nowrap text-center">
-          すべて <span id="count-ALL" class="opacity-80 ml-0.5 text-[11px]">(0)</span>
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 pb-0.5">
+        <button onclick="setAreaFilter('ALL')" id="header-tab-ALL" class="header-filter-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-bold transition-all text-white bg-[#1e293b] shadow-sm whitespace-nowrap text-center shrink-0">
+          すべて <span id="count-ALL" class="opacity-80 ml-0.5 text-[10px] sm:text-[11px]">(0)</span>
         </button>
-        <button onclick="setAreaFilter('此花区')" id="header-tab-此花区" class="header-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center">
-          此花区 <span id="count-此花区" class="opacity-80 ml-0.5 text-[11px]">(0)</span>
+        <button onclick="setAreaFilter('此花区')" id="header-tab-此花区" class="header-filter-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center shrink-0">
+          此花区 <span id="count-此花区" class="opacity-80 ml-0.5 text-[10px] sm:text-[11px]">(0)</span>
         </button>
-        <button onclick="setAreaFilter('福島区')" id="header-tab-福島区" class="header-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center">
-          福島区 <span id="count-福島区" class="opacity-80 ml-0.5 text-[11px]">(0)</span>
+        <button onclick="setAreaFilter('福島区')" id="header-tab-福島区" class="header-filter-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center shrink-0">
+          福島区 <span id="count-福島区" class="opacity-80 ml-0.5 text-[10px] sm:text-[11px]">(0)</span>
         </button>
-        <button onclick="setAreaFilter('急ぎ・優先')" id="header-tab-急ぎ・優先" class="header-filter-btn px-3 py-1.5 rounded-full text-xs font-bold transition-all text-[#854d0e] bg-[#fef3c7] hover:bg-[#fde68a] whitespace-nowrap text-center shrink-0 flex items-center gap-1">
-          <i class="fas fa-fire text-[#854d0e] text-[11px]"></i>
-          <span>急ぎ・優先 <span id="count-急ぎ・優先" class="opacity-90 ml-0.5 text-[11px]">(0)</span></span>
+        <button onclick="setAreaFilter('急ぎ・優先')" id="header-tab-急ぎ・優先" class="header-filter-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-bold transition-all text-[#854d0e] bg-[#fef3c7] hover:bg-[#fde68a] whitespace-nowrap text-center shrink-0 flex items-center gap-1">
+          <i class="fas fa-fire text-[#854d0e] text-[10px] sm:text-[11px]"></i>
+          <span>急ぎ・優先 <span id="count-急ぎ・優先" class="opacity-90 ml-0.5 text-[10px] sm:text-[11px]">(0)</span></span>
         </button>
       </div>
     </div>
@@ -735,12 +735,12 @@
 
         if (f === '急ぎ・優先') {
           btn.className = isActive
-            ? "header-filter-btn px-3 py-1.5 rounded-full text-xs font-bold transition-all text-[#854d0e] bg-[#fef3c7] border border-[#fde68a] shadow-sm whitespace-nowrap text-center shrink-0 flex items-center gap-1"
-            : "header-filter-btn px-3 py-1.5 rounded-full text-xs font-bold transition-all text-[#854d0e] bg-[#fef3c7]/60 hover:bg-[#fef3c7] whitespace-nowrap text-center shrink-0 flex items-center gap-1";
+            ? "header-filter-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-bold transition-all text-[#854d0e] bg-[#fef3c7] border border-[#fde68a] shadow-sm whitespace-nowrap text-center shrink-0 flex items-center gap-1"
+            : "header-filter-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-bold transition-all text-[#854d0e] bg-[#fef3c7]/60 hover:bg-[#fef3c7] whitespace-nowrap text-center shrink-0 flex items-center gap-1";
         } else {
           btn.className = isActive
-            ? "header-filter-btn px-3 py-1.5 rounded-full text-xs font-bold transition-all text-white bg-[#1e293b] shadow-sm whitespace-nowrap text-center"
-            : "header-filter-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center";
+            ? "header-filter-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-bold transition-all text-white bg-[#1e293b] shadow-sm whitespace-nowrap text-center shrink-0"
+            : "header-filter-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center shrink-0";
         }
       });
     }
