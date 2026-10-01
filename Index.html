@@ -91,6 +91,28 @@
       text-decoration: none !important;
     }
 
+    /* 急ぎ・優先ピンの波紋アニメーション */
+    .urgent-pin-pulse {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(245, 158, 11, 0.45);
+      animation: urgentPulse 1.8s infinite ease-out;
+      pointer-events: none;
+    }
+
+    @keyframes urgentPulse {
+      0% {
+        transform: scale(0.6);
+        opacity: 0.9;
+      }
+      100% {
+        transform: scale(1.6);
+        opacity: 0;
+      }
+    }
+
     /* スクロールバー非表示スタイル */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -165,10 +187,10 @@
 
   <!-- ログイン画面 -->
   <div id="loginScreen" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md border border-slate-100">
+    <div class="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-md border border-slate-100">
       <div class="text-center mb-6">
         <div class="flex items-center justify-center gap-2.5 mb-2">
-          <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center border border-blue-100 shadow-sm shrink-0">
+          <div class="w-10 h-10 bg-emerald-50 text-[#13685e] rounded-2xl flex items-center justify-center border border-emerald-100 shadow-sm shrink-0">
             <i class="fas fa-building text-xl"></i>
           </div>
           <h2 class="text-xl sm:text-2xl font-bold text-slate-800">此花マンション区域</h2>
@@ -181,7 +203,7 @@
           <label class="block text-xs font-semibold text-slate-600 mb-1">パスワード</label>
           <div class="relative">
             <input type="password" id="passwordInput" oninput="checkAutoLogin()" onchange="checkAutoLogin()" required placeholder="••••••••" autocomplete="current-password"
-              class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800 text-base">
+              class="w-full px-4 py-3 rounded-2xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#13685e] focus:border-transparent text-slate-800 text-base">
             <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
               <i id="eyeIcon" class="fas fa-eye"></i>
             </button>
@@ -193,7 +215,7 @@
           <span>パスワードが正しくありません</span>
         </div>
 
-        <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 transition duration-200 flex items-center justify-center gap-2">
+        <button type="submit" class="w-full py-3.5 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] text-white font-bold rounded-2xl shadow-lg shadow-emerald-900/20 transition duration-200 flex items-center justify-center gap-2">
           <span>ログイン</span>
           <i class="fas fa-arrow-right text-sm"></i>
         </button>
@@ -224,7 +246,7 @@
       <div class="p-4 bg-[#13685e] text-white flex items-center justify-between">
         <h3 class="font-bold text-sm flex items-center gap-2">
           <i class="fas fa-building text-emerald-200"></i>
-          <span>登録マンション一覧</span>
+          <span>マンション一覧</span>
         </h3>
         <button onclick="toggleMansionListDrawer()" class="text-emerald-100 hover:text-white p-1">
           <i class="fas fa-times"></i>
@@ -634,12 +656,24 @@
 
       filteredList.forEach(m => {
         const color = getSheetColor(m.sheetName);
+        const isUrgent = m.name && (m.name.includes('急ぎ') || m.name.includes('優先'));
+
+        // 急ぎ・優先時の炎バッジおよび波紋リング
+        const urgentBadge = isUrgent ? `
+          <div style="position: absolute; top: -5px; right: -5px; background: linear-gradient(135deg, #f59e0b, #dc2626); color: #ffffff; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px; border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10;">
+            <i class="fas fa-fire"></i>
+          </div>
+        ` : '';
+
+        const urgentPulseHtml = isUrgent ? `<div class="urgent-pin-pulse"></div>` : '';
 
         const pinHtml = `
-          <div class="custom-mansion-pin">
-            <div style="background-color: ${color.bg}; color: ${color.text}; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid #ffffff;">
+          <div class="custom-mansion-pin" style="position: relative; display: flex; align-items: center; justify-content: center;">
+            ${urgentPulseHtml}
+            <div style="background-color: ${color.bg}; color: ${color.text}; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid #ffffff; position: relative; z-index: 1;">
               <i class="fas fa-building" style="transform: rotate(45deg); font-size: 13px;"></i>
             </div>
+            ${urgentBadge}
           </div>
         `;
 
@@ -658,15 +692,22 @@
              </a>`
           : `<div class="mt-2 text-xs text-slate-400 italic">リンク未登録</div>`;
 
+        const urgentPopupTag = isUrgent ? `
+          <span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
+            <i class="fas fa-fire text-amber-600"></i> 急ぎ・優先
+          </span>
+        ` : '';
+
         const popupContent = `
           <div class="p-1 min-w-[200px]">
-            <div class="mb-1 flex items-center gap-1">
+            <div class="mb-1 flex items-center gap-1 flex-wrap">
               <span style="background-color: ${color.badgeBg}; color: ${color.badgeText};" class="px-2 py-0.5 rounded-full text-[10px] font-bold inline-block">
                 ${m.sheetName}
               </span>
               <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[10px] font-bold inline-block border border-slate-200">
                 ${getMansionArea(m)}
               </span>
+              ${urgentPopupTag}
             </div>
             <h4 class="font-bold text-slate-900 text-sm border-b pb-1 mb-1 border-slate-200">${m.name}</h4>
             <p class="text-xs text-slate-600 flex items-start gap-1 my-1">
@@ -716,6 +757,14 @@
       container.innerHTML = filteredList.map(m => {
         const color = getSheetColor(m.sheetName);
         const area = getMansionArea(m);
+        const isUrgent = m.name && (m.name.includes('急ぎ') || m.name.includes('優先'));
+
+        const urgentCardBadge = isUrgent ? `
+          <span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
+            <i class="fas fa-fire text-amber-600"></i> 急ぎ・優先
+          </span>
+        ` : '';
+
         const roomBtn = m.roomLink && m.roomLink.length > 5
           ? `<a href="${m.roomLink}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="mt-2 inline-flex items-center justify-center w-full px-3 py-2 bg-[#13685e] hover:bg-[#0e524a] text-white font-bold rounded-xl text-xs transition shadow-sm gap-1.5 no-underline">
               <span>部屋番号一覧を見る</span>
@@ -724,16 +773,19 @@
           : `<div class="mt-1.5 text-[11px] text-slate-400 italic">リンク未登録</div>`;
 
         return `
-          <div onclick="focusMansionOnMap(${m.id})" class="p-3 bg-white hover:bg-emerald-50/40 rounded-2xl border border-slate-200 shadow-sm transition cursor-pointer flex flex-col gap-1">
-            <div class="flex items-center gap-1.5">
+          <div onclick="focusMansionOnMap(${m.id})" class="p-3 bg-white hover:bg-emerald-50/40 rounded-2xl border ${isUrgent ? 'border-amber-300 ring-1 ring-amber-200' : 'border-slate-200'} shadow-sm transition cursor-pointer flex flex-col gap-1 relative overflow-hidden">
+            <div class="flex items-center gap-1.5 flex-wrap">
               <span style="background-color: ${color.badgeBg}; color: ${color.badgeText};" class="px-2 py-0.5 rounded-full text-[10px] font-bold">
                 ${m.sheetName}
               </span>
               <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-200">
                 ${area}
               </span>
+              ${urgentCardBadge}
             </div>
-            <h4 class="font-bold text-slate-900 text-sm mt-0.5">${m.name}</h4>
+            <h4 class="font-bold text-slate-900 text-sm mt-0.5 flex items-center gap-1.5">
+              <span>${m.name}</span>
+            </h4>
             <p class="text-xs text-slate-500 flex items-center gap-1">
               <i class="fas fa-location-dot text-slate-400 shrink-0"></i>
               <span>${m.address || '住所未登録'}</span>
