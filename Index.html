@@ -90,6 +90,15 @@
       color: #ffffff !important;
       text-decoration: none !important;
     }
+
+    /* スクロールバー非表示スタイル */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   </style>
 </head>
 <body class="bg-slate-100 flex flex-col h-screen select-none">
@@ -302,6 +311,7 @@
     let userCoordinates = null;
     let currentAreaFilter = 'ALL';
     let searchKeyword = '';
+    let isDrawerOpen = false;
 
     // カラーパレット定義（16シート識別用）
     const sheetColors = [
@@ -598,6 +608,7 @@
       mansionMarkers = [];
 
       const filteredList = getFilteredMansionList();
+      const bounds = [];
 
       filteredList.forEach(m => {
         const color = getSheetColor(m.sheetName);
@@ -647,56 +658,108 @@
         const marker = L.marker([m.lat, m.lng], { icon: customIcon }).addTo(map);
         marker.bindPopup(popupContent);
         mansionMarkers.push(marker);
+
+        // バウンディングボックス用座標を追加
+        bounds.push([m.lat, m.lng]);
       });
+
+      // 該当するマンションが存在する場合、全体が中央に収まるように縮尺・位置を切り替え
+      if (bounds.length > 0) {
+        if (bounds.length === 1) {
+          map.setView(bounds[0], 16);
+        } else {
+          map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+        }
+      }
     }
 
     function renderDrawerList() {
       const container = document.getElementById("drawerContent");
+      const countEl = document.getElementById("mansionSearchCount");
       if (!container) return;
-      container.innerHTML = "";
 
       const filteredList = getFilteredMansionList();
-
-      const countEl = document.getElementById("mansionSearchCount");
       if (countEl) countEl.textContent = filteredList.length;
 
       if (filteredList.length === 0) {
-        container.innerHTML = `<div class="text-center text-xs text-slate-400 py-8">該当するマンションが見つかりません</div>`;
+        container.innerHTML = `
+          <div class="text-center py-10 text-slate-400 text-xs">
+            <i class="fas fa-search-minus text-2xl mb-2 text-slate-300"></i>
+            <p>該当するマンションが見つかりません</p>
+          </div>
+        `;
         return;
       }
 
-      filteredList.forEach(m => {
+      container.innerHTML = filteredList.map(m => {
         const color = getSheetColor(m.sheetName);
-        const areaName = getMansionArea(m);
-        const card = document.createElement("div");
-        card.className = "p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 cursor-pointer transition shadow-sm";
-        card.onclick = () => {
-          toggleMansionListDrawer();
-          if (map) map.setView([m.lat, m.lng], 17);
-          const index = filteredList.findIndex(item => item.id === m.id);
-          if (index !== -1 && mansionMarkers[index]) {
-            mansionMarkers[index].openPopup();
-          }
-        };
+        const area = getMansionArea(m);
+        const roomBtn = m.roomLink && m.roomLink.length > 5
+          ? `<a href="${m.roomLink}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="mt-2 inline-flex items-center justify-center w-full px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs transition shadow-sm gap-1 no-underline">
+              <span>部屋番号一覧を見る</span>
+              <i class="fas fa-external-link-alt text-[10px]"></i>
+             </a>`
+          : `<div class="mt-1.5 text-[11px] text-slate-400 italic">リンク未登録</div>`;
 
-        card.innerHTML = `
-          <div class="flex items-center justify-between mb-1">
-            <div class="flex items-center gap-1">
+        return `
+          <div onclick="focusMansionOnMap(${m.id})" class="p-3 bg-white hover:bg-blue-50/50 rounded-2xl border border-slate-200 shadow-sm transition cursor-pointer flex flex-col gap-1">
+            <div class="flex items-center gap-1.5">
               <span style="background-color: ${color.badgeBg}; color: ${color.badgeText};" class="px-2 py-0.5 rounded-full text-[10px] font-bold">
                 ${m.sheetName}
               </span>
-              <span class="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded-full text-[9px] font-semibold">
-                ${areaName}
+              <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-200">
+                ${area}
               </span>
             </div>
-            <i class="fas fa-chevron-right text-xs text-slate-400"></i>
+            <h4 class="font-bold text-slate-900 text-sm mt-0.5">${m.name}</h4>
+            <p class="text-xs text-slate-500 flex items-center gap-1">
+              <i class="fas fa-location-dot text-slate-400 shrink-0"></i>
+              <span>${m.address || '住所未登録'}</span>
+            </p>
+            ${roomBtn}
           </div>
-          <div class="font-bold text-slate-800 text-xs mb-1">${m.name}</div>
-          <div class="text-[11px] text-slate-500 truncate">${m.address || '住所未指定'}</div>
         `;
+      }).join('');
+    }
 
-        container.appendChild(card);
+    function focusMansionOnMap(id) {
+      const mansion = mansionDataList.find(m => m.id === id);
+      if (!mansion || !map) return;
+
+      if (window.innerWidth < 640) {
+        if (isDrawerOpen) toggleMansionListDrawer();
+      }
+
+      map.setView([mansion.lat, mansion.lng], 17);
+      const marker = mansionMarkers.find(mk => {
+        const latLng = mk.getLatLng();
+        return Math.abs(latLng.lat - mansion.lat) < 0.00001 && Math.abs(latLng.lng - mansion.lng) < 0.00001;
       });
+      if (marker) {
+        marker.openPopup();
+      }
+    }
+
+    function toggleMansionListDrawer() {
+      const drawer = document.getElementById("listDrawer");
+      const btnList = document.getElementById("btnList");
+      if (!drawer) return;
+
+      isDrawerOpen = !isDrawerOpen;
+
+      if (isDrawerOpen) {
+        drawer.classList.remove("translate-x-full");
+        if (btnList) {
+          btnList.innerHTML = `<i class="fas fa-map text-[11px]"></i><span>地図</span>`;
+          btnList.className = "header-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-blue-950 bg-white shadow-md whitespace-nowrap text-center shrink-0 flex items-center gap-1.5";
+        }
+      } else {
+        drawer.classList.add("translate-x-full");
+        if (btnList) {
+          btnList.innerHTML = `<i class="fas fa-list text-[11px]"></i><span>一覧</span>`;
+          btnList.className = "header-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-white bg-blue-600 hover:bg-blue-500 active:bg-blue-700 whitespace-nowrap text-center shrink-0 border border-blue-400/40 shadow-sm flex items-center gap-1.5";
+        }
+      }
     }
 
     function startLocationTracking() {
@@ -720,7 +783,7 @@
             });
 
             userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
-            userMarker.bindPopup("<b>あなたの現在地</b>");
+            userMarker.bindPopup("<b>現在地</b>");
           } else if (userMarker) {
             userMarker.setLatLng([lat, lng]);
           }
@@ -736,31 +799,10 @@
       );
     }
 
-    function toggleMansionListDrawer() {
-      const drawer = document.getElementById("listDrawer");
-      const btnList = document.getElementById("btnList");
-      if (!drawer) return;
-
-      drawer.classList.toggle("translate-x-full");
-      const isOpen = !drawer.classList.contains("translate-x-full");
-
-      if (btnList) {
-        if (isOpen) {
-          btnList.innerHTML = `<i class="fas fa-map text-[11px]"></i><span>地図</span>`;
-          btnList.className = "header-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-blue-950 bg-white hover:bg-blue-50 whitespace-nowrap text-center shrink-0 border border-white shadow-md flex items-center gap-1.5";
-        } else {
-          btnList.innerHTML = `<i class="fas fa-list text-[11px]"></i><span>一覧</span>`;
-          btnList.className = "header-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-white bg-blue-600 hover:bg-blue-500 whitespace-nowrap text-center shrink-0 border border-blue-400/40 shadow-sm flex items-center gap-1.5";
-        }
-      }
-    }
-
     function moveToCurrentLocation() {
       if (userCoordinates && map) {
         map.setView(userCoordinates, 17);
-        if (userMarker) {
-          userMarker.openPopup();
-        }
+        if (userMarker) userMarker.openPopup();
         showToast("現在地に移動しました", false);
       } else {
         showToast("現在地を取得中、またはGPSが不許可です", false);
