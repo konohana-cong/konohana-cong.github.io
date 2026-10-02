@@ -12,6 +12,9 @@
   <!-- Leaflet GIS Map Library -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Leaflet.markercluster（ピンのクラスタリング） -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
   <style>
     html, body {
@@ -72,6 +75,18 @@
     .custom-mansion-pin:hover {
       transform: scale(1.15);
       z-index: 999 !important;
+    }
+
+    /* クラスタ（数字の丸）のスタイリング */
+    .custom-cluster-icon {
+      background: transparent;
+      border: none;
+    }
+    .custom-cluster-icon > div {
+      transition: transform 0.15s ease;
+    }
+    .custom-cluster-icon:hover > div {
+      transform: scale(1.08);
     }
 
     .leaflet-popup-content-wrapper {
@@ -479,6 +494,7 @@
     let userAuthPassword = "";
 
     let map = null;
+    let clusterGroup = null; // マンションのピンをまとめるクラスタグループ
     let userMarker = null;
     let mansionMarkersMap = {};
     let mansionDataList = [];
@@ -823,6 +839,7 @@
     function applyTourChange(prev) {
       const affected = new Set(prev.concat(tourSelection));
       affected.forEach(id => updateMarkerAppearance(id));
+      refreshMarkerClusters(); // クラスタ（数字の丸）の巡回バッジも更新
       updateTourBar();
       renderDrawerList(true);
       const sheet = document.getElementById("tourSheet");
@@ -1232,6 +1249,39 @@
     // 地図・データ
     // ============================================================
 
+    // クラスタ（数字の丸）のアイコンを生成
+    function createClusterIcon(cluster) {
+      const count = cluster.getChildCount();
+      const children = cluster.getAllChildMarkers();
+      const hasUrgent = children.some(mk => mk.mansionUrgent === true);
+      const tourCount = children.filter(mk => tourSelection.includes(mk.mansionId)).length;
+
+      const size = count < 10 ? 38 : (count < 50 ? 44 : 52);
+      const fontSize = count < 100 ? 14 : 12;
+      const ringColor = hasUrgent ? '#f59e0b' : '#ffffff';
+
+      const urgentBadge = hasUrgent ? `
+        <div style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#dc2626);color:#ffffff;display:flex;align-items:center;justify-content:center;font-size:10px;border:2px solid #ffffff;box-shadow:0 2px 5px rgba(0,0,0,0.3);">
+          <i class="fas fa-fire"></i>
+        </div>` : '';
+
+      const tourBadge = tourCount > 0 ? `
+        <div style="position:absolute;bottom:-6px;right:-8px;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:#0f172a;color:#ffffff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid #ffffff;box-shadow:0 2px 5px rgba(0,0,0,0.3);">${tourCount}</div>` : '';
+
+      const html = `
+        <div style="position:relative;width:${size}px;height:${size}px;border-radius:50%;background:#13685e;color:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${fontSize}px;border:3px solid ${ringColor};box-shadow:0 4px 12px rgba(0,0,0,0.35);box-sizing:border-box;">
+          ${count}
+          ${urgentBadge}
+          ${tourBadge}
+        </div>`;
+
+      return L.divIcon({
+        html: html,
+        className: 'custom-cluster-icon',
+        iconSize: L.point(size, size)
+      });
+    }
+
     function initMap() {
       if (map) return;
       map = L.map('map', { zoomControl: false }).setView([34.682, 135.452], 14);
@@ -1243,9 +1293,44 @@
 
       L.control.zoom({ position: 'bottomright' }).addTo(map);
 
+      // マンションのピンをまとめるクラスタグループ
+      // （プラグインの読み込みに失敗した場合は、通常のレイヤーグループで従来どおり表示）
+      if (typeof L.markerClusterGroup === 'function') {
+        clusterGroup = L.markerClusterGroup({
+          maxClusterRadius: 45,        // この距離(px)以内のピンをまとめる
+          showCoverageOnHover: false,  // ホバー時の範囲表示は不要
+          zoomToBoundsOnClick: true,   // 丸をタップするとその範囲へズーム
+          spiderfyOnMaxZoom: true,     // 最大ズームでも重なるピンは放射状に展開
+          removeOutsideVisibleBounds: true,
+          iconCreateFunction: createClusterIcon
+        });
+      } else {
+        console.warn('markercluster が読み込めなかったため、通常表示にします');
+        clusterGroup = L.layerGroup();
+      }
+      map.addLayer(clusterGroup);
+
       // ポップアップ表示中は、近く表示の自動再描画を止めるための目印
       map.on('popupopen', () => { isPopupOpen = true; });
       map.on('popupclose', () => { isPopupOpen = false; });
+    }
+
+    // クラスタのアイコン（巡回バッジなど）を最新の状態に更新
+    function refreshMarkerClusters() {
+      if (clusterGroup && typeof clusterGroup.refreshClusters === 'function') {
+        try { clusterGroup.refreshClusters(); } catch (e) { console.warn('refreshClusters error', e); }
+      }
+    }
+
+    // 指定マンションのポップアップを開く（クラスタにまとまっていれば展開してから開く）
+    function openMansionPopup(id) {
+      const marker = mansionMarkersMap[id];
+      if (!marker) return;
+      if (clusterGroup && typeof clusterGroup.zoomToShowLayer === 'function' && clusterGroup.hasLayer(marker)) {
+        clusterGroup.zoomToShowLayer(marker, () => { marker.openPopup(); });
+      } else if (map && map.hasLayer(marker)) {
+        marker.openPopup();
+      }
     }
 
     function loadMansionData() {
@@ -1533,24 +1618,36 @@
     }
 
     function renderMarkers(shouldFitBounds = false) {
-      if (!map) return;
+      if (!map || !clusterGroup) return;
 
-      Object.values(mansionMarkersMap).forEach(mk => map.removeLayer(mk));
+      // 既存のピンをすべてクリア
+      clusterGroup.clearLayers();
       mansionMarkersMap = {};
 
       const filteredList = getFilteredMansionList();
       const bounds = [];
+      const newMarkers = [];
 
       filteredList.forEach(m => {
-        const marker = L.marker([m.lat, m.lng], { icon: buildPinIcon(m) }).addTo(map);
+        const marker = L.marker([m.lat, m.lng], { icon: buildPinIcon(m) });
+        marker.mansionId = m.id;                       // クラスタ表示用の目印
+        marker.mansionUrgent = isUrgentMansion(m);     // クラスタに急ぎが含まれるか判定する用
         marker.bindPopup(buildPopupContent(m), {
           autoPanPaddingTopLeft: L.point(20, 85),
           autoPanPaddingBottomRight: L.point(20, 20)
         });
 
         mansionMarkersMap[m.id] = marker;
+        newMarkers.push(marker);
         bounds.push([m.lat, m.lng]);
       });
+
+      // まとめてクラスタグループへ追加
+      if (typeof clusterGroup.addLayers === 'function') {
+        clusterGroup.addLayers(newMarkers);
+      } else {
+        newMarkers.forEach(mk => clusterGroup.addLayer(mk));
+      }
 
       // 近く表示中は現在地も範囲に含めて表示
       if (nearMode && userCoordinates) {
@@ -1679,11 +1776,9 @@
         if (isDrawerOpen) toggleMansionListDrawer();
       }
 
-      map.setView([mansion.lat, mansion.lng], 17);
-      const marker = mansionMarkersMap[id];
-      if (marker) {
-        marker.openPopup();
-      }
+      // まずそのマンション付近へ移動し、クラスタにまとまっていれば展開してポップアップを開く
+      map.setView([mansion.lat, mansion.lng], 17, { animate: false });
+      openMansionPopup(id);
     }
 
     function toggleMansionListDrawer() {
