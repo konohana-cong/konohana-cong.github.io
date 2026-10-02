@@ -28,7 +28,6 @@
       z-index: 1;
     }
 
-    /* UI操作領域のテキスト選択無効化（マップや一覧本文のコピーは許可） */
     .btn-touch-ui {
       user-select: none;
       -webkit-user-select: none;
@@ -77,14 +76,18 @@
 
     .leaflet-popup-content-wrapper {
       border-radius: 24px;
-      padding: 6px;
+      padding: 14px 16px !important;
       box-shadow: 0 12px 28px -5px rgba(0, 0, 0, 0.22);
       max-width: calc(100vw - 40px) !important;
       overflow: hidden;
     }
     .leaflet-popup-content {
-      margin: 12px 14px 14px 14px !important;
+      margin: 0 !important;
       line-height: 1.5;
+    }
+    .leaflet-popup-content .popup-inner-wrapper {
+      margin-bottom: 4px;
+      padding-bottom: 4px;
     }
     /* ポップアップ内「✕」ボタンの位置とスタイリング調整 */
     .leaflet-container a.leaflet-popup-close-button {
@@ -99,16 +102,12 @@
       align-items: center !important;
       justify-content: center !important;
       border-radius: 50% !important;
+      background-color: transparent !important;
       transition: background-color 0.2s ease, color 0.2s ease !important;
     }
     .leaflet-container a.leaflet-popup-close-button:hover {
       background-color: #f1f5f9 !important;
       color: #0f172a !important;
-    }
-    .leaflet-popup-content a.room-link-btn,
-    .leaflet-popup-content a.room-link-btn * {
-      color: #ffffff !important;
-      text-decoration: none !important;
     }
 
     /* 急ぎ・優先ピンの波紋アニメーション */
@@ -127,7 +126,6 @@
       100% { transform: scale(1.6); opacity: 0; }
     }
 
-    /* スクロールバー非表示スタイル */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
@@ -194,7 +192,7 @@
   </header>
 
   <!-- ログイン画面 -->
-  <div id="loginScreen" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 btn-touch-ui">
+  <div id="loginScreen" class="fixed inset-0 z-[10001] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 btn-touch-ui">
     <div class="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-md border border-slate-100">
       <div class="text-center mb-6">
         <div class="flex items-center justify-center gap-2.5 mb-2">
@@ -652,7 +650,6 @@
       showToast(`${mansionDataList.length}件のマンションを取得しました`, false);
     }
 
-    // 検索デバウンス処理（300ms間打鍵がない場合のみ再検索）
     function debouncedSearchInput() {
       if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
       searchDebounceTimer = setTimeout(() => {
@@ -663,7 +660,7 @@
     function handleSearchInput() {
       const input = document.getElementById("mansionSearchInput");
       searchKeyword = input ? input.value.trim().toLowerCase() : '';
-      renderMarkers(false); // 検索入力時は fitBounds せず位置固定
+      renderMarkers(false);
       renderDrawerList();
     }
 
@@ -701,7 +698,6 @@
       return list;
     }
 
-    // 各カテゴリーの該当件数を計算してUI更新
     function updateCountsUI() {
       const countAll = mansionDataList.length;
       const countKonohana = mansionDataList.filter(m => getMansionArea(m) === '此花区').length;
@@ -722,7 +718,7 @@
     function setAreaFilter(area) {
       currentAreaFilter = area;
       updateFilterUI();
-      renderMarkers(true); // エリア切り替え時は該当グループ全体に位置調整（fitBounds）
+      renderMarkers(true);
       renderDrawerList();
     }
 
@@ -748,7 +744,6 @@
     function renderMarkers(shouldFitBounds = false) {
       if (!map) return;
 
-      // 既存マーカーのクリア
       Object.values(mansionMarkersMap).forEach(mk => map.removeLayer(mk));
       mansionMarkersMap = {};
 
@@ -787,11 +782,11 @@
 
         const validRoomLink = safeUrl(m.roomLink);
         const roomBtn = validRoomLink
-          ? `<a href="${esc(validRoomLink)}" target="_blank" rel="noopener noreferrer" class="room-link-btn mt-3 mb-1 inline-flex items-center justify-center w-full px-4 py-3 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] !text-white font-bold rounded-2xl text-xs transition shadow-sm gap-2 no-underline shrink-0" style="color: #ffffff !important;">
+          ? `<a href="${esc(validRoomLink)}" target="_blank" rel="noopener noreferrer" class="room-link-btn mt-2 inline-flex items-center justify-center w-full px-4 py-2.5 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] !text-white font-bold rounded-2xl text-xs transition shadow-sm gap-2 no-underline shrink-0" style="color: #ffffff !important;">
               <span style="color: #ffffff !important;">部屋番号一覧を見る</span>
               <i class="fas fa-external-link-alt text-[10px]" style="color: #ffffff !important;"></i>
              </a>`
-          : `<div class="mt-2.5 pb-1 text-xs text-slate-400 italic">リンク未登録</div>`;
+          : `<div class="mt-2 pb-1 text-xs text-slate-400 italic">リンク未登録</div>`;
 
         const urgentPopupTag = isUrgent ? `
           <span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
@@ -800,7 +795,7 @@
         ` : '';
 
         const popupContent = `
-          <div class="p-1 pb-1.5 min-w-[210px] sm:min-w-[230px]">
+          <div class="popup-inner-wrapper min-w-[220px]">
             <div class="mb-1.5 flex items-center gap-1 flex-wrap">
               <span style="background-color: ${esc(color.badgeBg)}; color: ${esc(color.badgeText)};" class="px-2 py-0.5 rounded-full text-[10px] font-bold inline-block">
                 ${esc(m.sheetName)}
@@ -810,10 +805,10 @@
               </span>
               ${urgentPopupTag}
             </div>
-            <h4 class="font-bold text-slate-900 text-sm border-b pb-1.5 mb-1.5 border-slate-100">${esc(m.name)}</h4>
-            <p class="text-xs text-slate-600 flex items-start gap-1 my-1">
+            <h4 class="font-bold text-slate-900 text-sm mb-1 leading-tight">${esc(m.name)}</h4>
+            <p class="text-xs text-slate-600 flex items-start gap-1 my-1 mb-2">
               <i class="fas fa-location-dot text-slate-400 mt-0.5 shrink-0"></i>
-              <span>${esc(m.address || '住所未登録')}</span>
+              <span class="leading-tight">${esc(m.address || '住所未登録')}</span>
             </p>
             ${roomBtn}
           </div>
@@ -829,7 +824,6 @@
         bounds.push([m.lat, m.lng]);
       });
 
-      // エリア切替や初期表示時のみ地図範囲をフィット
       if (shouldFitBounds && bounds.length > 0) {
         if (bounds.length === 1) {
           map.setView(bounds[0], 16);
@@ -870,11 +864,11 @@
 
         const validRoomLink = safeUrl(m.roomLink);
         const roomBtn = validRoomLink
-          ? `<a href="${esc(validRoomLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="mt-2 inline-flex items-center justify-center w-full px-3 py-2 bg-[#13685e] hover:bg-[#0e524a] text-white font-bold rounded-xl text-xs transition shadow-sm gap-1.5 no-underline">
+          ? `<a href="${esc(validRoomLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="mt-1 inline-flex items-center justify-center w-full px-3 py-2 bg-[#13685e] hover:bg-[#0e524a] text-white font-bold rounded-xl text-xs transition shadow-sm gap-1.5 no-underline">
               <span>部屋番号一覧を見る</span>
               <i class="fas fa-external-link-alt text-[10px]"></i>
              </a>`
-          : `<div class="mt-1.5 text-[11px] text-slate-400 italic">リンク未登録</div>`;
+          : `<div class="mt-1 text-[11px] text-slate-400 italic">リンク未登録</div>`;
 
         return `
           <div onclick="focusMansionOnMap(${m.id})" class="p-3 bg-white hover:bg-emerald-50/40 rounded-2xl border ${isUrgent ? 'border-amber-300 ring-1 ring-amber-200' : 'border-slate-200'} shadow-sm transition cursor-pointer flex flex-col gap-1 relative overflow-hidden">
@@ -890,7 +884,7 @@
             <h4 class="font-bold text-slate-900 text-sm mt-0.5 flex items-center gap-1.5">
               <span>${esc(m.name)}</span>
             </h4>
-            <p class="text-xs text-slate-500 flex items-center gap-1">
+            <p class="text-xs text-slate-500 flex items-center gap-1 mb-1">
               <i class="fas fa-location-dot text-slate-400 shrink-0"></i>
               <span>${esc(m.address || '住所未登録')}</span>
             </p>
@@ -900,7 +894,6 @@
       }).join('');
     }
 
-    // IDによる直接ピン指定（複数同階数・同座標物件にも完全対応）
     function focusMansionOnMap(id) {
       const mansion = mansionDataList.find(m => m.id === id);
       if (!mansion || !map) return;
