@@ -280,8 +280,61 @@
     </div>
   </main>
 
+  <!-- ルート案内シート（地図アプリへ移動） -->
+  <div id="routeSheet" class="hidden fixed inset-0 z-[10002] bg-slate-950/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 btn-touch-ui" onclick="closeRouteSheet()">
+    <div onclick="event.stopPropagation()" class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-100 p-5 sm:p-6 pb-7">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2 text-slate-800 font-bold text-lg">
+          <i class="fas fa-route text-emerald-600"></i>
+          <span>ルート案内</span>
+        </div>
+        <button type="button" onclick="closeRouteSheet()" aria-label="閉じる" class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+
+      <div class="mb-4 p-3 bg-slate-50 rounded-2xl border border-slate-200">
+        <div id="routeMansionName" class="font-bold text-sm text-slate-900 leading-tight"></div>
+        <div id="routeMansionAddr" class="text-xs text-slate-500 mt-1 leading-tight"></div>
+        <div id="routeDistance" class="hidden text-xs text-[#13685e] font-semibold mt-1.5"></div>
+      </div>
+
+      <div class="text-[11px] font-bold text-slate-500 mb-1.5">移動手段</div>
+      <div class="grid grid-cols-3 gap-2 mb-4">
+        <button type="button" id="route-mode-walking" onclick="setRouteMode('walking')" class="px-2 py-2.5 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5">
+          <i class="fas fa-person-walking"></i><span>徒歩</span>
+        </button>
+        <button type="button" id="route-mode-driving" onclick="setRouteMode('driving')" class="px-2 py-2.5 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5">
+          <i class="fas fa-car"></i><span>車</span>
+        </button>
+        <button type="button" id="route-mode-transit" onclick="setRouteMode('transit')" class="px-2 py-2.5 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5">
+          <i class="fas fa-train"></i><span>電車</span>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-2.5">
+        <a id="routeGoogleLink" href="#" target="_blank" rel="noopener noreferrer"
+          class="w-full py-3.5 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] font-bold rounded-2xl shadow-lg transition flex items-center justify-center gap-2 text-sm no-underline"
+          style="color:#ffffff !important;">
+          <i class="fab fa-google text-xs" style="color:#ffffff !important;"></i>
+          <span style="color:#ffffff !important;">Googleマップで開く</span>
+        </a>
+        <a id="routeAppleLink" href="#" target="_blank" rel="noopener noreferrer"
+          class="hidden w-full py-3.5 bg-white border border-slate-300 hover:bg-slate-50 active:bg-slate-100 font-bold rounded-2xl transition flex items-center justify-center gap-2 text-sm no-underline"
+          style="color:#1e293b !important;">
+          <i class="fab fa-apple text-sm" style="color:#1e293b !important;"></i>
+          <span style="color:#1e293b !important;">Appleマップで開く</span>
+        </a>
+      </div>
+
+      <p class="text-[11px] text-slate-400 mt-3 leading-snug">
+        現在地から目的地までのルートが地図アプリに表示されます。位置情報の許可を求められた場合は許可してください。
+      </p>
+    </div>
+  </div>
+
   <!-- 報告モーダルダイアログ -->
-  <div id="reportModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div id="reportModal" class="hidden fixed inset-0 z-[10002] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100">
       <!-- モーダルヘッダー -->
       <div class="p-5 sm:p-6 pb-2 flex items-center justify-between btn-touch-ui">
@@ -352,6 +405,18 @@
     let isDrawerOpen = false;
     let searchDebounceTimer = null;
 
+    // ルート案内用の状態
+    let routeTarget = null;
+    let routeMode = 'walking';
+    const ROUTE_MODE_KEY = 'konohana_route_mode';
+    const VALID_ROUTE_MODES = ['walking', 'driving', 'transit'];
+
+    // 保存済みの移動手段を復元（保存できない環境でもエラーにしない）
+    try {
+      const saved = localStorage.getItem(ROUTE_MODE_KEY);
+      if (saved && VALID_ROUTE_MODES.includes(saved)) routeMode = saved;
+    } catch (e) { /* 何もしない */ }
+
     // カラーパレット定義（16シート識別用）
     const sheetColors = [
       { bg: '#2563eb', text: '#ffffff', badgeBg: '#dbeafe', badgeText: '#1e40af' },
@@ -400,6 +465,122 @@
       return sheetColorMap[sheetName];
     }
 
+    // ============================================================
+    // ルート案内（Googleマップ / Appleマップへ移動。APIキー不要）
+    // ============================================================
+
+    // iPhone / iPad 判定（iPadOSのデスクトップ表示モードも含む）
+    function isIOSDevice() {
+      const ua = navigator.userAgent || '';
+      if (/iPhone|iPad|iPod/i.test(ua)) return true;
+      return (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    // Googleマップ：出発地を省略すると「現在地」が自動で出発地になる
+    function buildGoogleRouteUrl(m, mode) {
+      return 'https://www.google.com/maps/dir/?api=1'
+        + '&destination=' + m.lat + ',' + m.lng
+        + '&travelmode=' + mode;
+    }
+
+    // Appleマップ：saddrを省略すると「現在地」が出発地になる（d:車 / w:徒歩 / r:公共交通）
+    function buildAppleRouteUrl(m, mode) {
+      const flagMap = { walking: 'w', driving: 'd', transit: 'r' };
+      return 'https://maps.apple.com/?daddr=' + m.lat + ',' + m.lng
+        + '&dirflg=' + (flagMap[mode] || 'w');
+    }
+
+    // 2点間の直線距離（メートル）
+    function calcDistanceMeters(lat1, lng1, lat2, lng2) {
+      const R = 6371000;
+      const toRad = (d) => d * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLng = toRad(lng2 - lng1);
+      const a = Math.sin(dLat / 2) ** 2
+        + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+      return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function formatDistance(meters) {
+      if (meters < 1000) return Math.round(meters / 10) * 10 + ' m';
+      return (meters / 1000).toFixed(1) + ' km';
+    }
+
+    function openRouteSheet(id) {
+      const m = mansionDataList.find(x => x.id === id);
+      if (!m || !isFinite(m.lat) || !isFinite(m.lng)) {
+        showToast("このマンションの位置情報がありません", false);
+        return;
+      }
+      routeTarget = m;
+      closeHamburgerMenu();
+
+      document.getElementById("routeMansionName").textContent = m.name || '';
+      document.getElementById("routeMansionAddr").textContent = m.address || '住所未登録';
+
+      // 現在地が取得できていれば直線距離を表示
+      const distEl = document.getElementById("routeDistance");
+      if (userCoordinates) {
+        const d = calcDistanceMeters(userCoordinates[0], userCoordinates[1], m.lat, m.lng);
+        distEl.textContent = '現在地から直線で約 ' + formatDistance(d);
+        distEl.classList.remove("hidden");
+      } else {
+        distEl.classList.add("hidden");
+      }
+
+      // iPhone / iPad のときだけ Appleマップのボタンを表示
+      const appleLink = document.getElementById("routeAppleLink");
+      if (isIOSDevice()) {
+        appleLink.classList.remove("hidden");
+      } else {
+        appleLink.classList.add("hidden");
+      }
+
+      updateRouteSheetUI();
+      document.getElementById("routeSheet").classList.remove("hidden");
+    }
+
+    function closeRouteSheet() {
+      const sheet = document.getElementById("routeSheet");
+      if (sheet) sheet.classList.add("hidden");
+    }
+
+    function setRouteMode(mode) {
+      if (!VALID_ROUTE_MODES.includes(mode)) return;
+      routeMode = mode;
+      try { localStorage.setItem(ROUTE_MODE_KEY, mode); } catch (e) { /* 何もしない */ }
+      updateRouteSheetUI();
+    }
+
+    // 移動手段ボタンの見た目とリンク先URLを更新
+    function updateRouteSheetUI() {
+      VALID_ROUTE_MODES.forEach(mode => {
+        const btn = document.getElementById('route-mode-' + mode);
+        if (!btn) return;
+        btn.className = (mode === routeMode)
+          ? "px-2 py-2.5 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5 bg-[#13685e] text-white border-[#13685e] shadow-sm"
+          : "px-2 py-2.5 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5 bg-white text-slate-600 border-slate-200 hover:bg-slate-50";
+      });
+
+      if (!routeTarget) return;
+      const g = document.getElementById("routeGoogleLink");
+      const a = document.getElementById("routeAppleLink");
+      if (g) g.href = buildGoogleRouteUrl(routeTarget, routeMode);
+      if (a) a.href = buildAppleRouteUrl(routeTarget, routeMode);
+    }
+
+    // Escキーでシート・モーダルを閉じる
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeRouteSheet();
+        closeReportModal();
+      }
+    });
+
+    // ============================================================
+    // ログイン・認証
+    // ============================================================
+
     // サーバー認証付きログイン処理
     function handleLogin(e) {
       if (e) e.preventDefault();
@@ -420,6 +601,7 @@
             submitBtn.disabled = false;
             document.getElementById("loginBtnText").textContent = "ログイン";
             if (res && res.success) {
+              if (errDiv) errDiv.classList.add("hidden");
               userAuthPassword = pwd;
               onLoginSuccess();
             } else {
@@ -435,16 +617,18 @@
           })
           .checkPassword(pwd);
       } else {
-        // テスト環境用フォールバック
+        // PC内でのテスト用フォールバック（localhost / ファイル直開きのときだけ有効）
+        const host = location.hostname;
+        const isLocalTest = (host === 'localhost' || host === '127.0.0.1' || host === '');
         setTimeout(() => {
           submitBtn.disabled = false;
           document.getElementById("loginBtnText").textContent = "ログイン";
-          if (pwd === "konohana") {
+          if (isLocalTest && pwd.length > 0) {
             userAuthPassword = pwd;
             onLoginSuccess();
           } else {
             if (errDiv) errDiv.classList.remove("hidden");
-            if (errMsg) errMsg.textContent = "パスワードが正しくありません";
+            if (errMsg) errMsg.textContent = "このページはGASのWebアプリURLから開いてください";
           }
         }, 300);
       }
@@ -452,7 +636,7 @@
 
     function onLoginSuccess() {
       document.getElementById("loginScreen").classList.add("hidden");
-      
+
       const controls = document.getElementById("headerControls");
       const areaFilter = document.getElementById("headerAreaFilter");
       if (controls) {
@@ -488,10 +672,11 @@
 
     function logout() {
       closeHamburgerMenu();
+      closeRouteSheet();
       userAuthPassword = "";
-      
+
       // GPS位置追跡停止
-      if (watchPositionId && navigator.geolocation) {
+      if (watchPositionId !== null && navigator.geolocation) {
         navigator.geolocation.clearWatch(watchPositionId);
         watchPositionId = null;
       }
@@ -499,6 +684,7 @@
         map.removeLayer(userMarker);
         userMarker = null;
       }
+      userCoordinates = null;
 
       document.getElementById("passwordInput").value = "";
       document.getElementById("loginError").classList.add("hidden");
@@ -527,6 +713,10 @@
         closeHamburgerMenu();
       }
     });
+
+    // ============================================================
+    // 報告
+    // ============================================================
 
     function openReportModal() {
       closeHamburgerMenu();
@@ -597,6 +787,10 @@
       }
     }
 
+    // ============================================================
+    // 地図・データ
+    // ============================================================
+
     function initMap() {
       if (map) return;
       map = L.map('map', { zoomControl: false }).setView([34.682, 135.452], 14);
@@ -643,7 +837,7 @@
       }
 
       mansionDataList = res.data || [];
-      
+
       updateCountsUI();
       renderMarkers(true); // 初期データロード時のみ fitBounds 実行
       renderDrawerList();
@@ -673,7 +867,7 @@
 
     function isUrgentMansion(m) {
       if (typeof m.isUrgent === 'boolean') return m.isUrgent;
-      return m.name && (m.name.includes('急ぎ') || m.name.includes('優先'));
+      return !!(m.name && (m.name.includes('急ぎ') || m.name.includes('優先')));
     }
 
     function getFilteredMansionList() {
@@ -781,6 +975,15 @@
         });
 
         const validRoomLink = safeUrl(m.roomLink);
+
+        // ルート案内ボタン（ポップアップ用）
+        const routeBtn = `
+          <button type="button" onclick="openRouteSheet(${Number(m.id)})"
+            class="mt-2 inline-flex items-center justify-center w-full px-4 py-2.5 bg-white border-2 border-[#13685e] text-[#13685e] font-bold rounded-2xl text-xs transition gap-2 shrink-0 hover:bg-emerald-50 active:bg-emerald-100">
+            <i class="fas fa-route text-[11px]"></i>
+            <span>ルート案内（地図アプリで開く）</span>
+          </button>`;
+
         const roomBtn = validRoomLink
           ? `<a href="${esc(validRoomLink)}" target="_blank" rel="noopener noreferrer" class="room-link-btn mt-2 inline-flex items-center justify-center w-full px-4 py-2.5 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] !text-white font-bold rounded-2xl text-xs transition shadow-sm gap-2 no-underline shrink-0" style="color: #ffffff !important;">
               <span style="color: #ffffff !important;">部屋番号一覧を見る</span>
@@ -811,6 +1014,7 @@
               <span class="leading-tight">${esc(m.address || '住所未登録')}</span>
             </p>
             ${roomBtn}
+            ${routeBtn}
           </div>
         `;
 
@@ -863,15 +1067,25 @@
         ` : '';
 
         const validRoomLink = safeUrl(m.roomLink);
+
+        const routeBtn = `
+          <button type="button" onclick="event.stopPropagation(); openRouteSheet(${Number(m.id)})"
+            class="inline-flex items-center justify-center px-3 py-2 bg-white border border-[#13685e] text-[#13685e] font-bold rounded-xl text-xs transition gap-1.5 hover:bg-emerald-50 active:bg-emerald-100">
+            <i class="fas fa-route text-[10px]"></i>
+            <span>ルート案内</span>
+          </button>`;
+
         const roomBtn = validRoomLink
-          ? `<a href="${esc(validRoomLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="mt-1 inline-flex items-center justify-center w-full px-3 py-2 bg-[#13685e] hover:bg-[#0e524a] text-white font-bold rounded-xl text-xs transition shadow-sm gap-1.5 no-underline">
-              <span>部屋番号一覧を見る</span>
+          ? `<a href="${esc(validRoomLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="inline-flex items-center justify-center px-3 py-2 bg-[#13685e] hover:bg-[#0e524a] text-white font-bold rounded-xl text-xs transition shadow-sm gap-1.5 no-underline">
+              <span>部屋番号一覧</span>
               <i class="fas fa-external-link-alt text-[10px]"></i>
              </a>`
-          : `<div class="mt-1 text-[11px] text-slate-400 italic">リンク未登録</div>`;
+          : '';
+
+        const noLinkNote = validRoomLink ? '' : `<div class="text-[11px] text-slate-400 italic">リンク未登録</div>`;
 
         return `
-          <div onclick="focusMansionOnMap(${m.id})" class="p-3 bg-white hover:bg-emerald-50/40 rounded-2xl border ${isUrgent ? 'border-amber-300 ring-1 ring-amber-200' : 'border-slate-200'} shadow-sm transition cursor-pointer flex flex-col gap-1 relative overflow-hidden">
+          <div onclick="focusMansionOnMap(${Number(m.id)})" class="p-3 bg-white hover:bg-emerald-50/40 rounded-2xl border ${isUrgent ? 'border-amber-300 ring-1 ring-amber-200' : 'border-slate-200'} shadow-sm transition cursor-pointer flex flex-col gap-1 relative overflow-hidden">
             <div class="flex items-center gap-1.5 flex-wrap">
               <span style="background-color: ${esc(color.badgeBg)}; color: ${esc(color.badgeText)};" class="px-2 py-0.5 rounded-full text-[10px] font-bold">
                 ${esc(m.sheetName)}
@@ -888,7 +1102,11 @@
               <i class="fas fa-location-dot text-slate-400 shrink-0"></i>
               <span>${esc(m.address || '住所未登録')}</span>
             </p>
-            ${roomBtn}
+            <div class="grid ${validRoomLink ? 'grid-cols-2' : 'grid-cols-1'} gap-2 mt-1">
+              ${routeBtn}
+              ${roomBtn}
+            </div>
+            ${noLinkNote}
           </div>
         `;
       }).join('');
@@ -934,6 +1152,7 @@
         showToast("お使いの端末はGPSに対応していません", false);
         return;
       }
+      if (watchPositionId !== null) return; // 二重起動防止
 
       watchPositionId = navigator.geolocation.watchPosition(
         (pos) => {
