@@ -74,6 +74,7 @@
       z-index: 999 !important;
     }
 
+    /* 現在地ポップアップ（Leaflet標準）の見た目 */
     .leaflet-popup-content-wrapper {
       border-radius: 24px;
       padding: 14px 16px !important;
@@ -85,11 +86,6 @@
       margin: 0 !important;
       line-height: 1.5;
     }
-    .leaflet-popup-content .popup-inner-wrapper {
-      margin-bottom: 4px;
-      padding-bottom: 4px;
-    }
-    /* ポップアップ内「✕」ボタンの位置とスタイリング調整 */
     .leaflet-container a.leaflet-popup-close-button {
       top: 12px !important;
       right: 12px !important;
@@ -128,13 +124,33 @@
 
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* 下から出る詳細シート */
+    #detailSheet {
+      transform: translateY(110%);
+      visibility: hidden;
+      transition: transform 0.28s ease, visibility 0s linear 0.28s;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    #detailSheet.open {
+      transform: translateY(0);
+      visibility: visible;
+      transition: transform 0.28s ease, visibility 0s linear 0s;
+    }
+
+    /* 文字サイズ「大」 */
+    body.font-large .text-xs { font-size: 0.95rem; line-height: 1.4rem; }
+    body.font-large .text-sm { font-size: 1.05rem; line-height: 1.55rem; }
+    body.font-large .text-lg { font-size: 1.3rem; line-height: 1.7rem; }
+    body.font-large [class*="text-[9px]"] { font-size: 11px !important; }
+    body.font-large [class*="text-[10px]"] { font-size: 12.5px !important; }
+    body.font-large [class*="text-[11px]"] { font-size: 13.5px !important; }
   </style>
 </head>
 <body class="bg-slate-100 flex flex-col h-[100dvh]">
 
-  <!-- 上部ヘッダー（クリーンホワイト ＋ エメラルドグリーン） -->
+  <!-- 上部ヘッダー -->
   <header class="bg-white text-slate-800 px-3.5 sm:px-4 pt-3 pb-2.5 flex flex-col gap-2.5 shadow-sm z-[9999] shrink-0 relative border-b border-slate-100 btn-touch-ui">
-    <!-- 1行目：タイトル（左） ＆ 操作ボタン（右：現在地 ＋ ハンバーガー） -->
     <div class="flex items-center justify-between w-full gap-2">
       <div class="flex items-center gap-2.5 shrink-0">
         <div class="w-9 h-9 rounded-xl bg-[#13685e] flex items-center justify-center text-white shadow-sm shrink-0">
@@ -145,7 +161,6 @@
         </div>
       </div>
 
-      <!-- 右端：現在地ボタン ＆ ハンバーガーメニュー -->
       <div id="headerControls" class="hidden flex items-center justify-end gap-2">
         <button onclick="moveToCurrentLocation()" aria-label="現在地に移動" title="現在地に移動"
           class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 rounded-xl text-base transition flex items-center justify-center w-10 h-10 border border-slate-200 bg-white shadow-sm">
@@ -159,7 +174,11 @@
     </div>
 
     <!-- ハンバーガーメニュー ドロップダウン -->
-    <div id="hamburgerDropdown" class="hidden absolute right-3 top-16 z-[10000] bg-white text-slate-800 border border-slate-200 rounded-2xl shadow-xl p-1.5 w-40 flex flex-col gap-1 backdrop-blur-md">
+    <div id="hamburgerDropdown" class="hidden absolute right-3 top-16 z-[10000] bg-white text-slate-800 border border-slate-200 rounded-2xl shadow-xl p-1.5 w-44 flex flex-col gap-1 backdrop-blur-md">
+      <button onclick="openSettingsSheet()" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2 transition font-semibold">
+        <i class="fas fa-sliders text-slate-500 w-4"></i>
+        <span>表示設定</span>
+      </button>
       <button onclick="openReportModal()" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2 transition font-semibold">
         <i class="fas fa-pen-to-square text-emerald-600 w-4"></i>
         <span>報告</span>
@@ -171,7 +190,7 @@
       </button>
     </div>
 
-    <!-- 2行目：エリアフィルター（カプセル・ピル型タブ ＆ 右端グラデーションガイド） -->
+    <!-- 2行目：エリアフィルター ＆ 近く ＆ 絞込 -->
     <div id="headerAreaFilter" class="hidden items-center justify-between gap-1 w-full pt-0.5 relative">
       <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 pb-0.5 pr-6">
         <button onclick="setAreaFilter('ALL')" id="header-tab-ALL" class="header-filter-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-white bg-[#1e293b] shadow-sm whitespace-nowrap text-center shrink-0">
@@ -191,9 +210,13 @@
           <i class="fas fa-location-arrow text-[10px] sm:text-[11px]"></i>
           <span>近く<span class="hidden sm:inline">500m</span></span>
         </button>
+        <button onclick="openFilterSheet()" id="header-tab-FILTER" class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-slate-700 bg-white border border-slate-300 whitespace-nowrap text-center shrink-0 flex items-center gap-1">
+          <i class="fas fa-sliders text-[10px] sm:text-[11px]"></i>
+          <span id="filterChipLabel" class="max-w-[7rem] truncate">絞込</span>
+        </button>
       </div>
 
-      <!-- 右端のスクロール誘導フェード（グラデーション影） -->
+      <!-- 右端のスクロール誘導フェード -->
       <div class="absolute right-0 top-0 bottom-0 w-7 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none flex items-center justify-end pr-0.5 text-slate-400 text-[10px]">
         <i class="fas fa-chevron-right opacity-60 animate-pulse"></i>
       </div>
@@ -250,12 +273,6 @@
       </button>
     </div>
 
-    <!-- ステータス表示（Toast） -->
-    <div id="statusToast" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 bg-slate-900/90 text-white text-xs px-4 py-2.5 rounded-full shadow-lg backdrop-blur-sm flex items-center gap-2 transition-all duration-300 pointer-events-none opacity-0">
-      <i id="statusSpinner" class="fas fa-circle-notch fa-spin text-blue-400"></i>
-      <span id="statusText">データを読み込んでいます...</span>
-    </div>
-
     <!-- マンション一覧ドロワー -->
     <div id="listDrawer" class="absolute top-0 right-0 h-full w-full sm:w-80 bg-white/95 backdrop-blur-md shadow-2xl z-30 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-l border-slate-200">
       <div class="p-4 bg-[#13685e] text-white flex items-center justify-between btn-touch-ui">
@@ -268,11 +285,10 @@
         </button>
       </div>
 
-      <!-- 検索窓 ＆ 該当数・並べ替え・更新エリア -->
       <div class="p-3 bg-slate-50/90 border-b border-slate-200 flex flex-col gap-2 shrink-0">
         <div class="relative">
           <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-          <input type="text" id="mansionSearchInput" oninput="debouncedSearchInput()" placeholder="マンション名・住所・エリアで検索..." class="w-full pl-8 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#13685e] focus:border-transparent text-slate-700 shadow-sm">
+          <input type="text" id="mansionSearchInput" oninput="debouncedSearchInput()" placeholder="名前・住所・区域で検索（ひらがなOK）" class="w-full pl-8 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#13685e] focus:border-transparent text-slate-700 shadow-sm">
         </div>
         <div class="flex items-center justify-between gap-2 text-xs text-slate-600 px-1 pt-0.5 btn-touch-ui">
           <div class="whitespace-nowrap">該当数: <span id="mansionSearchCount" class="font-bold text-slate-900">0</span> 件</div>
@@ -281,7 +297,7 @@
               <i class="fas fa-sort text-[10px]"></i>
               <span>近い順</span>
             </button>
-            <button onclick="loadMansionData()" class="text-[#13685e] hover:text-[#0a3f39] font-semibold flex items-center gap-1 transition">
+            <button onclick="loadMansionData(true)" class="text-[#13685e] hover:text-[#0a3f39] font-semibold flex items-center gap-1 transition">
               <i class="fas fa-sync-alt text-xs"></i>
               <span>更新</span>
             </button>
@@ -293,7 +309,88 @@
         <!-- JSで動的挿入 -->
       </div>
     </div>
+
+    <!-- ステータス表示（Toast） -->
+    <div id="statusToast" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-[45] bg-slate-900/90 text-white text-xs px-4 py-2.5 rounded-full shadow-lg backdrop-blur-sm flex items-center gap-2 transition-all duration-300 pointer-events-none opacity-0 max-w-[90vw]">
+      <i id="statusSpinner" class="fas fa-circle-notch fa-spin text-blue-400"></i>
+      <span id="statusText">データを読み込んでいます...</span>
+    </div>
   </main>
+
+  <!-- マンション詳細シート（画面下から開く） -->
+  <div id="detailSheet" class="fixed left-0 right-0 bottom-0 z-[40] bg-white rounded-t-3xl shadow-[0_-12px_32px_rgba(0,0,0,0.18)] border-t border-slate-100 max-h-[72dvh] overflow-y-auto sm:left-4 sm:right-auto sm:bottom-4 sm:w-[420px] sm:rounded-3xl sm:border btn-touch-ui">
+    <div class="flex justify-center pt-2 sm:hidden">
+      <div class="w-10 h-1.5 rounded-full bg-slate-200"></div>
+    </div>
+    <button type="button" onclick="closeDetailSheet()" aria-label="詳細を閉じる" class="absolute top-3 right-3 w-9 h-9 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center z-10">
+      <i class="fas fa-times text-base"></i>
+    </button>
+    <div id="detailContent" class="px-4 pt-3 pb-5"></div>
+  </div>
+
+  <!-- 絞り込みシート（区域・訪問状況） -->
+  <div id="filterSheet" class="hidden fixed inset-0 z-[10002] bg-slate-950/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 btn-touch-ui" onclick="closeFilterSheet()">
+    <div onclick="event.stopPropagation()" class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-100 p-5 sm:p-6 pb-7 max-h-[88dvh] flex flex-col">
+      <div class="flex items-center justify-between mb-3 shrink-0">
+        <div class="flex items-center gap-2 text-slate-800 font-bold text-lg">
+          <i class="fas fa-sliders text-emerald-600"></i>
+          <span>絞り込み</span>
+        </div>
+        <button type="button" onclick="closeFilterSheet()" aria-label="閉じる" class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+
+      <button type="button" id="unvisitedToggle" onclick="toggleUnvisitedOnly()" class="w-full flex items-center justify-between gap-3 p-3 rounded-2xl border border-slate-200 bg-slate-50 mb-4 shrink-0 text-left">
+        <div>
+          <div class="text-sm font-bold text-slate-800">未訪問のみ表示</div>
+          <div id="filterProgress" class="text-xs text-slate-500 mt-0.5"></div>
+        </div>
+        <span id="unvisitedSwitch" class="relative inline-block w-11 h-6 rounded-full bg-slate-300 transition shrink-0">
+          <span id="unvisitedKnob" class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"></span>
+        </span>
+      </button>
+
+      <div class="text-[11px] font-bold text-slate-500 mb-1.5 shrink-0">区域（丸の色がピンの色です）</div>
+      <div id="filterSheetList" class="flex-1 min-h-0 overflow-y-auto space-y-1.5 mb-3"></div>
+
+      <button type="button" onclick="resetFilters()" class="w-full py-3 rounded-2xl text-sm font-bold border border-slate-300 text-slate-600 bg-white hover:bg-slate-50 transition shrink-0">
+        絞り込みをすべて解除
+      </button>
+    </div>
+  </div>
+
+  <!-- 表示設定シート（文字サイズ・地図の種類） -->
+  <div id="settingsSheet" class="hidden fixed inset-0 z-[10002] bg-slate-950/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 btn-touch-ui" onclick="closeSettingsSheet()">
+    <div onclick="event.stopPropagation()" class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-100 p-5 sm:p-6 pb-7">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2 text-slate-800 font-bold text-lg">
+          <i class="fas fa-sliders text-emerald-600"></i>
+          <span>表示設定</span>
+        </div>
+        <button type="button" onclick="closeSettingsSheet()" aria-label="閉じる" class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+
+      <div class="text-[11px] font-bold text-slate-500 mb-1.5">文字サイズ</div>
+      <div class="grid grid-cols-2 gap-2 mb-5">
+        <button type="button" id="set-font-normal" onclick="applyFontSize('normal')" class="py-3 rounded-xl text-sm font-bold border transition">標準</button>
+        <button type="button" id="set-font-large" onclick="applyFontSize('large')" class="py-3 rounded-xl text-base font-bold border transition">大きい</button>
+      </div>
+
+      <div class="text-[11px] font-bold text-slate-500 mb-1.5">地図の種類</div>
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" id="set-map-standard" onclick="applyMapType('standard')" class="py-3 rounded-xl text-sm font-bold border transition flex items-center justify-center gap-1.5">
+          <i class="fas fa-map"></i><span>標準</span>
+        </button>
+        <button type="button" id="set-map-photo" onclick="applyMapType('photo')" class="py-3 rounded-xl text-sm font-bold border transition flex items-center justify-center gap-1.5">
+          <i class="fas fa-satellite"></i><span>航空写真</span>
+        </button>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-3 leading-snug">航空写真は国土地理院のタイルを使用しています（日本国内のみ）。</p>
+    </div>
+  </div>
 
   <!-- ルート案内シート（地図アプリへ移動） -->
   <div id="routeSheet" class="hidden fixed inset-0 z-[10002] bg-slate-950/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 btn-touch-ui" onclick="closeRouteSheet()">
@@ -420,23 +517,33 @@
   </div>
 
   <script>
-    // セッション認証状態（サーバー検証後に保持）
+    // ============================================================
+    // 状態管理
+    // ============================================================
     let userAuthPassword = "";
 
     let map = null;
+    let baseLayer = null;
     let markersLayer = null;
     let userMarker = null;
     let mansionMarkersMap = {};
     let mansionDataList = [];
     let watchPositionId = null;
     let userCoordinates = null;
+
     let currentAreaFilter = 'ALL';
-    let searchKeyword = '';
+    let currentSheetFilter = '';
+    let unvisitedOnly = false;
+    let searchTerms = [];
     let isDrawerOpen = false;
     let searchDebounceTimer = null;
-    let isPopupOpen = false;
+    let currentDetailId = null;
 
-    // 現在地ボタンのズーム
+    let hasAppliedDataOnce = false;
+    let restoredView = false;
+    let isInitialLoading = false;
+    let mapViewTimer = null;
+
     const CURRENT_LOCATION_ZOOM = 16;
 
     // 近く表示・並べ替え
@@ -449,18 +556,41 @@
     // 報告の対象マンション
     let reportTarget = null;
 
-    // ルート案内用の状態
+    // ルート案内
     let routeTarget = null;
     let routeMode = 'walking';
-    const ROUTE_MODE_KEY = 'konohana_route_mode';
     const VALID_ROUTE_MODES = ['walking', 'driving', 'bicycling'];
 
-    try {
-      const saved = localStorage.getItem(ROUTE_MODE_KEY);
-      if (saved && VALID_ROUTE_MODES.includes(saved)) routeMode = saved;
-    } catch (e) { /* 何もしない */ }
+    // 端末への保存キー
+    const ROUTE_MODE_KEY = 'konohana_route_mode';
+    const CACHE_KEY = 'konohana_mansion_cache_v1';
+    const PWHASH_KEY = 'konohana_pw_hash_v1';
+    const VIEW_KEY = 'konohana_map_view_v1';
+    const FONT_KEY = 'konohana_font_size';
+    const MAPTYPE_KEY = 'konohana_map_type';
 
-    // カラーパレット定義（16シート識別用）
+    let fontSize = 'normal';
+    let mapType = 'standard';
+
+    // ============================================================
+    // 端末ストレージ（使えない環境でもエラーにしない）
+    // ============================================================
+    function storageGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+    function storageSet(key, val) { try { localStorage.setItem(key, val); } catch (e) { /* 何もしない */ }  }
+    function storageRemove(key) { try { localStorage.removeItem(key); } catch (e) { /* 何もしない */ } }
+
+    (function restoreSimpleSettings() {
+      const saved = storageGet(ROUTE_MODE_KEY);
+      if (saved && VALID_ROUTE_MODES.includes(saved)) routeMode = saved;
+      const f = storageGet(FONT_KEY);
+      if (f === 'large' || f === 'normal') fontSize = f;
+      const t = storageGet(MAPTYPE_KEY);
+      if (t === 'standard' || t === 'photo') mapType = t;
+    })();
+
+    // ============================================================
+    // 共通ヘルパー
+    // ============================================================
     const sheetColors = [
       { bg: '#2563eb', text: '#ffffff', badgeBg: '#dbeafe', badgeText: '#1e40af' },
       { bg: '#dc2626', text: '#ffffff', badgeBg: '#fee2e2', badgeText: '#991b1b' },
@@ -503,6 +633,23 @@
       return /^https?:\/\//i.test(trimmed) ? trimmed : '';
     }
 
+    // 検索用の正規化：全角/半角・大文字/小文字・ひらがな/カタカナのゆれを吸収
+    function normalizeText(s) {
+      return String(s ?? '')
+        .normalize('NFKC')
+        .toLowerCase()
+        .replace(/[\u30a1-\u30f6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60))
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function todayString() {
+      const d = new Date();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return d.getFullYear() + '-' + mm + '-' + dd;
+    }
+
     function getSheetColor(sheetName) {
       if (!sheetName) sheetName = 'その他';
       if (!sheetColorMap[sheetName]) {
@@ -521,10 +668,99 @@
       return `<span style="background-color: ${esc(st.bg)}; color: ${esc(st.text)};" class="px-2 py-0.5 rounded-full text-[10px] font-bold inline-block">${esc(area)}</span>`;
     }
 
+    // 「注意」列の内容を「、」「,」「改行」「/」で区切って配列にする
+    function parseNotes(note) {
+      return String(note || '').split(/[、,，\/\n]+/).map(s => s.trim()).filter(Boolean);
+    }
+
     function findMansion(id) {
       return mansionDataList.find(m => m.id === id);
     }
 
+    function mansionKey(m) {
+      return [m.sheetName, m.row, m.name].join('#');
+    }
+
+    function getMansionArea(m) {
+      if (m.address && m.address.includes('此花区')) return '此花区';
+      if (m.address && m.address.includes('福島区')) return '福島区';
+      if (m.sheetName && m.sheetName.includes('海老江')) return '福島区';
+      return 'その他';
+    }
+
+    function isUrgentMansion(m) {
+      if (typeof m.isUrgent === 'boolean') return m.isUrgent;
+      return !!(m.name && (m.name.includes('急ぎ') || m.name.includes('優先')));
+    }
+
+    function prepareMansion(m) {
+      const copy = Object.assign({}, m);
+      copy.note = copy.note || '';
+      copy.visitDate = copy.visitDate || '';
+      copy.distance = null;
+      copy._search = normalizeText([copy.name, copy.address, copy.sheetName, getMansionArea(copy), copy.note].join(' '));
+      return copy;
+    }
+
+    // ============================================================
+    // 表示設定（文字サイズ・地図の種類）
+    // ============================================================
+    function applyFontSize(size) {
+      fontSize = (size === 'large') ? 'large' : 'normal';
+      document.body.classList.toggle('font-large', fontSize === 'large');
+      storageSet(FONT_KEY, fontSize);
+      updateSettingsUI();
+    }
+
+    const TILE_DEFS = {
+      standard: {
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        options: { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }
+      },
+      photo: {
+        url: 'https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg',
+        options: { maxZoom: 19, maxNativeZoom: 18, attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>' }
+      }
+    };
+
+    function applyMapType(type) {
+      if (!TILE_DEFS[type]) type = 'standard';
+      mapType = type;
+      storageSet(MAPTYPE_KEY, type);
+      if (map) {
+        if (baseLayer) map.removeLayer(baseLayer);
+        baseLayer = L.tileLayer(TILE_DEFS[type].url, TILE_DEFS[type].options).addTo(map);
+        baseLayer.bringToBack();
+      }
+      updateSettingsUI();
+    }
+
+    function updateSettingsUI() {
+      const on = "py-3 rounded-xl font-bold border transition flex items-center justify-center gap-1.5 bg-[#13685e] text-white border-[#13685e] shadow-sm";
+      const off = "py-3 rounded-xl font-bold border transition flex items-center justify-center gap-1.5 bg-white text-slate-600 border-slate-200 hover:bg-slate-50";
+      const set = (id, active, extra) => {
+        const el = document.getElementById(id);
+        if (el) el.className = (active ? on : off) + ' ' + extra;
+      };
+      set('set-font-normal', fontSize === 'normal', 'text-sm');
+      set('set-font-large', fontSize === 'large', 'text-base');
+      set('set-map-standard', mapType === 'standard', 'text-sm');
+      set('set-map-photo', mapType === 'photo', 'text-sm');
+    }
+
+    function openSettingsSheet() {
+      closeHamburgerMenu();
+      updateSettingsUI();
+      document.getElementById('settingsSheet').classList.remove('hidden');
+    }
+    function closeSettingsSheet() {
+      const el = document.getElementById('settingsSheet');
+      if (el) el.classList.add('hidden');
+    }
+
+    // ============================================================
+    // 距離計算・近く表示・並べ替え
+    // ============================================================
     function calcDistanceMeters(lat1, lng1, lat2, lng2) {
       const R = 6371000;
       const toRad = (d) => d * Math.PI / 180;
@@ -601,7 +837,7 @@
 
     function toggleSortByDistance() {
       if (nearMode) {
-        showToast("「近く500m」の表示中は近い順に並びます", false);
+        showToast("「近く」の表示中は近い順に並びます", false);
         return;
       }
       if (!sortByDistance && !userCoordinates) {
@@ -622,6 +858,7 @@
         : "px-2.5 py-1 rounded-full text-[11px] font-bold border transition flex items-center gap-1 bg-white text-slate-600 border-slate-300";
     }
 
+    // 現在地が更新されたときの再描画（50m以上動いたときだけ）
     function onLocationUpdated() {
       if (!userCoordinates) return;
       const moved = !lastListCoords ||
@@ -631,11 +868,14 @@
 
       if (nearMode) {
         updateNearCircle();
-        if (!isPopupOpen) renderMarkers(false);
+        renderMarkers(false);
       }
       if (isDrawerOpen) renderDrawerList(true);
     }
 
+    // ============================================================
+    // ルート案内（Googleマップ / Appleマップ）
+    // ============================================================
     function isIOSDevice() {
       const ua = navigator.userAgent || '';
       if (/iPhone|iPad|iPod/i.test(ua)) return true;
@@ -687,7 +927,7 @@
     function setRouteMode(mode) {
       if (!VALID_ROUTE_MODES.includes(mode)) return;
       routeMode = mode;
-      try { localStorage.setItem(ROUTE_MODE_KEY, mode); } catch (e) { /* 何もしない */ }
+      storageSet(ROUTE_MODE_KEY, mode);
       updateRouteSheetUI();
     }
 
@@ -723,8 +963,319 @@
       if (e.key === 'Escape') {
         closeRouteSheet();
         closeReportModal();
+        closeFilterSheet();
+        closeSettingsSheet();
+        closeDetailSheet();
       }
     });
+
+    // ============================================================
+    // 詳細シート（画面下から開く）
+    // ============================================================
+    function openDetailSheet(id) {
+      const m = findMansion(id);
+      if (!m) return;
+      currentDetailId = id;
+      closeHamburgerMenu();
+      renderDetailSheet();
+      const sheet = document.getElementById('detailSheet');
+      sheet.scrollTop = 0;
+      sheet.classList.add('open');
+      requestAnimationFrame(() => panMarkerIntoView(m));
+    }
+
+    function closeDetailSheet() {
+      currentDetailId = null;
+      const sheet = document.getElementById('detailSheet');
+      if (sheet) sheet.classList.remove('open');
+    }
+
+    // シートに隠れないよう、ピンを見える位置へ移動
+    function panMarkerIntoView(m) {
+      if (!map) return;
+      const sheet = document.getElementById('detailSheet');
+      const size = map.getSize();
+      const pt = map.latLngToContainerPoint([m.lat, m.lng]);
+      let tx = size.x / 2;
+      let ty = size.y / 2;
+      if (window.innerWidth < 640) {
+        const avail = size.y - (sheet ? sheet.offsetHeight : 0);
+        ty = Math.max(avail / 2, 60);
+      } else {
+        tx = size.x / 2 + 210;
+      }
+      map.panBy([pt.x - tx, pt.y - ty], { animate: true });
+    }
+
+    function renderDetailSheet() {
+      const box = document.getElementById('detailContent');
+      const m = findMansion(currentDetailId);
+      if (!box || !m) return;
+
+      if (userCoordinates) m.distance = calcDistanceMeters(userCoordinates[0], userCoordinates[1], m.lat, m.lng);
+
+      const color = getSheetColor(m.sheetName);
+      const area = getMansionArea(m);
+      const validRoomLink = safeUrl(m.roomLink);
+      const visited = !!m.visitDate;
+      const notes = parseNotes(m.note);
+
+      const urgentTag = isUrgentMansion(m) ? `
+        <span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
+          <i class="fas fa-fire text-amber-600"></i> 急ぎ・優先
+        </span>` : '';
+
+      const visitedTag = visited ? `
+        <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
+          <i class="fas fa-check text-[9px]"></i> 訪問済み
+        </span>` : '';
+
+      const distTag = (m.distance !== null && m.distance !== undefined) ? `
+        <span class="bg-sky-50 text-sky-700 border border-sky-200 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
+          <i class="fas fa-location-arrow text-[9px]"></i> ${esc(formatDistance(m.distance))}
+        </span>` : '';
+
+      const noteBox = notes.length ? `
+        <div class="mt-3 p-3 rounded-2xl bg-red-50 border border-red-200 flex items-start gap-2">
+          <i class="fas fa-triangle-exclamation text-red-500 mt-1"></i>
+          <div class="flex flex-wrap gap-1.5">
+            ${notes.map(n => `<span class="bg-white text-red-700 border border-red-200 px-2 py-0.5 rounded-full text-xs font-bold">${esc(n)}</span>`).join('')}
+          </div>
+        </div>` : '';
+
+      const visitLine = visited ? `
+        <div class="mt-2 text-xs text-slate-500"><i class="fas fa-calendar-check mr-1 text-emerald-600"></i>最終訪問: ${esc(m.visitDate)}</div>` : '';
+
+      const roomBtn = validRoomLink
+        ? `<a href="${esc(validRoomLink)}" target="_blank" rel="noopener noreferrer" class="mt-4 flex items-center justify-center w-full px-4 py-3.5 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] font-bold rounded-2xl text-sm transition shadow-sm gap-2 no-underline" style="color:#ffffff !important;">
+            <span style="color:#ffffff !important;">部屋番号一覧を見る</span>
+            <i class="fas fa-external-link-alt text-[11px]" style="color:#ffffff !important;"></i>
+          </a>`
+        : `<div class="mt-4 text-xs text-slate-400 italic">リンク未登録</div>`;
+
+      const visitBtn = visited
+        ? `<button type="button" onclick="toggleVisited(${Number(m.id)})" class="flex items-center justify-center px-2 py-3 bg-slate-100 border-2 border-slate-300 text-slate-600 font-bold rounded-2xl text-sm transition gap-1.5 active:bg-slate-200">
+            <i class="fas fa-rotate-left text-xs"></i><span>訪問済み(取消)</span>
+          </button>`
+        : `<button type="button" onclick="toggleVisited(${Number(m.id)})" class="flex items-center justify-center px-2 py-3 bg-white border-2 border-emerald-500 text-emerald-700 font-bold rounded-2xl text-sm transition gap-1.5 hover:bg-emerald-50 active:bg-emerald-100">
+            <i class="fas fa-check-circle text-xs"></i><span>訪問済みにする</span>
+          </button>`;
+
+      box.innerHTML = `
+        <div class="pr-10 flex items-center gap-1.5 flex-wrap mb-2">
+          ${buildAreaBadge(area)}
+          <span style="background-color: ${esc(color.badgeBg)}; color: ${esc(color.badgeText)};" class="px-2 py-0.5 rounded-full text-[10px] font-bold inline-block">${esc(m.sheetName)}</span>
+          ${urgentTag}${visitedTag}${distTag}
+        </div>
+        <h3 class="text-base font-bold text-slate-900 leading-snug">${esc(m.name)}</h3>
+        <p class="mt-1 text-sm text-slate-600 flex items-start gap-1.5">
+          <i class="fas fa-location-dot text-slate-400 mt-1 shrink-0"></i>
+          <span class="leading-snug">${esc(m.address || '住所未登録')}</span>
+        </p>
+        ${noteBox}
+        ${visitLine}
+        ${roomBtn}
+        <div class="grid grid-cols-2 gap-2 mt-2.5">
+          <button type="button" onclick="openRouteSheet(${Number(m.id)})" class="flex items-center justify-center px-2 py-3 bg-white border-2 border-[#13685e] text-[#13685e] font-bold rounded-2xl text-sm transition gap-1.5 hover:bg-emerald-50 active:bg-emerald-100">
+            <i class="fas fa-route text-xs"></i><span>ルート案内</span>
+          </button>
+          ${visitBtn}
+        </div>
+        <button type="button" onclick="openReportModal(${Number(m.id)})" class="mt-2 flex items-center justify-center w-full px-3 py-2.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 font-semibold rounded-xl text-xs transition gap-1.5">
+          <i class="fas fa-pen-to-square text-[11px]"></i><span>このマンションについて報告</span>
+        </button>
+      `;
+    }
+
+    // ============================================================
+    // 訪問済みの記録
+    // ============================================================
+    function toggleVisited(id) {
+      const m = findMansion(id);
+      if (!m) return;
+      if (!m.sheetName || !m.row) {
+        showToast("このマンションは記録できません", false);
+        return;
+      }
+      if (m._visitBusy) return;
+
+      const nextVisited = !m.visitDate;
+      const prev = m.visitDate;
+      m.visitDate = nextVisited ? todayString() : '';
+      m._visitBusy = true;
+      afterVisitChange(m);
+
+      const finish = (ok, res) => {
+        m._visitBusy = false;
+        if (ok) {
+          if (res && res.visitDate !== undefined) m.visitDate = res.visitDate || '';
+          saveCachedMansions();
+          showToast(nextVisited ? "訪問済みにしました" : "訪問済みを取り消しました", false);
+        } else {
+          m.visitDate = prev;
+          showToast("記録できませんでした" + (res && res.error ? "：" + res.error : ""), false);
+        }
+        afterVisitChange(m);
+      };
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler((res) => finish(!!(res && res.success), res))
+          .withFailureHandler((err) => finish(false, { error: (err && err.message) || '通信エラー' }))
+          .setVisitStatus(userAuthPassword, { sheetName: m.sheetName, row: m.row, name: m.name, visited: nextVisited });
+      } else {
+        finish(true, { visitDate: m.visitDate });
+      }
+    }
+
+    function afterVisitChange(m) {
+      const mk = mansionMarkersMap[m.id];
+      if (mk) mk.setIcon(buildPinIcon(m));
+      if (unvisitedOnly) renderMarkers(false);
+      renderDrawerList(true);
+      if (currentDetailId === m.id) renderDetailSheet();
+      renderFilterSheetIfOpen();
+    }
+
+    // ============================================================
+    // 絞り込みシート（区域・未訪問）
+    // ============================================================
+    function getSheetStats() {
+      const order = [];
+      const map = {};
+      mansionDataList.forEach(m => {
+        const key = m.sheetName || 'その他';
+        if (!map[key]) { map[key] = { name: key, total: 0, visited: 0 }; order.push(key); }
+        map[key].total++;
+        if (m.visitDate) map[key].visited++;
+      });
+      return order.map(k => map[k]);
+    }
+
+    function openFilterSheet() {
+      closeHamburgerMenu();
+      renderFilterSheet();
+      document.getElementById('filterSheet').classList.remove('hidden');
+    }
+    function closeFilterSheet() {
+      const el = document.getElementById('filterSheet');
+      if (el) el.classList.add('hidden');
+    }
+    function renderFilterSheetIfOpen() {
+      const el = document.getElementById('filterSheet');
+      if (el && !el.classList.contains('hidden')) renderFilterSheet();
+    }
+
+    function renderFilterSheet() {
+      const stats = getSheetStats();
+      const totalAll = mansionDataList.length;
+      const visitedAll = mansionDataList.filter(m => m.visitDate).length;
+
+      const progress = document.getElementById('filterProgress');
+      if (progress) progress.textContent = `訪問済み ${visitedAll} / ${totalAll} 件`;
+
+      const sw = document.getElementById('unvisitedSwitch');
+      const knob = document.getElementById('unvisitedKnob');
+      if (sw) sw.className = 'relative inline-block w-11 h-6 rounded-full transition shrink-0 ' + (unvisitedOnly ? 'bg-[#13685e]' : 'bg-slate-300');
+      if (knob) knob.style.transform = unvisitedOnly ? 'translateX(20px)' : 'translateX(0)';
+
+      const list = document.getElementById('filterSheetList');
+      if (!list) return;
+
+      const allActive = !currentSheetFilter;
+      const allRow = `
+        <button type="button" onclick="setSheetFilterByIndex(-1)" class="w-full flex items-center gap-3 px-3 py-3 rounded-2xl border text-left transition ${allActive ? 'border-[#13685e] bg-emerald-50' : 'border-slate-200 bg-white hover:bg-slate-50'}">
+          <span class="w-3.5 h-3.5 rounded-full shrink-0 bg-gradient-to-br from-blue-500 via-emerald-500 to-rose-500"></span>
+          <span class="flex-1 text-sm font-bold text-slate-800">すべての区域</span>
+          <span class="text-xs text-slate-500 whitespace-nowrap">${visitedAll}/${totalAll}</span>
+          ${allActive ? '<i class="fas fa-check text-[#13685e]"></i>' : ''}
+        </button>`;
+
+      const rows = stats.map((s, i) => {
+        const color = getSheetColor(s.name);
+        const active = currentSheetFilter === s.name;
+        return `
+        <button type="button" onclick="setSheetFilterByIndex(${i})" class="w-full flex items-center gap-3 px-3 py-3 rounded-2xl border text-left transition ${active ? 'border-[#13685e] bg-emerald-50' : 'border-slate-200 bg-white hover:bg-slate-50'}">
+          <span class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color:${esc(color.bg)};"></span>
+          <span class="flex-1 text-sm font-bold text-slate-800 truncate">${esc(s.name)}</span>
+          <span class="text-xs text-slate-500 whitespace-nowrap">${s.visited}/${s.total}</span>
+          ${active ? '<i class="fas fa-check text-[#13685e]"></i>' : ''}
+        </button>`;
+      }).join('');
+
+      list.innerHTML = allRow + rows;
+    }
+
+    function setSheetFilterByIndex(i) {
+      if (i < 0) {
+        currentSheetFilter = '';
+      } else {
+        const stats = getSheetStats();
+        currentSheetFilter = stats[i] ? stats[i].name : '';
+      }
+      onFiltersChanged();
+      closeFilterSheet();
+    }
+
+    function toggleUnvisitedOnly() {
+      unvisitedOnly = !unvisitedOnly;
+      onFiltersChanged();
+    }
+
+    function resetFilters() {
+      currentSheetFilter = '';
+      unvisitedOnly = false;
+      onFiltersChanged();
+    }
+
+    function onFiltersChanged() {
+      updateFilterChip();
+      renderFilterSheetIfOpen();
+      renderMarkers(true);
+      renderDrawerList();
+    }
+
+    function updateFilterChip() {
+      const btn = document.getElementById('header-tab-FILTER');
+      const label = document.getElementById('filterChipLabel');
+      if (!btn || !label) return;
+
+      const parts = [];
+      if (currentSheetFilter) parts.push(currentSheetFilter);
+      if (unvisitedOnly) parts.push('未訪問');
+      label.textContent = parts.length ? parts.join('・') : '絞込';
+
+      btn.className = parts.length
+        ? "px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-white bg-[#13685e] border border-[#13685e] shadow-sm whitespace-nowrap text-center shrink-0 flex items-center gap-1"
+        : "px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-slate-700 bg-white border border-slate-300 whitespace-nowrap text-center shrink-0 flex items-center gap-1";
+    }
+
+    // ============================================================
+    // ログイン・認証（オフライン起動対応）
+    // ============================================================
+    async function hashPassword(text) {
+      try {
+        if (!(window.crypto && crypto.subtle)) return '';
+        const buf = new TextEncoder().encode('konohana-app:' + text);
+        const digest = await crypto.subtle.digest('SHA-256', buf);
+        return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+      } catch (e) {
+        return '';
+      }
+    }
+
+    async function storePasswordHash(pwd) {
+      const h = await hashPassword(pwd);
+      if (h) storageSet(PWHASH_KEY, h);
+    }
+
+    // 通信できないとき、前回ログイン時のパスワードと前回のデータがあれば、オフラインで起動を許可
+    async function tryOfflineLogin(pwd) {
+      const stored = storageGet(PWHASH_KEY);
+      if (!stored || !loadCachedMansions()) return false;
+      const h = await hashPassword(pwd);
+      return !!h && h === stored;
+    }
 
     function handleLogin(e) {
       if (e) e.preventDefault();
@@ -739,33 +1290,45 @@
       submitBtn.disabled = true;
       document.getElementById("loginBtnText").textContent = "確認中...";
 
+      const resetBtn = () => {
+        submitBtn.disabled = false;
+        document.getElementById("loginBtnText").textContent = "ログイン";
+      };
+
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler((res) => {
-            submitBtn.disabled = false;
-            document.getElementById("loginBtnText").textContent = "ログイン";
+            resetBtn();
             if (res && res.success) {
               if (errDiv) errDiv.classList.add("hidden");
               userAuthPassword = pwd;
+              storePasswordHash(pwd);
               onLoginSuccess();
             } else {
               if (errDiv) errDiv.classList.remove("hidden");
               if (errMsg) errMsg.textContent = res ? res.error : "パスワードが正しくありません";
             }
           })
-          .withFailureHandler((err) => {
-            submitBtn.disabled = false;
-            document.getElementById("loginBtnText").textContent = "ログイン";
-            if (errDiv) errDiv.classList.remove("hidden");
-            if (errMsg) errMsg.textContent = "通信エラーが発生しました";
+          .withFailureHandler(async () => {
+            resetBtn();
+            const ok = await tryOfflineLogin(pwd);
+            if (ok) {
+              if (errDiv) errDiv.classList.add("hidden");
+              userAuthPassword = pwd;
+              onLoginSuccess();
+              showToast("通信できないため、前回のデータで起動しました", false);
+            } else {
+              if (errDiv) errDiv.classList.remove("hidden");
+              if (errMsg) errMsg.textContent = "通信エラーが発生しました";
+            }
           })
           .checkPassword(pwd);
       } else {
+        // PC内でのテスト用フォールバック（localhost / ファイル直開きのときだけ有効）
         const host = location.hostname;
         const isLocalTest = (host === 'localhost' || host === '127.0.0.1' || host === '');
         setTimeout(() => {
-          submitBtn.disabled = false;
-          document.getElementById("loginBtnText").textContent = "ログイン";
+          resetBtn();
           if (isLocalTest && pwd.length > 0) {
             userAuthPassword = pwd;
             onLoginSuccess();
@@ -794,7 +1357,13 @@
       setTimeout(() => {
         initMap();
         if (map) map.invalidateSize();
-        loadMansionData();
+
+        // 前回のデータがあれば先に表示（裏で最新データを取得）
+        const cached = loadCachedMansions();
+        if (cached) {
+          applyMansionData(cached.data);
+        }
+        loadMansionData(false);
         startLocationTracking();
       }, 100);
     }
@@ -817,6 +1386,9 @@
       closeHamburgerMenu();
       closeRouteSheet();
       closeReportModal();
+      closeFilterSheet();
+      closeSettingsSheet();
+      closeDetailSheet();
       userAuthPassword = "";
 
       if (watchPositionId !== null && navigator.geolocation) {
@@ -830,11 +1402,28 @@
       userCoordinates = null;
       lastListCoords = null;
 
+      // 端末に保存していたデータとパスワードの照合用情報を削除
+      storageRemove(CACHE_KEY);
+      storageRemove(PWHASH_KEY);
+      mansionDataList = [];
+      mansionMarkersMap = {};
+      if (markersLayer) markersLayer.clearLayers();
+      hasAppliedDataOnce = false;
+      const drawerContent = document.getElementById('drawerContent');
+      if (drawerContent) drawerContent.innerHTML = '';
+
+      // 各種状態をリセット
       nearMode = false;
       sortByDistance = false;
+      currentAreaFilter = 'ALL';
+      currentSheetFilter = '';
+      unvisitedOnly = false;
       updateNearCircle();
       updateNearUI();
       updateSortUI();
+      updateFilterUI();
+      updateFilterChip();
+      updateCountsUI();
       reportTarget = null;
       updateReportTargetUI();
 
@@ -866,6 +1455,9 @@
       }
     });
 
+    // ============================================================
+    // 報告
+    // ============================================================
     function openReportModal(id) {
       closeHamburgerMenu();
       reportTarget = null;
@@ -925,7 +1517,6 @@
       submitBtn.disabled = true;
       submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin text-xs"></i> <span>送信中...</span>`;
 
-            // 対象マンションがある場合は、マンション名と住所を別々に送る
       const reportData = {
         reporterName: name,
         category: category,
@@ -934,11 +1525,15 @@
         address: reportTarget ? (reportTarget.address || '') : ''
       };
 
+      const resetSubmit = () => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="fas fa-paper-plane text-xs"></i> <span>送信</span>`;
+      };
+
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler((res) => {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = `<i class="fas fa-paper-plane text-xs"></i> <span>送信</span>`;
+            resetSubmit();
             if (res && res.success) {
               closeReportModal();
               showToast("報告を送信しました", false);
@@ -953,15 +1548,13 @@
             }
           })
           .withFailureHandler((err) => {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = `<i class="fas fa-paper-plane text-xs"></i> <span>送信</span>`;
+            resetSubmit();
             showToast("通信エラー: " + (err.message || err.toString()), false);
           })
-          .submitReport(reportData);
+          .submitReport(userAuthPassword, reportData);
       } else {
         setTimeout(() => {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = `<i class="fas fa-paper-plane text-xs"></i> <span>送信</span>`;
+          resetSubmit();
           closeReportModal();
           showToast("報告を送信しました（テスト動作）", false);
           reportTarget = null;
@@ -970,38 +1563,91 @@
       }
     }
 
+    // ============================================================
+    // 地図
+    // ============================================================
+    function loadSavedView() {
+      try {
+        const raw = storageGet(VIEW_KEY);
+        if (!raw) return null;
+        const v = JSON.parse(raw);
+        if (v && isFinite(v.lat) && isFinite(v.lng) && isFinite(v.zoom) &&
+            v.lat > 20 && v.lat < 50 && v.lng > 120 && v.lng < 155 && v.zoom >= 3 && v.zoom <= 19) {
+          return v;
+        }
+      } catch (e) { /* 何もしない */ }
+      return null;
+    }
+
+    function saveMapViewSoon() {
+      if (mapViewTimer) clearTimeout(mapViewTimer);
+      mapViewTimer = setTimeout(() => {
+        if (!map) return;
+        const c = map.getCenter();
+        storageSet(VIEW_KEY, JSON.stringify({ lat: c.lat, lng: c.lng, zoom: map.getZoom() }));
+      }, 600);
+    }
+
     function initMap() {
       if (map) return;
-      map = L.map('map', { zoomControl: false }).setView([34.682, 135.452], 14);
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      }).addTo(map);
+      const saved = loadSavedView();
+      restoredView = !!saved;
+      const center = saved ? [saved.lat, saved.lng] : [34.682, 135.452];
+      const zoom = saved ? saved.zoom : 14;
 
+      map = L.map('map', { zoomControl: false }).setView(center, zoom);
+      applyMapType(mapType);
       L.control.zoom({ position: 'bottomright' }).addTo(map);
 
       markersLayer = L.layerGroup().addTo(map);
 
-      map.on('popupopen', () => { isPopupOpen = true; });
-      map.on('popupclose', () => { isPopupOpen = false; });
+      map.on('click', () => closeDetailSheet());
+      map.on('moveend', saveMapViewSoon);
     }
 
-    function loadMansionData() {
-      showToast("データを読み込んでいます...", true);
+    // ============================================================
+    // データ読み込み・端末キャッシュ
+    // ============================================================
+    function loadCachedMansions() {
+      const raw = storageGet(CACHE_KEY);
+      if (!raw) return null;
+      try {
+        const o = JSON.parse(raw);
+        if (o && Array.isArray(o.data) && o.data.length > 0) return o;
+      } catch (e) { /* 何もしない */ }
+      return null;
+    }
+
+    function saveCachedMansions() {
+      if (!mansionDataList.length) return;
+      const slim = mansionDataList.map(m => {
+        const c = Object.assign({}, m);
+        delete c.distance;
+        delete c._search;
+        delete c._visitBusy;
+        return c;
+      });
+      storageSet(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), data: slim }));
+    }
+
+    function loadMansionData(force) {
+      isInitialLoading = (mansionDataList.length === 0);
+      showToast(isInitialLoading ? "データを読み込んでいます..." : "最新データを確認中...", true);
+      if (isInitialLoading) renderDrawerList();
 
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(onDataLoaded)
           .withFailureHandler(onDataError)
-          .getMansionData(userAuthPassword);
+          .getMansionData(userAuthPassword, !!force);
       } else {
         setTimeout(() => {
           onDataLoaded({
             success: true,
             data: [
-              { id: 1, name: "サンプルプレサンス此花 (急ぎ)", address: "大阪市此花区四貫島1-1", roomLink: "https://example.com", lat: 34.682, lng: 135.452, sheetName: "フロタン", isUrgent: true },
-              { id: 2, name: "福島グランドハイツ", address: "大阪市福島区海老江2-1", roomLink: "https://example.com", lat: 34.690, lng: 135.465, sheetName: "海老江", isUrgent: false }
+              { id: 1, name: "サンプルプレサンス此花 (急ぎ)", address: "大阪市此花区四貫島1-1", roomLink: "https://example.com", lat: 34.682, lng: 135.452, sheetName: "フロタン", row: 2, isUrgent: true, visitDate: "", note: "訪問拒否、外国語" },
+              { id: 2, name: "福島グランドハイツ", address: "大阪市福島区海老江2-1", roomLink: "https://example.com", lat: 34.690, lng: 135.465, sheetName: "海老江", row: 2, isUrgent: false, visitDate: "2026-10-01", note: "" }
             ]
           });
         }, 600);
@@ -1010,23 +1656,57 @@
 
     function onDataError(err) {
       console.error("GAS Execution Error: ", err);
-      showToast("通信エラー: " + (err.message || err.toString()), false);
+      isInitialLoading = false;
+      if (mansionDataList.length > 0) {
+        showToast("通信できないため、前回のデータを表示しています", false);
+      } else {
+        renderDrawerList();
+        showToast("通信エラー: " + ((err && err.message) || String(err)), false);
+      }
     }
 
     function onDataLoaded(res) {
+      isInitialLoading = false;
       if (!res || !res.success) {
         showToast("データ取得失敗: " + (res ? res.error : "不明なエラー"), false);
+        renderDrawerList();
         return;
       }
-
-      mansionDataList = res.data || [];
-
-      updateCountsUI();
-      renderMarkers(true);
-      renderDrawerList();
+      applyMansionData(res.data || []);
+      saveCachedMansions();
       showToast(`${mansionDataList.length}件のマンションを取得しました`, false);
     }
 
+    // 取得したデータを画面に反映（初回のみ全体表示、以降は地図位置を動かさない）
+    function applyMansionData(list) {
+      const openMansion = currentDetailId !== null ? findMansion(currentDetailId) : null;
+      const detailKey = openMansion ? mansionKey(openMansion) : null;
+
+      mansionDataList = (list || []).map(prepareMansion);
+
+      if (detailKey) {
+        const again = mansionDataList.find(x => mansionKey(x) === detailKey);
+        if (again) currentDetailId = again.id;
+        else closeDetailSheet();
+      }
+      if (currentSheetFilter && !mansionDataList.some(m => m.sheetName === currentSheetFilter)) {
+        currentSheetFilter = '';
+      }
+
+      const shouldFit = !hasAppliedDataOnce && !restoredView;
+      hasAppliedDataOnce = true;
+
+      updateCountsUI();
+      updateFilterChip();
+      renderMarkers(shouldFit);
+      renderDrawerList(true);
+      if (currentDetailId !== null) renderDetailSheet();
+      renderFilterSheetIfOpen();
+    }
+
+    // ============================================================
+    // 検索・絞り込み
+    // ============================================================
     function debouncedSearchInput() {
       if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
       searchDebounceTimer = setTimeout(() => {
@@ -1036,21 +1716,10 @@
 
     function handleSearchInput() {
       const input = document.getElementById("mansionSearchInput");
-      searchKeyword = input ? input.value.trim().toLowerCase() : '';
+      const normalized = input ? normalizeText(input.value) : '';
+      searchTerms = normalized ? normalized.split(' ').filter(Boolean) : [];
       renderMarkers(false);
       renderDrawerList();
-    }
-
-    function getMansionArea(m) {
-      if (m.address && m.address.includes('此花区')) return '此花区';
-      if (m.address && m.address.includes('福島区')) return '福島区';
-      if (m.sheetName && m.sheetName.includes('海老江')) return '福島区';
-      return 'その他';
-    }
-
-    function isUrgentMansion(m) {
-      if (typeof m.isUrgent === 'boolean') return m.isUrgent;
-      return !!(m.name && (m.name.includes('急ぎ') || m.name.includes('優先')));
     }
 
     function getFilteredMansionList() {
@@ -1063,18 +1732,20 @@
         list = list.filter(m => getMansionArea(m) === currentAreaFilter);
       }
 
+      if (currentSheetFilter) {
+        list = list.filter(m => m.sheetName === currentSheetFilter);
+      }
+
+      if (unvisitedOnly) {
+        list = list.filter(m => !m.visitDate);
+      }
+
       if (nearMode && userCoordinates) {
         list = list.filter(m => m.distance !== null && m.distance <= NEAR_RADIUS_M);
       }
 
-      if (searchKeyword) {
-        list = list.filter(m => {
-          const name = (m.name || '').toLowerCase();
-          const addr = (m.address || '').toLowerCase();
-          const sheet = (m.sheetName || '').toLowerCase();
-          const area = (getMansionArea(m) || '').toLowerCase();
-          return name.includes(searchKeyword) || addr.includes(searchKeyword) || sheet.includes(searchKeyword) || area.includes(searchKeyword);
-        });
+      if (searchTerms.length) {
+        list = list.filter(m => searchTerms.every(t => m._search.includes(t)));
       }
 
       if ((sortByDistance || nearMode) && userCoordinates) {
@@ -1094,15 +1765,11 @@
       const countFukushima = mansionDataList.filter(m => getMansionArea(m) === '福島区').length;
       const countUrgent = mansionDataList.filter(m => isUrgentMansion(m)).length;
 
-      const elAll = document.getElementById('count-ALL');
-      const elKonohana = document.getElementById('count-此花区');
-      const elFukushima = document.getElementById('count-福島区');
-      const elUrgent = document.getElementById('count-急ぎ・優先');
-
-      if (elAll) elAll.textContent = `(${countAll})`;
-      if (elKonohana) elKonohana.textContent = `(${countKonohana})`;
-      if (elFukushima) elFukushima.textContent = `(${countFukushima})`;
-      if (elUrgent) elUrgent.textContent = `(${countUrgent})`;
+      const set = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = `(${n})`; };
+      set('count-ALL', countAll);
+      set('count-此花区', countKonohana);
+      set('count-福島区', countFukushima);
+      set('count-急ぎ・優先', countUrgent);
     }
 
     function setAreaFilter(area) {
@@ -1131,95 +1798,46 @@
       });
     }
 
+    // ============================================================
+    // ピン・一覧
+    // ============================================================
     function buildPinIcon(m) {
       const color = getSheetColor(m.sheetName);
       const isUrgent = isUrgentMansion(m);
+      const visited = !!m.visitDate;
+      const hasNote = !!m.note;
 
       const urgentBadge = isUrgent ? `
         <div style="position: absolute; top: -5px; right: -5px; background: linear-gradient(135deg, #f59e0b, #dc2626); color: #ffffff; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px; border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10;">
           <i class="fas fa-fire"></i>
-        </div>
-      ` : '';
+        </div>` : '';
 
-      const urgentPulseHtml = isUrgent ? `<div class="urgent-pin-pulse"></div>` : '';
+      const noteBadge = hasNote ? `
+        <div style="position: absolute; top: -5px; left: -7px; background: #dc2626; color: #ffffff; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10;">!</div>` : '';
+
+      const visitedBadge = visited ? `
+        <div style="position: absolute; bottom: -4px; right: -7px; background: #059669; color: #ffffff; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 9px; border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10;">
+          <i class="fas fa-check"></i>
+        </div>` : '';
+
+      const urgentPulseHtml = (isUrgent && !visited) ? `<div class="urgent-pin-pulse"></div>` : '';
+      const fade = visited ? 'opacity: 0.5; filter: saturate(0.5);' : '';
 
       const pinHtml = `
         <div class="custom-mansion-pin" style="position: relative; display: flex; align-items: center; justify-content: center;">
           ${urgentPulseHtml}
-          <div style="background-color: ${color.bg}; color: ${color.text}; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid #ffffff; position: relative; z-index: 1;">
+          <div style="${fade} background-color: ${color.bg}; color: ${color.text}; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid #ffffff; position: relative; z-index: 1;">
             <i class="fas fa-building" style="transform: rotate(45deg); font-size: 13px;"></i>
           </div>
-          ${urgentBadge}
-        </div>
-      `;
+          ${urgentBadge}${noteBadge}${visitedBadge}
+        </div>`;
 
       return L.divIcon({
         className: 'mansion-pin-icon',
         html: pinHtml,
         iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32]
+        iconAnchor: [16, 32]
       });
-    }
-
-    function buildPopupContent(m) {
-      const color = getSheetColor(m.sheetName);
-      const isUrgent = isUrgentMansion(m);
-      const validRoomLink = safeUrl(m.roomLink);
-
-      const roomBtn = validRoomLink
-        ? `<a href="${esc(validRoomLink)}" target="_blank" rel="noopener noreferrer" class="room-link-btn mt-2 inline-flex items-center justify-center w-full px-4 py-2.5 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] !text-white font-bold rounded-2xl text-xs transition shadow-sm gap-2 no-underline shrink-0" style="color: #ffffff !important;">
-            <span style="color: #ffffff !important;">部屋番号一覧を見る</span>
-            <i class="fas fa-external-link-alt text-[10px]" style="color: #ffffff !important;"></i>
-           </a>`
-        : `<div class="mt-2 pb-1 text-xs text-slate-400 italic">リンク未登録</div>`;
-
-      const routeBtn = `
-        <button type="button" onclick="openRouteSheet(${Number(m.id)})"
-          class="mt-2 inline-flex items-center justify-center w-full px-4 py-2.5 bg-white border-2 border-[#13685e] text-[#13685e] font-bold rounded-2xl text-xs transition gap-2 shrink-0 hover:bg-emerald-50 active:bg-emerald-100">
-          <i class="fas fa-route text-[11px]"></i>
-          <span>ルート案内（地図アプリで開く）</span>
-        </button>`;
-
-      const reportBtn = `
-        <button type="button" onclick="openReportModal(${Number(m.id)})"
-          class="mt-2 inline-flex items-center justify-center w-full px-3 py-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 font-semibold rounded-xl text-[11px] transition gap-1.5">
-          <i class="fas fa-pen-to-square text-[10px]"></i>
-          <span>このマンションについて報告</span>
-        </button>`;
-
-      const urgentPopupTag = isUrgent ? `
-        <span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
-          <i class="fas fa-fire text-amber-600"></i> 急ぎ・優先
-        </span>
-      ` : '';
-
-      const distTag = (m.distance !== null && m.distance !== undefined) ? `
-        <span class="bg-sky-50 text-sky-700 border border-sky-200 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
-          <i class="fas fa-location-arrow text-[9px]"></i> ${esc(formatDistance(m.distance))}
-        </span>
-      ` : '';
-
-      return `
-        <div class="popup-inner-wrapper min-w-[220px]">
-          <div class="mb-1.5 flex items-center gap-1 flex-wrap">
-            ${buildAreaBadge(getMansionArea(m))}
-            <span style="background-color: ${esc(color.badgeBg)}; color: ${esc(color.badgeText)};" class="px-2 py-0.5 rounded-full text-[10px] font-bold inline-block">
-              ${esc(m.sheetName)}
-            </span>
-            ${urgentPopupTag}
-            ${distTag}
-          </div>
-          <h4 class="font-bold text-slate-900 text-sm mb-1 leading-tight">${esc(m.name)}</h4>
-          <p class="text-xs text-slate-600 flex items-start gap-1 my-1 mb-2">
-            <i class="fas fa-location-dot text-slate-400 mt-0.5 shrink-0"></i>
-            <span class="leading-tight">${esc(m.address || '住所未登録')}</span>
-          </p>
-          ${roomBtn}
-          ${routeBtn}
-          ${reportBtn}
-        </div>
-      `;
     }
 
     function renderMarkers(shouldFitBounds = false) {
@@ -1233,10 +1851,7 @@
 
       filteredList.forEach(m => {
         const marker = L.marker([m.lat, m.lng], { icon: buildPinIcon(m) });
-        marker.bindPopup(buildPopupContent(m), {
-          autoPanPaddingTopLeft: L.point(20, 85),
-          autoPanPaddingBottomRight: L.point(20, 20)
-        });
+        marker.on('click', () => openDetailSheet(m.id));
         markersLayer.addLayer(marker);
 
         mansionMarkersMap[m.id] = marker;
@@ -1256,10 +1871,28 @@
       }
     }
 
+    function skeletonHtml() {
+      const card = `
+        <div class="p-3 bg-white rounded-2xl border border-slate-200 animate-pulse flex flex-col gap-2">
+          <div class="flex gap-1.5"><div class="h-4 w-14 bg-slate-200 rounded-full"></div><div class="h-4 w-20 bg-slate-200 rounded-full"></div></div>
+          <div class="h-4 w-3/4 bg-slate-200 rounded"></div>
+          <div class="h-3 w-1/2 bg-slate-100 rounded"></div>
+          <div class="grid grid-cols-2 gap-2"><div class="h-8 bg-slate-100 rounded-xl"></div><div class="h-8 bg-slate-100 rounded-xl"></div></div>
+        </div>`;
+      return card.repeat(5);
+    }
+
     function renderDrawerList(preserveScroll = false) {
       const container = document.getElementById("drawerContent");
       const countEl = document.getElementById("mansionSearchCount");
       if (!container) return;
+
+      // 初回読み込み中は仮表示（スケルトン）
+      if (isInitialLoading && mansionDataList.length === 0) {
+        container.innerHTML = skeletonHtml();
+        if (countEl) countEl.textContent = '…';
+        return;
+      }
 
       const prevScroll = container.scrollTop;
       const filteredList = getFilteredMansionList();
@@ -1270,80 +1903,84 @@
           <div class="text-center py-10 text-slate-400 text-xs">
             <i class="fas fa-search-minus text-2xl mb-2 text-slate-300"></i>
             <p>${nearMode ? '半径' + NEAR_RADIUS_M + 'm以内にマンションはありません' : '該当するマンションが見つかりません'}</p>
-          </div>
-        `;
+          </div>`;
         return;
       }
 
       container.innerHTML = filteredList.map(m => {
         const color = getSheetColor(m.sheetName);
         const area = getMansionArea(m);
+        const areaStyle = getAreaStyle(area);
         const isUrgent = isUrgentMansion(m);
+        const visited = !!m.visitDate;
+        const notes = parseNotes(m.note);
 
         const urgentCardBadge = isUrgent ? `
           <span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
             <i class="fas fa-fire text-amber-600"></i> 急ぎ・優先
-          </span>
-        ` : '';
+          </span>` : '';
+
+        const visitedBadge = visited ? `
+          <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
+            <i class="fas fa-check text-[9px]"></i> 訪問済 ${esc(m.visitDate.slice(5))}
+          </span>` : '';
+
+        const noteBadges = notes.slice(0, 2).map(n => `
+          <span class="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
+            <i class="fas fa-triangle-exclamation text-[9px]"></i>${esc(n)}
+          </span>`).join('') + (notes.length > 2 ? `<span class="text-[10px] font-bold text-red-500">+${notes.length - 2}</span>` : '');
 
         const distBadge = (m.distance !== null && m.distance !== undefined) ? `
           <span class="ml-auto bg-sky-50 text-sky-700 border border-sky-200 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
             <i class="fas fa-location-arrow text-[9px]"></i>${esc(formatDistance(m.distance))}
-          </span>
-        ` : '';
+          </span>` : '';
 
         const validRoomLink = safeUrl(m.roomLink);
 
         const routeBtn = `
           <button type="button" onclick="event.stopPropagation(); openRouteSheet(${Number(m.id)})"
-            class="inline-flex items-center justify-center px-3 py-2 bg-white border border-[#13685e] text-[#13685e] font-bold rounded-xl text-xs transition gap-1.5 hover:bg-emerald-50 active:bg-emerald-100">
-            <i class="fas fa-route text-[10px]"></i>
-            <span>ルート案内</span>
+            class="inline-flex items-center justify-center px-3 py-2.5 bg-white border border-[#13685e] text-[#13685e] font-bold rounded-xl text-xs transition gap-1.5 hover:bg-emerald-50 active:bg-emerald-100">
+            <i class="fas fa-route text-[10px]"></i><span>ルート案内</span>
           </button>`;
 
         const roomBtn = validRoomLink
-          ? `<a href="${esc(validRoomLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="inline-flex items-center justify-center px-3 py-2 bg-[#13685e] hover:bg-[#0e524a] text-white font-bold rounded-xl text-xs transition shadow-sm gap-1.5 no-underline">
-              <span>部屋番号一覧</span>
-              <i class="fas fa-external-link-alt text-[10px]"></i>
-             </a>`
+          ? `<a href="${esc(validRoomLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="inline-flex items-center justify-center px-3 py-2.5 bg-[#13685e] hover:bg-[#0e524a] text-white font-bold rounded-xl text-xs transition shadow-sm gap-1.5 no-underline">
+              <span>部屋番号一覧</span><i class="fas fa-external-link-alt text-[10px]"></i>
+            </a>`
           : '';
+
+        const visitBtn = visited
+          ? `<button type="button" onclick="event.stopPropagation(); toggleVisited(${Number(m.id)})" class="inline-flex items-center justify-center px-3 py-2.5 bg-slate-100 border border-slate-300 text-slate-600 font-bold rounded-xl text-xs transition gap-1.5">
+              <i class="fas fa-rotate-left text-[10px]"></i><span>訪問取消</span>
+            </button>`
+          : `<button type="button" onclick="event.stopPropagation(); toggleVisited(${Number(m.id)})" class="inline-flex items-center justify-center px-3 py-2.5 bg-white border border-emerald-500 text-emerald-700 font-bold rounded-xl text-xs transition gap-1.5 hover:bg-emerald-50">
+              <i class="fas fa-check-circle text-[10px]"></i><span>訪問済みにする</span>
+            </button>`;
 
         const reportBtn = `
           <button type="button" onclick="event.stopPropagation(); openReportModal(${Number(m.id)})"
-            class="inline-flex items-center justify-center px-3 py-2 bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 font-bold rounded-xl text-xs transition gap-1.5">
-            <i class="fas fa-pen-to-square text-[10px]"></i>
-            <span>報告</span>
+            class="inline-flex items-center justify-center px-3 py-2.5 bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 font-bold rounded-xl text-xs transition gap-1.5">
+            <i class="fas fa-pen-to-square text-[10px]"></i><span>報告</span>
           </button>`;
 
         const noLinkNote = validRoomLink ? '' : `<div class="text-[11px] text-slate-400 italic">リンク未登録</div>`;
 
         return `
-          <div onclick="focusMansionOnMap(${Number(m.id)})" class="p-3 bg-white hover:bg-emerald-50/40 rounded-2xl border ${isUrgent ? 'border-amber-300 ring-1 ring-amber-200' : 'border-slate-200'} shadow-sm transition cursor-pointer flex flex-col gap-1 relative overflow-hidden">
+          <div onclick="focusMansionOnMap(${Number(m.id)})" style="border-left-color: ${esc(areaStyle.bg)};" class="p-3 ${visited ? 'bg-slate-50' : 'bg-white'} hover:bg-emerald-50/40 rounded-2xl border border-l-4 ${isUrgent ? 'border-t-amber-300 border-r-amber-300 border-b-amber-300' : 'border-t-slate-200 border-r-slate-200 border-b-slate-200'} shadow-sm transition cursor-pointer flex flex-col gap-1 relative overflow-hidden">
             <div class="flex items-center gap-1.5 flex-wrap">
               ${buildAreaBadge(area)}
-              <span style="background-color: ${esc(color.badgeBg)}; color: ${esc(color.badgeText)};" class="px-2 py-0.5 rounded-full text-[10px] font-bold">
-                ${esc(m.sheetName)}
-              </span>
-              ${urgentCardBadge}
-              ${distBadge}
+              <span style="background-color: ${esc(color.badgeBg)}; color: ${esc(color.badgeText)};" class="px-2 py-0.5 rounded-full text-[10px] font-bold">${esc(m.sheetName)}</span>
+              ${urgentCardBadge}${visitedBadge}${distBadge}
             </div>
-            <h4 class="font-bold text-slate-900 text-sm mt-0.5 flex items-center gap-1.5">
-              <span>${esc(m.name)}</span>
-            </h4>
+            ${noteBadges ? `<div class="flex items-center gap-1.5 flex-wrap">${noteBadges}</div>` : ''}
+            <h4 class="font-bold text-slate-900 text-sm mt-0.5 flex items-center gap-1.5"><span>${esc(m.name)}</span></h4>
             <p class="text-xs text-slate-500 flex items-center gap-1 mb-1">
-              <i class="fas fa-location-dot text-slate-400 shrink-0"></i>
-              <span>${esc(m.address || '住所未登録')}</span>
+              <i class="fas fa-location-dot text-slate-400 shrink-0"></i><span>${esc(m.address || '住所未登録')}</span>
             </p>
-            <div class="grid ${validRoomLink ? 'grid-cols-2' : 'grid-cols-1'} gap-2 mt-1">
-              ${routeBtn}
-              ${roomBtn}
-            </div>
+            <div class="grid ${validRoomLink ? 'grid-cols-2' : 'grid-cols-1'} gap-2 mt-1">${routeBtn}${roomBtn}</div>
             ${noLinkNote}
-            <div class="grid grid-cols-1 gap-2">
-              ${reportBtn}
-            </div>
-          </div>
-        `;
+            <div class="grid grid-cols-2 gap-2">${visitBtn}${reportBtn}</div>
+          </div>`;
       }).join('');
 
       if (preserveScroll) container.scrollTop = prevScroll;
@@ -1353,15 +1990,12 @@
       const mansion = findMansion(id);
       if (!mansion || !map) return;
 
-      if (window.innerWidth < 640) {
-        if (isDrawerOpen) toggleMansionListDrawer();
+      if (window.innerWidth < 640 && isDrawerOpen) {
+        toggleMansionListDrawer();
       }
 
-      map.setView([mansion.lat, mansion.lng], 17);
-      const marker = mansionMarkersMap[id];
-      if (marker) {
-        marker.openPopup();
-      }
+      map.setView([mansion.lat, mansion.lng], 17, { animate: false });
+      openDetailSheet(id);
     }
 
     function toggleMansionListDrawer() {
@@ -1372,6 +2006,7 @@
       isDrawerOpen = !isDrawerOpen;
 
       if (isDrawerOpen) {
+        closeDetailSheet();
         drawer.classList.remove("translate-x-full");
         if (btnList) {
           btnList.innerHTML = `<i class="fas fa-map text-xs"></i><span>地図</span>`;
@@ -1385,6 +2020,9 @@
       }
     }
 
+    // ============================================================
+    // 現在地
+    // ============================================================
     function startLocationTracking() {
       if (!navigator.geolocation) {
         showToast("お使いの端末はGPSに対応していません", false);
@@ -1435,6 +2073,9 @@
       }
     }
 
+    // ============================================================
+    // トースト
+    // ============================================================
     function showToast(message, isSpinning = false) {
       const toast = document.getElementById("statusToast");
       const text = document.getElementById("statusText");
@@ -1458,6 +2099,12 @@
         }, 3000);
       }
     }
+
+    // ============================================================
+    // 起動時の初期化（保存済みの文字サイズを反映）
+    // ============================================================
+    applyFontSize(fontSize);
+    updateSettingsUI();
   </script>
 </body>
 </html>
