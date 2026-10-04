@@ -259,7 +259,65 @@ function getMansionData(password) {
 }
 
 /**
+ * 「報告」シートの見出し（A〜F列の順番）
+ */
+const REPORT_HEADERS = ['送信日時', '奉仕者名', '項目', 'マンション名', '住所', '詳細内容'];
+
+/**
+ * 報告が送信されたときに通知メールを送る宛先
+ * （空文字 '' にすると通知メールは送信されません）
+ */
+const REPORT_NOTIFY_EMAIL = 'nao7083177@gmail.com';
+
+/**
+ * セルに書き込む値の安全化
+ * 先頭が「=」「+」「-」「@」の文字列は、スプレッドシートが数式として解釈しないよう文字列として扱う
+ */
+function sanitizeCellValue_(value) {
+  const s = String(value === null || value === undefined ? '' : value);
+  return /^[=+\-@]/.test(s) ? "'" + s : s;
+}
+
+/**
+ * 報告の通知メールを送信する補助関数
+ * info: { timestamp, reporterName, category, mansionName, address, details }
+ */
+function sendReportNotification_(reportUrl, info) {
+  if (!REPORT_NOTIFY_EMAIL) return;
+
+  // 件名に改行が混ざらないよう整形
+  const oneLine = (s) => String(s === null || s === undefined ? '' : s).replace(/[\r\n]+/g, ' ').trim();
+
+  const subject = '【此花マンション区域】新しい報告: ' + oneLine(info.category)
+    + (info.mansionName ? '（' + oneLine(info.mansionName) + '）' : '');
+
+  const body = [
+    '「報告」が送信されました。',
+    '',
+    '送信日時: ' + info.timestamp,
+    '奉仕者名: ' + (info.reporterName || '（未入力）'),
+    '項目: ' + (info.category || '（未選択）'),
+    'マンション名: ' + (info.mansionName || '（指定なし）'),
+    '住所: ' + (info.address || '（指定なし）'),
+    '',
+    '【詳細内容】',
+    (info.details || '（記入なし）'),
+    '',
+    '報告シート: ' + reportUrl
+  ].join('\n');
+
+  MailApp.sendEmail({
+    to: REPORT_NOTIFY_EMAIL,
+    subject: subject,
+    body: body,
+    name: '此花マンション区域'
+  });
+}
+
+/**
  * 報告送信処理
+ * 列の順番: A 送信日時 / B 奉仕者名 / C 項目 / D マンション名 / E 住所 / F 詳細内容
+ * 保存後、REPORT_NOTIFY_EMAIL 宛に通知メールを送信します。
  */
 function submitReport(data) {
   try {
@@ -274,21 +332,128 @@ function submitReport(data) {
     let reportSheet = ss.getSheetByName('報告');
     if (!reportSheet) {
       reportSheet = ss.insertSheet('報告');
-      reportSheet.appendRow(['送信日時', '奉仕者名', '項目', '詳細内容', '位置/マンション名']);
-      reportSheet.getRange(1, 1, 1, 5).setFontWeight('bold').setBackground('#f1f5f9');
+      reportSheet.appendRow(REPORT_HEADERS);
+      reportSheet.getRange(1, 1, 1, REPORT_HEADERS.length).setFontWeight('bold').setBackground('#f1f5f9');
+    }
+
+    data = data || {};
+
+    // マンション名・住所（新しい画面から別々に届く）
+    let mansionName = data.mansionName;
+    let address = data.address;
+
+    // 古い画面（キャッシュ等）から「名前｜住所｜シート名」でまとめて届いた場合の互換処理
+    if (mansionName === undefined && address === undefined && data.location) {
+      const parts = String(data.location).split('｜');
+      mansionName = parts[0] || '';
+      address = parts[1] || '';
     }
 
     const timestamp = Utilities.formatDate(new Date(), 'JST', 'yyyy-MM-dd HH:mm:ss');
     reportSheet.appendRow([
       timestamp,
-      data.reporterName || '',
-      data.category || '',
-      data.details || '',
-      data.location || ''
+      sanitizeCellValue_(data.reporterName),
+      sanitizeCellValue_(data.category),
+      sanitizeCellValue_(mansionName),
+      sanitizeCellValue_(address),
+      sanitizeCellValue_(data.details)
     ]);
+
+    // 通知メール（失敗しても報告の保存自体は成功として扱う）
+    try {
+      sendReportNotification_(
+        ss.getUrl() + '#gid=' + reportSheet.getSheetId(),
+        {
+          timestamp: timestamp,
+          reporterName: data.reporterName,
+          category: data.category,
+          mansionName: mansionName,
+          address: address,
+          details: data.details
+        }
+      );
+    } catch (mailErr) {
+      Logger.log('Report notification mail error: ' + mailErr.toString());
+    }
 
     return { success: true };
   } catch (e) {
     return { success: false, error: e.toString() };
   }
+}
+
+/**
+ * 【管理者用・初回のみ手動実行】
+ * 通知メールのテスト送信と、メール送信権限の承認を行います。
+ * 実行すると、権限の確認画面が表示されるので「許可」してください。
+ */
+function testReportEmail() {
+  if (!REPORT_NOTIFY_EMAIL) {
+    Logger.log('REPORT_NOTIFY_EMAIL が空のため、テストメールは送信しませんでした。');
+    return;
+  }
+  MailApp.sendEmail({
+    to: REPORT_NOTIFY_EMAIL,
+    subject: '【テスト】此花マンション区域 通知メール',
+    body: 'これはテストメールです。\n報告が送信されると、このアドレスに通知メールが届きます。',
+    name: '此花マンション区域'
+  });
+  Logger.log('テストメールを送信しました: ' + REPORT_NOTIFY_EMAIL);
+}
+
+/**
+ * 【管理者用・1回だけ手動実行】
+ * 旧形式の「報告」シート（A:送信日時 / B:奉仕者名 / C:項目 / D:詳細内容 / E:位置/マンション名）を
+ * 新形式（A:送信日時 / B:奉仕者名 / C:項目 / D:マンション名 / E:住所 / F:詳細内容）に変換します。
+ *
+ * ・実行前に「報告」シートを複製してバックアップしてください
+ * ・旧E列の「名前｜住所｜シート名」のうち、シート名は新形式には含まれません
+ * ・すでに新形式の場合（D1が「マンション名」）は何もせず終了します
+ */
+function migrateReportSheetLayout() {
+  const spreadsheetId = '1ht3s0_fMP0_n89zeRYUD0_iUv9cMhdhOmeCyXgr6vbQ';
+  const ss = SpreadsheetApp.openById(spreadsheetId);
+  const sheet = ss.getSheetByName('報告');
+
+  if (!sheet) {
+    Logger.log('「報告」シートが見つかりません。移行は不要です。');
+    return;
+  }
+
+  const lastCol = Math.max(sheet.getLastColumn(), 5);
+  const header = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h).trim());
+
+  // 旧形式かどうかを確認（D1が「詳細内容」、E1が「位置/マンション名」）
+  if (header[3] !== '詳細内容' || header[4] !== '位置/マンション名') {
+    Logger.log('旧形式の見出しではないため、移行を中止しました。（D1=' + header[3] + ' / E1=' + header[4] + '）');
+    return;
+  }
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow >= 2) {
+    const rows = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
+    const converted = rows.map(r => {
+      const details = r[3];                       // 旧D列：詳細内容
+      const loc = String(r[4] || '');             // 旧E列：名前｜住所｜シート名
+      const parts = loc ? loc.split('｜') : [];
+      return [
+        r[0],                                     // 送信日時
+        r[1],                                     // 奉仕者名
+        r[2],                                     // 項目
+        parts[0] || '',                           // マンション名
+        parts[1] || '',                           // 住所
+        details                                   // 詳細内容
+      ];
+    });
+    sheet.getRange(2, 1, converted.length, REPORT_HEADERS.length).setValues(converted);
+    sheet.getRange(2, 1, converted.length, 1).setNumberFormat('yyyy-MM-dd HH:mm:ss');
+  }
+
+  // 見出し行を新形式に更新
+  sheet.getRange(1, 1, 1, REPORT_HEADERS.length)
+    .setValues([REPORT_HEADERS])
+    .setFontWeight('bold')
+    .setBackground('#f1f5f9');
+
+  Logger.log('移行が完了しました。変換した行数: ' + Math.max(lastRow - 1, 0));
 }

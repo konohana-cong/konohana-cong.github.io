@@ -925,11 +925,14 @@
       submitBtn.disabled = true;
       submitBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin text-xs"></i> <span>送信中...</span>`;
 
-      const locationText = reportTarget
-        ? [reportTarget.name, reportTarget.address, reportTarget.sheetName].filter(Boolean).join('｜')
-        : '';
-
-      const reportData = { reporterName: name, category: category, details: details, location: locationText };
+            // 対象マンションがある場合は、マンション名と住所を別々に送る
+      const reportData = {
+        reporterName: name,
+        category: category,
+        details: details,
+        mansionName: reportTarget ? (reportTarget.name || '') : '',
+        address: reportTarget ? (reportTarget.address || '') : ''
+      };
 
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
