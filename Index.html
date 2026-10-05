@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>此花区域</title>
 
+  <!-- Web App & PWA Settings -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="此花区域">
+  <meta name="application-name" content="此花区域">
+  <meta name="theme-color" content="#0e4d45">
+
+  <!-- アプリアイコン・ファビコン設定 (SVG Data URI: 白背景・緑マンション・KONOHANA KUIKIテキスト) -->
+  <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%23ffffff'/%3E%3Cpath fill='%230e4d45' d='M 176 100 C 153.9 100 136 117.9 136 140 L 136 348 C 136 354.6 141.4 360 148 360 L 216 360 L 216 304 C 216 281.9 233.9 264 256 264 C 278.1 264 296 281.9 296 304 L 296 360 L 364 360 C 370.6 360 376 354.6 376 348 L 376 140 C 376 117.9 358.1 100 336 100 Z M 184 148 A 16 16 0 0 1 216 148 A 16 16 0 0 1 184 148 Z M 240 148 A 16 16 0 0 1 272 148 A 16 16 0 0 1 240 148 Z M 296 148 A 16 16 0 0 1 328 148 A 16 16 0 0 1 296 148 Z M 184 204 A 16 16 0 0 1 216 204 A 16 16 0 0 1 184 204 Z M 240 204 A 16 16 0 0 1 272 204 A 16 16 0 0 1 240 204 Z M 296 204 A 16 16 0 0 1 328 204 A 16 16 0 0 1 296 204 Z'/%3E%3Ctext x='256' y='424' fill='%230e4d45' font-family='-apple-system, BlinkMacSystemFont, Arial, sans-serif' font-weight='800' font-size='38' letter-spacing='3' text-anchor='middle'%3EKONOHANA KUIKI%3C/text%3E%3C/svg%3E">
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%23ffffff'/%3E%3Cpath fill='%230e4d45' d='M 176 100 C 153.9 100 136 117.9 136 140 L 136 348 C 136 354.6 141.4 360 148 360 L 216 360 L 216 304 C 216 281.9 233.9 264 256 264 C 278.1 264 296 281.9 296 304 L 296 360 L 364 360 C 370.6 360 376 354.6 376 348 L 376 140 C 376 117.9 358.1 100 336 100 Z M 184 148 A 16 16 0 0 1 216 148 A 16 16 0 0 1 184 148 Z M 240 148 A 16 16 0 0 1 272 148 A 16 16 0 0 1 240 148 Z M 296 148 A 16 16 0 0 1 328 148 A 16 16 0 0 1 296 148 Z M 184 204 A 16 16 0 0 1 216 204 A 16 16 0 0 1 184 204 Z M 240 204 A 16 16 0 0 1 272 204 A 16 16 0 0 1 240 204 Z M 296 204 A 16 16 0 0 1 328 204 A 16 16 0 0 1 296 204 Z'/%3E%3Ctext x='256' y='424' fill='%230e4d45' font-family='-apple-system, BlinkMacSystemFont, Arial, sans-serif' font-weight='800' font-size='38' letter-spacing='3' text-anchor='middle'%3EKONOHANA KUIKI%3C/text%3E%3C/svg%3E">
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome Icons -->
@@ -153,8 +165,13 @@
   <header class="bg-white text-slate-800 px-3.5 sm:px-4 pt-3 pb-2.5 flex flex-col gap-2.5 shadow-sm z-[9999] shrink-0 relative border-b border-slate-100 btn-touch-ui">
     <div class="flex items-center justify-between w-full gap-2">
       <div class="flex items-center gap-2.5 shrink-0">
-        <div class="w-9 h-9 rounded-xl bg-[#13685e] flex items-center justify-center text-white shadow-sm shrink-0">
-          <i class="fas fa-building text-base"></i>
+        <!-- ヘッダーアイコン (SVG Data URI) -->
+        <div class="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-sm shrink-0 overflow-hidden border border-slate-200">
+          <svg viewBox="0 0 512 512" class="w-full h-full">
+            <rect width="512" height="512" rx="110" fill="#ffffff"/>
+            <path fill="#0e4d45" d="M 176 100 C 153.9 100 136 117.9 136 140 L 136 348 C 136 354.6 141.4 360 148 360 L 216 360 L 216 304 C 216 281.9 233.9 264 256 264 C 278.1 264 296 281.9 296 304 L 296 360 L 364 360 C 370.6 360 376 354.6 376 348 L 376 140 C 376 117.9 358.1 100 336 100 Z M 184 148 A 16 16 0 0 1 216 148 A 16 16 0 0 1 184 148 Z M 240 148 A 16 16 0 0 1 272 148 A 16 16 0 0 1 240 148 Z M 296 148 A 16 16 0 0 1 328 148 A 16 16 0 0 1 296 148 Z M 184 204 A 16 16 0 0 1 216 204 A 16 16 0 0 1 184 204 Z M 240 204 A 16 16 0 0 1 272 204 A 16 16 0 0 1 240 204 Z M 296 204 A 16 16 0 0 1 328 204 A 16 16 0 0 1 296 204 Z"/>
+            <text x="256" y="424" fill="#0e4d45" font-family="-apple-system, BlinkMacSystemFont, Arial, sans-serif" font-weight="800" font-size="38" letter-spacing="3" text-anchor="middle">KONOHANA KUIKI</text>
+          </svg>
         </div>
         <div class="flex flex-col shrink-0">
           <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-800 whitespace-nowrap leading-tight">此花区域</h1>
@@ -191,7 +208,7 @@
       </button>
     </div>
 
-    <!-- 2行目：エリアフィルター ＆ 近く ＆ 絞込 -->
+    <!-- 2行目：エリアフィルター ＆ 絞込 -->
     <div id="headerAreaFilter" class="hidden items-center justify-between gap-1 w-full pt-0.5 relative">
       <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 pb-0.5 pr-6">
         <button onclick="setAreaFilter('ALL')" id="header-tab-ALL" class="header-filter-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-white bg-[#1e293b] shadow-sm whitespace-nowrap text-center shrink-0">
@@ -206,10 +223,6 @@
         <button onclick="setAreaFilter('急ぎ・優先')" id="header-tab-急ぎ・優先" class="header-filter-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-[#854d0e] bg-[#fef3c7] hover:bg-[#fde68a] whitespace-nowrap text-center shrink-0 flex items-center gap-1">
           <i class="fas fa-fire text-[#854d0e] text-[10px] sm:text-[11px]"></i>
           <span>急ぎ<span class="hidden sm:inline">・優先</span> <span id="count-急ぎ・優先" class="opacity-90 ml-0.5 text-[10px] sm:text-[11px]">(0)</span></span>
-        </button>
-        <button onclick="toggleNearMode()" id="header-tab-NEAR" class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-sky-800 bg-sky-50 border border-sky-200 whitespace-nowrap text-center shrink-0 flex items-center gap-1">
-          <i class="fas fa-location-arrow text-[10px] sm:text-[11px]"></i>
-          <span>近く<span class="hidden sm:inline">500m</span></span>
         </button>
         <button onclick="openFilterSheet()" id="header-tab-FILTER" class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-slate-700 bg-white border border-slate-300 whitespace-nowrap text-center shrink-0 flex items-center gap-1">
           <i class="fas fa-sliders text-[10px] sm:text-[11px]"></i>
@@ -234,8 +247,12 @@
     <div class="relative w-full max-w-[300px]">
       <!-- ロゴ・名称 -->
       <div class="text-center">
-        <div class="w-12 h-12 rounded-2xl bg-white inline-flex items-center justify-center">
-          <i class="fas fa-building text-xl text-[#13685e]"></i>
+        <div class="w-20 h-20 rounded-2xl bg-white p-1 inline-flex items-center justify-center shadow-xl overflow-hidden">
+          <svg viewBox="0 0 512 512" class="w-full h-full">
+            <rect width="512" height="512" rx="110" fill="#ffffff"/>
+            <path fill="#0e4d45" d="M 176 100 C 153.9 100 136 117.9 136 140 L 136 348 C 136 354.6 141.4 360 148 360 L 216 360 L 216 304 C 216 281.9 233.9 264 256 264 C 278.1 264 296 281.9 296 304 L 296 360 L 364 360 C 370.6 360 376 354.6 376 348 L 376 140 C 376 117.9 358.1 100 336 100 Z M 184 148 A 16 16 0 0 1 216 148 A 16 16 0 0 1 184 148 Z M 240 148 A 16 16 0 0 1 272 148 A 16 16 0 0 1 240 148 Z M 296 148 A 16 16 0 0 1 328 148 A 16 16 0 0 1 296 148 Z M 184 204 A 16 16 0 0 1 216 204 A 16 16 0 0 1 184 204 Z M 240 204 A 16 16 0 0 1 272 204 A 16 16 0 0 1 240 204 Z M 296 204 A 16 16 0 0 1 328 204 A 16 16 0 0 1 296 204 Z"/>
+            <text x="256" y="424" fill="#0e4d45" font-family="-apple-system, BlinkMacSystemFont, Arial, sans-serif" font-weight="800" font-size="38" letter-spacing="3" text-anchor="middle">KONOHANA KUIKI</text>
+          </svg>
         </div>
         <h2 class="mt-3 text-xl font-bold text-white tracking-tight">此花区域</h2>
         <div class="mt-0.5 text-[10px] tracking-[0.3em] text-[#a7d3cb] font-semibold">KONOHANA KUIKI</div>
@@ -540,7 +557,6 @@
     // ============================================================
     // 状態管理
     // ============================================================
-    // サーバーに送る認証情報（パスワード、または「token:」で始まるログイン状態保持用の合言葉）
     let userAuthPassword = "";
 
     let map = null;
@@ -567,11 +583,8 @@
 
     const CURRENT_LOCATION_ZOOM = 16;
 
-    // 近く表示・並べ替え
-    const NEAR_RADIUS_M = 500;
-    let nearMode = false;
+    // 並べ替え・移動座標
     let sortByDistance = false;
-    let nearCircle = null;
     let lastListCoords = null;
 
     // 報告の対象マンション
@@ -597,7 +610,7 @@
     let keepLogin = false;
 
     // ============================================================
-    // 端末ストレージ（使えない環境でもエラーにしない）
+    // 端末ストレージ
     // ============================================================
     function storageGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
     function storageSet(key, val) { try { localStorage.setItem(key, val); } catch (e) { /* 何もしない */ } }
@@ -610,7 +623,6 @@
       if (f === 'large' || f === 'normal') fontSize = f;
       const t = storageGet(MAPTYPE_KEY);
       if (t === 'standard' || t === 'photo') mapType = t;
-      // 「ログイン状態を保つ」は、前回の選択（または保存済みの合言葉があるか）を引き継ぐ
       keepLogin = (storageGet(KEEP_KEY) === '1') || !!storageGet(TOKEN_KEY);
     })();
 
@@ -659,7 +671,6 @@
       return /^https?:\/\//i.test(trimmed) ? trimmed : '';
     }
 
-    // 検索用の正規化：全角/半角・大文字/小文字・ひらがな/カタカナのゆれを吸収
     function normalizeText(s) {
       return String(s ?? '')
         .normalize('NFKC')
@@ -694,7 +705,6 @@
       return `<span style="background-color: ${esc(st.bg)}; color: ${esc(st.text)};" class="px-2 py-0.5 rounded-full text-[10px] font-bold inline-block">${esc(area)}</span>`;
     }
 
-    // 「注意」列の内容を「、」「,」「改行」「/」で区切って配列にする
     function parseNotes(note) {
       return String(note || '').split(/[、,，\/\n]+/).map(s => s.trim()).filter(Boolean);
     }
@@ -729,7 +739,7 @@
     }
 
     // ============================================================
-    // 表示設定（文字サイズ・地図の種類）
+    // 表示設定
     // ============================================================
     function applyFontSize(size) {
       fontSize = (size === 'large') ? 'large' : 'normal';
@@ -785,7 +795,7 @@
     }
 
     // ============================================================
-    // 距離計算・近く表示・並べ替え
+    // 距離計算・並べ替え
     // ============================================================
     function calcDistanceMeters(lat1, lng1, lat2, lng2) {
       const R = 6371000;
@@ -810,62 +820,7 @@
       });
     }
 
-    function toggleNearMode() {
-      if (!nearMode) {
-        if (!userCoordinates) {
-          showToast("現在地を取得中、またはGPSが不許可です", false);
-          return;
-        }
-        nearMode = true;
-      } else {
-        nearMode = false;
-      }
-      updateNearCircle();
-      updateNearUI();
-      updateSortUI();
-      renderMarkers(true);
-      renderDrawerList();
-
-      if (nearMode) {
-        const n = getFilteredMansionList().length;
-        showToast(n > 0 ? `現在地から${NEAR_RADIUS_M}m以内: ${n}件` : `半径${NEAR_RADIUS_M}m以内にマンションはありません`, false);
-      }
-    }
-
-    function updateNearUI() {
-      const btn = document.getElementById("header-tab-NEAR");
-      if (!btn) return;
-      btn.className = nearMode
-        ? "px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-white bg-sky-600 border border-sky-600 shadow-sm whitespace-nowrap text-center shrink-0 flex items-center gap-1"
-        : "px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-sky-800 bg-sky-50 border border-sky-200 whitespace-nowrap text-center shrink-0 flex items-center gap-1";
-    }
-
-    function updateNearCircle() {
-      if (!map) return;
-      if (nearMode && userCoordinates) {
-        if (!nearCircle) {
-          nearCircle = L.circle(userCoordinates, {
-            radius: NEAR_RADIUS_M,
-            color: '#0284c7',
-            weight: 1.5,
-            fillColor: '#0ea5e9',
-            fillOpacity: 0.06,
-            interactive: false
-          }).addTo(map);
-        } else {
-          nearCircle.setLatLng(userCoordinates);
-        }
-      } else if (nearCircle) {
-        map.removeLayer(nearCircle);
-        nearCircle = null;
-      }
-    }
-
     function toggleSortByDistance() {
-      if (nearMode) {
-        showToast("「近く」の表示中は近い順に並びます", false);
-        return;
-      }
       if (!sortByDistance && !userCoordinates) {
         showToast("現在地を取得中、またはGPSが不許可です", false);
         return;
@@ -878,13 +833,11 @@
     function updateSortUI() {
       const btn = document.getElementById("btnSortDistance");
       if (!btn) return;
-      const active = sortByDistance || nearMode;
-      btn.className = active
+      btn.className = sortByDistance
         ? "px-2.5 py-1 rounded-full text-[11px] font-bold border transition flex items-center gap-1 bg-sky-600 text-white border-sky-600"
         : "px-2.5 py-1 rounded-full text-[11px] font-bold border transition flex items-center gap-1 bg-white text-slate-600 border-slate-300";
     }
 
-    // 現在地が更新されたときの再描画（50m以上動いたときだけ）
     function onLocationUpdated() {
       if (!userCoordinates) return;
       const moved = !lastListCoords ||
@@ -892,15 +845,11 @@
       if (!moved) return;
       lastListCoords = [userCoordinates[0], userCoordinates[1]];
 
-      if (nearMode) {
-        updateNearCircle();
-        renderMarkers(false);
-      }
       if (isDrawerOpen) renderDrawerList(true);
     }
 
     // ============================================================
-    // ルート案内（Googleマップ / Appleマップ）
+    // ルート案内
     // ============================================================
     function isIOSDevice() {
       const ua = navigator.userAgent || '';
@@ -996,7 +945,7 @@
     });
 
     // ============================================================
-    // 詳細シート（画面下から開く）
+    // 詳細シート
     // ============================================================
     function openDetailSheet(id) {
       const m = findMansion(id);
@@ -1016,7 +965,6 @@
       if (sheet) sheet.classList.remove('open');
     }
 
-    // シートに隠れないよう、ピンを見える位置へ移動
     function panMarkerIntoView(m) {
       if (!map) return;
       const sheet = document.getElementById('detailSheet');
@@ -1164,7 +1112,7 @@
     }
 
     // ============================================================
-    // 絞り込みシート（区域・未訪問）
+    // 絞り込みシート
     // ============================================================
     function getSheetStats() {
       const order = [];
@@ -1277,7 +1225,7 @@
     }
 
     // ============================================================
-    // ログイン・認証（ログイン状態を保つ／オフライン起動対応）
+    // ログイン・認証
     // ============================================================
     function toggleKeepLogin() {
       keepLogin = !keepLogin;
@@ -1301,7 +1249,6 @@
       if (errDiv) errDiv.classList.remove('hidden');
     }
 
-    // ログイン状態の確認中は、フォームの代わりに確認中の表示を出す
     function setAutoLoginState(checking) {
       const form = document.getElementById('loginForm');
       const status = document.getElementById('autoLoginStatus');
@@ -1309,7 +1256,6 @@
       if (status) status.classList.toggle('hidden', !checking);
     }
 
-    // 保存済みの合言葉を無効にする（サーバー側も）
     function discardLoginToken() {
       const token = storageGet(TOKEN_KEY);
       storageRemove(TOKEN_KEY);
@@ -1318,7 +1264,6 @@
       }
     }
 
-    // 起動時：保存済みの合言葉があれば自動でログイン
     function tryAutoLogin() {
       const token = storageGet(TOKEN_KEY);
       if (!token) return;
@@ -1339,7 +1284,6 @@
         .withFailureHandler(() => {
           setAutoLoginState(false);
           if (loadCachedMansions()) {
-            // 通信できないが、前回のデータがある場合はそのまま起動
             userAuthPassword = 'token:' + token;
             onLoginSuccess();
             showToast("通信できないため、前回のデータで起動しました", false);
@@ -1366,7 +1310,6 @@
       if (h) storageSet(PWHASH_KEY, h);
     }
 
-    // 通信できないとき、前回ログイン時のパスワードと前回のデータがあれば、オフラインで起動を許可
     async function tryOfflineLogin(pwd) {
       const stored = storageGet(PWHASH_KEY);
       if (!stored || !loadCachedMansions()) return false;
@@ -1398,7 +1341,6 @@
             if (res && res.success) {
               userAuthPassword = pwd;
               storePasswordHash(pwd);
-              // 「ログイン状態を保つ」：合言葉を端末に保存。オフならこの端末の合言葉を無効にする
               if (keepLogin && res.token) {
                 storageSet(TOKEN_KEY, res.token);
               } else if (!keepLogin) {
@@ -1422,7 +1364,6 @@
           })
           .checkPassword(pwd, keepLogin);
       } else {
-        // PC内でのテスト用フォールバック（localhost / ファイル直開きのときだけ有効）
         const host = location.hostname;
         const isLocalTest = (host === 'localhost' || host === '127.0.0.1' || host === '');
         setTimeout(() => {
@@ -1456,7 +1397,6 @@
         initMap();
         if (map) map.invalidateSize();
 
-        // 前回のデータがあれば先に表示（裏で最新データを取得）
         const cached = loadCachedMansions();
         if (cached) {
           applyMansionData(cached.data);
@@ -1489,7 +1429,6 @@
       closeDetailSheet();
       userAuthPassword = "";
 
-      // ログイン状態を保つ合言葉を無効にする
       discardLoginToken();
 
       if (watchPositionId !== null && navigator.geolocation) {
@@ -1503,7 +1442,6 @@
       userCoordinates = null;
       lastListCoords = null;
 
-      // 端末に保存していたデータとパスワードの照合用情報を削除
       storageRemove(CACHE_KEY);
       storageRemove(PWHASH_KEY);
       mansionDataList = [];
@@ -1513,14 +1451,10 @@
       const drawerContent = document.getElementById('drawerContent');
       if (drawerContent) drawerContent.innerHTML = '';
 
-      // 各種状態をリセット
-      nearMode = false;
       sortByDistance = false;
       currentAreaFilter = 'ALL';
       currentSheetFilter = '';
       unvisitedOnly = false;
-      updateNearCircle();
-      updateNearUI();
       updateSortUI();
       updateFilterUI();
       updateFilterChip();
@@ -1779,7 +1713,6 @@
       showToast(`${mansionDataList.length}件のマンションを取得しました`, false);
     }
 
-    // 取得したデータを画面に反映（初回のみ全体表示、以降は地図位置を動かさない）
     function applyMansionData(list) {
       const openMansion = currentDetailId !== null ? findMansion(currentDetailId) : null;
       const detailKey = openMansion ? mansionKey(openMansion) : null;
@@ -1842,15 +1775,11 @@
         list = list.filter(m => !m.visitDate);
       }
 
-      if (nearMode && userCoordinates) {
-        list = list.filter(m => m.distance !== null && m.distance <= NEAR_RADIUS_M);
-      }
-
       if (searchTerms.length) {
         list = list.filter(m => searchTerms.every(t => m._search.includes(t)));
       }
 
-      if ((sortByDistance || nearMode) && userCoordinates) {
+      if (sortByDistance && userCoordinates) {
         list = list.slice().sort((a, b) => {
           const da = (a.distance === null || a.distance === undefined) ? Infinity : a.distance;
           const db = (b.distance === null || b.distance === undefined) ? Infinity : b.distance;
@@ -1895,7 +1824,7 @@
         } else {
           btn.className = isActive
             ? "header-filter-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-white bg-[#1e293b] shadow-sm whitespace-nowrap text-center shrink-0"
-            : "header-filter-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center shrink-0";
+            : "header-filter-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center shrink-0";
         }
       });
     }
@@ -1960,15 +1889,11 @@
         bounds.push([m.lat, m.lng]);
       });
 
-      if (nearMode && userCoordinates) {
-        bounds.push([userCoordinates[0], userCoordinates[1]]);
-      }
-
       if (shouldFitBounds && bounds.length > 0) {
         if (bounds.length === 1) {
           map.setView(bounds[0], 16);
         } else {
-          map.fitBounds(bounds, { padding: [40, 40], maxZoom: nearMode ? 17 : 16 });
+          map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
         }
       }
     }
@@ -1989,7 +1914,6 @@
       const countEl = document.getElementById("mansionSearchCount");
       if (!container) return;
 
-      // 初回読み込み中は仮表示（スケルトン）
       if (isInitialLoading && mansionDataList.length === 0) {
         container.innerHTML = skeletonHtml();
         if (countEl) countEl.textContent = '…';
@@ -2004,7 +1928,7 @@
         container.innerHTML = `
           <div class="text-center py-10 text-slate-400 text-xs">
             <i class="fas fa-search-minus text-2xl mb-2 text-slate-300"></i>
-            <p>${nearMode ? '半径' + NEAR_RADIUS_M + 'm以内にマンションはありません' : '該当するマンションが見つかりません'}</p>
+            <p>該当するマンションが見つかりません</p>
           </div>`;
         return;
       }
@@ -2208,7 +2132,7 @@
     applyFontSize(fontSize);
     updateSettingsUI();
     updateKeepLoginUI();
-    tryAutoLogin(); // 「ログイン状態を保つ」の合言葉があれば自動ログイン
+    tryAutoLogin();
   </script>
 </body>
 </html>
