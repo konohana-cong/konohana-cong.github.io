@@ -4,7 +4,7 @@
 function doGet() {
   try {
     return HtmlService.createHtmlOutputFromFile('Index')
-      .setTitle('此花マンション区域')
+      .setTitle('此花区域')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
       .addMetaTag('viewport', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
   } catch (err) {
@@ -20,6 +20,10 @@ const MANSION_CACHE_KEY = 'mansion_data_v3';
 const MANSION_CACHE_TTL_SEC = 300;     // マンションデータのサーバー側キャッシュ（秒）
 const MANSION_CACHE_CHUNK = 30000;     // キャッシュ1件あたりの最大文字数（分割保存用）
 const REPORT_HEADERS = ['送信日時', '奉仕者名', '項目', 'マンション名', '住所', '詳細内容'];
+
+const LOGIN_TOKEN_DAYS = 30;           // 「ログイン状態を保つ」の有効日数（使うたびに延長）
+const TOKEN_PROP_PREFIX = 'LOGIN_TOKEN_';
+const TOKEN_CRED_PREFIX = 'token:';    // 画面から送られる認証情報がトークンであることを示す接頭辞
 
 /**
  * スクリプトプロパティの値を取得（未設定なら空文字）
@@ -48,26 +52,145 @@ function setupScriptProperties() {
   Logger.log('スクリプトプロパティを登録しました。必要に応じて「プロジェクトの設定」から値を変更してください。');
 }
 
-/**
- * パスワード検証用の補助関数
- */
-function verifyPassword(password) {
+// ============================================================
+// 認証（パスワード／ログイン状態を保つトークン）
+// ============================================================
+function sha256Hex_(text) {
+  const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(text), Utilities.Charset.UTF_8);
+  return bytes.map(b => ('0' + (b & 0xff).toString(16)).slice(-2)).join('');
+}
+
+/** 現在のパスワードの指紋（パスワードを変更すると、発行済みトークンはすべて無効になる） */
+function passwordFingerprint_() {
+  return sha256Hex_('pw:' + getProp_('APP_PASSWORD'));
+}
+
+/** 入力されたパスワードが正しいか */
+function isPlainPasswordCorrect_(password) {
   const real = getProp_('APP_PASSWORD');
   if (!real) return false; // 未設定の場合は誰もログインできない
   return String(password || '').trim() === real;
 }
 
+/** 期限切れ・パスワード変更前のトークンを掃除 */
+function purgeExpiredTokens_() {
+  const props = PropertiesService.getScriptProperties();
+  const all = props.getProperties();
+  const fp = passwordFingerprint_();
+  const now = Date.now();
+  Object.keys(all).forEach(key => {
+    if (key.indexOf(TOKEN_PROP_PREFIX) !== 0) return;
+    try {
+      const rec = JSON.parse(all[key]);
+      if (!rec || rec.exp < now || rec.pw !== fp) props.deleteProperty(key);
+    } catch (e) {
+      props.deleteProperty(key);
+    }
+  });
+}
+
+/** 新しいトークンを発行（サーバーにはハッシュだけを保存） */
+function issueLoginToken_() {
+  purgeExpiredTokens_();
+  const token = Utilities.getUuid() + Utilities.getUuid().replace(/-/g, '');
+  const record = {
+    exp: Date.now() + LOGIN_TOKEN_DAYS * 24 * 60 * 60 * 1000,
+    pw: passwordFingerprint_()
+  };
+  PropertiesService.getScriptProperties().setProperty(TOKEN_PROP_PREFIX + sha256Hex_(token), JSON.stringify(record));
+  return token;
+}
+
+/** トークンの検証（extend が true なら有効期限を延長） */
+function verifyToken_(token, extend) {
+  if (!token) return false;
+  const props = PropertiesService.getScriptProperties();
+  const key = TOKEN_PROP_PREFIX + sha256Hex_(String(token));
+  const raw = props.getProperty(key);
+  if (!raw) return false;
+  try {
+    const rec = JSON.parse(raw);
+    if (!rec || rec.exp < Date.now() || rec.pw !== passwordFingerprint_()) {
+      props.deleteProperty(key);
+      return false;
+    }
+    if (extend) {
+      rec.exp = Date.now() + LOGIN_TOKEN_DAYS * 24 * 60 * 60 * 1000;
+      props.setProperty(key, JSON.stringify(rec));
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * 認証情報（パスワード、または「token:」で始まるトークン）の検証
+ * 各API（データ取得・訪問記録・報告）から使われます。
+ */
+function verifyPassword(credential) {
+  const cred = String(credential || '').trim();
+  if (cred.indexOf(TOKEN_CRED_PREFIX) === 0) {
+    return verifyToken_(cred.substring(TOKEN_CRED_PREFIX.length), false);
+  }
+  return isPlainPasswordCorrect_(cred);
+}
+
 /**
  * ログインパスワードチェックAPI
+ * keepLogin が true なら、「ログイン状態を保つ」用のトークンも発行して返す
  */
-function checkPassword(password) {
+function checkPassword(password, keepLogin) {
   if (!getProp_('APP_PASSWORD')) {
     return { success: false, error: 'パスワードが未設定です（管理者: スクリプトプロパティ APP_PASSWORD を設定してください）' };
   }
-  if (verifyPassword(password)) {
-    return { success: true };
+  if (!isPlainPasswordCorrect_(password)) {
+    return { success: false, error: 'パスワードが正しくありません' };
   }
-  return { success: false, error: 'パスワードが正しくありません' };
+  const result = { success: true };
+  if (keepLogin) {
+    try {
+      result.token = issueLoginToken_();
+      result.days = LOGIN_TOKEN_DAYS;
+    } catch (e) {
+      Logger.log('Token issue error: ' + e.toString());
+    }
+  }
+  return result;
+}
+
+/** 保存済みのトークンでのログイン（有効なら期限を延長） */
+function loginWithToken(token) {
+  if (verifyToken_(token, true)) return { success: true };
+  return { success: false, error: 'ログインの有効期限が切れました。もう一度ログインしてください' };
+}
+
+/** ログアウト時：その端末のトークンを無効にする */
+function revokeLoginToken(token) {
+  try {
+    if (token) {
+      PropertiesService.getScriptProperties().deleteProperty(TOKEN_PROP_PREFIX + sha256Hex_(String(token)));
+    }
+  } catch (e) {
+    Logger.log('Token revoke error: ' + e.toString());
+  }
+  return { success: true };
+}
+
+/**
+ * 【管理者用・手動実行】すべての端末の「ログイン状態を保つ」を一括で解除します。
+ */
+function revokeAllLoginTokens() {
+  const props = PropertiesService.getScriptProperties();
+  const all = props.getProperties();
+  let n = 0;
+  Object.keys(all).forEach(key => {
+    if (key.indexOf(TOKEN_PROP_PREFIX) === 0) {
+      props.deleteProperty(key);
+      n++;
+    }
+  });
+  Logger.log('ログイン状態を解除しました（対象: ' + n + ' 件）');
 }
 
 /**
@@ -512,7 +635,7 @@ function sendReportNotification_(reportUrl, info) {
 
   const oneLine = (s) => String(s === null || s === undefined ? '' : s).replace(/[\r\n]+/g, ' ').trim();
 
-  const subject = '【此花マンション区域】新しい報告: ' + oneLine(info.category)
+  const subject = '【此花区域】新しい報告: ' + oneLine(info.category)
     + (info.mansionName ? '（' + oneLine(info.mansionName) + '）' : '');
 
   const body = [
@@ -530,11 +653,11 @@ function sendReportNotification_(reportUrl, info) {
     '報告シート: ' + reportUrl
   ].join('\n');
 
-  MailApp.sendEmail({ to: to, subject: subject, body: body, name: '此花マンション区域' });
+  MailApp.sendEmail({ to: to, subject: subject, body: body, name: '此花区域' });
 }
 
 /**
- * 報告送信処理（パスワード確認つき）
+ * 報告送信処理（認証つき）
  * 列の順番: A 送信日時 / B 奉仕者名 / C 項目 / D マンション名 / E 住所 / F 詳細内容
  */
 function submitReport(password, data) {
@@ -604,9 +727,9 @@ function testReportEmail() {
   }
   MailApp.sendEmail({
     to: to,
-    subject: '【テスト】此花マンション区域 通知メール',
+    subject: '【テスト】此花区域 通知メール',
     body: 'これはテストメールです。\n報告が送信されると、このアドレスに通知メールが届きます。',
-    name: '此花マンション区域'
+    name: '此花区域'
   });
   Logger.log('テストメールを送信しました: ' + to);
 }

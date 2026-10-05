@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>此花マンション区域</title>
+  <title>此花区域</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -157,7 +157,8 @@
           <i class="fas fa-building text-base"></i>
         </div>
         <div class="flex flex-col shrink-0">
-          <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-800 whitespace-nowrap leading-tight">此花マンション区域</h1>
+          <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-800 whitespace-nowrap leading-tight">此花区域</h1>
+          <span class="text-[9px] sm:text-[10px] tracking-[0.22em] font-semibold text-[#13685e] whitespace-nowrap leading-none mt-0.5">KONOHANA KUIKI</span>
         </div>
       </div>
 
@@ -216,46 +217,65 @@
         </button>
       </div>
 
-      <!-- 右端のスクロール誘導フェード -->
       <div class="absolute right-0 top-0 bottom-0 w-7 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none flex items-center justify-end pr-0.5 text-slate-400 text-[10px]">
         <i class="fas fa-chevron-right opacity-60 animate-pulse"></i>
       </div>
     </div>
   </header>
 
-  <!-- ログイン画面 -->
-  <div id="loginScreen" class="fixed inset-0 z-[10001] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 btn-touch-ui">
-    <div class="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-md border border-slate-100">
-      <div class="text-center mb-6">
-        <div class="flex items-center justify-center gap-2.5 mb-2">
-          <div class="w-10 h-10 bg-emerald-50 text-[#13685e] rounded-2xl flex items-center justify-center border border-emerald-100 shadow-sm shrink-0">
-            <i class="fas fa-building text-xl"></i>
-          </div>
-          <h2 class="text-xl sm:text-2xl font-bold text-slate-800">此花マンション区域</h2>
+  <!-- ログイン画面（ディープグリーン） -->
+  <div id="loginScreen" class="fixed inset-0 z-[10001] bg-[#0e4d45] flex items-center justify-center p-6 overflow-hidden btn-touch-ui">
+    <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <circle cx="200" cy="300" r="120" fill="none" stroke="#17695f" stroke-width="1"/>
+      <circle cx="200" cy="300" r="210" fill="none" stroke="#146057" stroke-width="1"/>
+      <circle cx="200" cy="300" r="300" fill="none" stroke="#115850" stroke-width="1"/>
+    </svg>
+
+    <div class="relative w-full max-w-[300px]">
+      <!-- ロゴ・名称 -->
+      <div class="text-center">
+        <div class="w-12 h-12 rounded-2xl bg-white inline-flex items-center justify-center">
+          <i class="fas fa-building text-xl text-[#13685e]"></i>
         </div>
-        <p class="text-xs sm:text-sm text-slate-500">パスワードを入力してください</p>
+        <h2 class="mt-3 text-xl font-bold text-white tracking-tight">此花区域</h2>
+        <div class="mt-0.5 text-[10px] tracking-[0.3em] text-[#a7d3cb] font-semibold">KONOHANA KUIKI</div>
       </div>
 
-      <form onsubmit="handleLogin(event)" class="space-y-4">
+      <!-- ログイン状態の確認中 -->
+      <div id="autoLoginStatus" class="hidden mt-9 text-center text-xs text-[#a7d3cb]">
+        <i class="fas fa-circle-notch fa-spin mr-1.5"></i>ログイン状態を確認しています...
+      </div>
+
+      <!-- ログインフォーム -->
+      <form id="loginForm" onsubmit="handleLogin(event)" class="mt-9 space-y-3">
         <div>
-          <label for="passwordInput" class="block text-xs font-semibold text-slate-600 mb-1">パスワード</label>
+          <label for="passwordInput" class="block text-[11px] font-medium text-[#bfe3db] mb-1.5">パスワード</label>
           <div class="relative">
+            <i class="fas fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-[#a7d3cb] text-xs pointer-events-none"></i>
             <input type="password" id="passwordInput" required placeholder="••••••••" autocomplete="current-password"
-              class="w-full px-4 py-3 rounded-2xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#13685e] focus:border-transparent text-slate-800 text-base">
-            <button type="button" onclick="togglePasswordVisibility()" aria-label="パスワードの表示切替" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-2">
-              <i id="eyeIcon" class="fas fa-eye"></i>
+              class="w-full pl-9 pr-11 py-2.5 rounded-2xl bg-[#14625a] border border-[#2f8176] text-white placeholder-[#7fb3aa] text-base focus:outline-none focus:ring-2 focus:ring-white/70 focus:border-transparent">
+            <button type="button" onclick="togglePasswordVisibility()" aria-label="パスワードの表示切替" class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#a7d3cb] hover:text-white p-2">
+              <i id="eyeIcon" class="fas fa-eye text-sm"></i>
             </button>
           </div>
         </div>
 
-        <div id="loginError" class="hidden text-red-600 text-xs text-center bg-red-50 py-2.5 rounded-lg border border-red-200 flex items-center justify-center gap-1.5">
-          <i class="fas fa-exclamation-circle"></i>
+        <!-- ログイン状態を保つ -->
+        <button type="button" id="keepLoginBtn" role="checkbox" aria-checked="false" onclick="toggleKeepLogin()" class="flex items-center gap-2 text-[11px] text-[#bfe3db] py-1">
+          <span id="keepLoginBox" class="w-4 h-4 rounded border border-[#7fb3aa] flex items-center justify-center transition">
+            <i id="keepLoginCheck" class="fas fa-check text-[9px] text-[#0e4d45] hidden"></i>
+          </span>
+          <span>ログイン状態を保つ</span>
+        </button>
+
+        <div id="loginError" class="hidden text-[11px] text-[#fecaca] flex items-start gap-1.5">
+          <i class="fas fa-exclamation-circle mt-0.5"></i>
           <span id="loginErrorMsg">パスワードが正しくありません</span>
         </div>
 
-        <button type="submit" id="btnLoginSubmit" class="w-full py-3.5 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] text-white font-bold rounded-2xl shadow-lg shadow-emerald-900/20 transition duration-200 flex items-center justify-center gap-2">
+        <button type="submit" id="btnLoginSubmit" class="w-full py-2.5 rounded-2xl bg-white hover:bg-[#f0faf7] active:bg-[#dff2ed] text-[#0e4d45] font-bold text-sm transition flex items-center justify-center gap-1.5">
           <span id="loginBtnText">ログイン</span>
-          <i class="fas fa-arrow-right text-sm"></i>
+          <i class="fas fa-arrow-right text-xs"></i>
         </button>
       </form>
     </div>
@@ -520,6 +540,7 @@
     // ============================================================
     // 状態管理
     // ============================================================
+    // サーバーに送る認証情報（パスワード、または「token:」で始まるログイン状態保持用の合言葉）
     let userAuthPassword = "";
 
     let map = null;
@@ -568,15 +589,18 @@
     const VIEW_KEY = 'konohana_map_view_v1';
     const FONT_KEY = 'konohana_font_size';
     const MAPTYPE_KEY = 'konohana_map_type';
+    const TOKEN_KEY = 'konohana_login_token_v1';
+    const KEEP_KEY = 'konohana_keep_login_v1';
 
     let fontSize = 'normal';
     let mapType = 'standard';
+    let keepLogin = false;
 
     // ============================================================
     // 端末ストレージ（使えない環境でもエラーにしない）
     // ============================================================
     function storageGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
-    function storageSet(key, val) { try { localStorage.setItem(key, val); } catch (e) { /* 何もしない */ }  }
+    function storageSet(key, val) { try { localStorage.setItem(key, val); } catch (e) { /* 何もしない */ } }
     function storageRemove(key) { try { localStorage.removeItem(key); } catch (e) { /* 何もしない */ } }
 
     (function restoreSimpleSettings() {
@@ -586,6 +610,8 @@
       if (f === 'large' || f === 'normal') fontSize = f;
       const t = storageGet(MAPTYPE_KEY);
       if (t === 'standard' || t === 'photo') mapType = t;
+      // 「ログイン状態を保つ」は、前回の選択（または保存済みの合言葉があるか）を引き継ぐ
+      keepLogin = (storageGet(KEEP_KEY) === '1') || !!storageGet(TOKEN_KEY);
     })();
 
     // ============================================================
@@ -1251,8 +1277,79 @@
     }
 
     // ============================================================
-    // ログイン・認証（オフライン起動対応）
+    // ログイン・認証（ログイン状態を保つ／オフライン起動対応）
     // ============================================================
+    function toggleKeepLogin() {
+      keepLogin = !keepLogin;
+      storageSet(KEEP_KEY, keepLogin ? '1' : '0');
+      updateKeepLoginUI();
+    }
+
+    function updateKeepLoginUI() {
+      const btn = document.getElementById('keepLoginBtn');
+      const box = document.getElementById('keepLoginBox');
+      const chk = document.getElementById('keepLoginCheck');
+      if (btn) btn.setAttribute('aria-checked', keepLogin ? 'true' : 'false');
+      if (box) box.className = 'w-4 h-4 rounded border flex items-center justify-center transition ' + (keepLogin ? 'bg-white border-white' : 'border-[#7fb3aa]');
+      if (chk) chk.classList.toggle('hidden', !keepLogin);
+    }
+
+    function showLoginError(msg) {
+      const errDiv = document.getElementById('loginError');
+      const errMsg = document.getElementById('loginErrorMsg');
+      if (errMsg) errMsg.textContent = msg;
+      if (errDiv) errDiv.classList.remove('hidden');
+    }
+
+    // ログイン状態の確認中は、フォームの代わりに確認中の表示を出す
+    function setAutoLoginState(checking) {
+      const form = document.getElementById('loginForm');
+      const status = document.getElementById('autoLoginStatus');
+      if (form) form.classList.toggle('hidden', checking);
+      if (status) status.classList.toggle('hidden', !checking);
+    }
+
+    // 保存済みの合言葉を無効にする（サーバー側も）
+    function discardLoginToken() {
+      const token = storageGet(TOKEN_KEY);
+      storageRemove(TOKEN_KEY);
+      if (token && typeof google !== 'undefined' && google.script && google.script.run) {
+        try { google.script.run.revokeLoginToken(token); } catch (e) { /* 何もしない */ }
+      }
+    }
+
+    // 起動時：保存済みの合言葉があれば自動でログイン
+    function tryAutoLogin() {
+      const token = storageGet(TOKEN_KEY);
+      if (!token) return;
+      if (!(typeof google !== 'undefined' && google.script && google.script.run)) return;
+
+      setAutoLoginState(true);
+      google.script.run
+        .withSuccessHandler((res) => {
+          setAutoLoginState(false);
+          if (res && res.success) {
+            userAuthPassword = 'token:' + token;
+            onLoginSuccess();
+          } else {
+            storageRemove(TOKEN_KEY);
+            showLoginError((res && res.error) || 'ログインの有効期限が切れました。もう一度ログインしてください');
+          }
+        })
+        .withFailureHandler(() => {
+          setAutoLoginState(false);
+          if (loadCachedMansions()) {
+            // 通信できないが、前回のデータがある場合はそのまま起動
+            userAuthPassword = 'token:' + token;
+            onLoginSuccess();
+            showToast("通信できないため、前回のデータで起動しました", false);
+          } else {
+            showLoginError('通信できません。電波の良い場所でもう一度お試しください');
+          }
+        })
+        .loginWithToken(token);
+    }
+
     async function hashPassword(text) {
       try {
         if (!(window.crypto && crypto.subtle)) return '';
@@ -1279,14 +1376,13 @@
 
     function handleLogin(e) {
       if (e) e.preventDefault();
-      const pwdInput = document.getElementById("passwordInput");
       const errDiv = document.getElementById("loginError");
-      const errMsg = document.getElementById("loginErrorMsg");
       const submitBtn = document.getElementById("btnLoginSubmit");
-      const pwd = pwdInput.value.trim();
+      const pwd = document.getElementById("passwordInput").value.trim();
 
       if (!pwd) return;
 
+      if (errDiv) errDiv.classList.add("hidden");
       submitBtn.disabled = true;
       document.getElementById("loginBtnText").textContent = "確認中...";
 
@@ -1300,29 +1396,31 @@
           .withSuccessHandler((res) => {
             resetBtn();
             if (res && res.success) {
-              if (errDiv) errDiv.classList.add("hidden");
               userAuthPassword = pwd;
               storePasswordHash(pwd);
+              // 「ログイン状態を保つ」：合言葉を端末に保存。オフならこの端末の合言葉を無効にする
+              if (keepLogin && res.token) {
+                storageSet(TOKEN_KEY, res.token);
+              } else if (!keepLogin) {
+                discardLoginToken();
+              }
               onLoginSuccess();
             } else {
-              if (errDiv) errDiv.classList.remove("hidden");
-              if (errMsg) errMsg.textContent = res ? res.error : "パスワードが正しくありません";
+              showLoginError(res && res.error ? res.error : "パスワードが正しくありません");
             }
           })
           .withFailureHandler(async () => {
             resetBtn();
             const ok = await tryOfflineLogin(pwd);
             if (ok) {
-              if (errDiv) errDiv.classList.add("hidden");
               userAuthPassword = pwd;
               onLoginSuccess();
               showToast("通信できないため、前回のデータで起動しました", false);
             } else {
-              if (errDiv) errDiv.classList.remove("hidden");
-              if (errMsg) errMsg.textContent = "通信エラーが発生しました";
+              showLoginError("通信エラーが発生しました");
             }
           })
-          .checkPassword(pwd);
+          .checkPassword(pwd, keepLogin);
       } else {
         // PC内でのテスト用フォールバック（localhost / ファイル直開きのときだけ有効）
         const host = location.hostname;
@@ -1333,8 +1431,7 @@
             userAuthPassword = pwd;
             onLoginSuccess();
           } else {
-            if (errDiv) errDiv.classList.remove("hidden");
-            if (errMsg) errMsg.textContent = "このページはGASのWebアプリURLから開いてください";
+            showLoginError("このページはGASのWebアプリURLから開いてください");
           }
         }, 300);
       }
@@ -1342,6 +1439,7 @@
 
     function onLoginSuccess() {
       document.getElementById("loginScreen").classList.add("hidden");
+      document.getElementById("passwordInput").value = "";
 
       const controls = document.getElementById("headerControls");
       const areaFilter = document.getElementById("headerAreaFilter");
@@ -1391,6 +1489,9 @@
       closeDetailSheet();
       userAuthPassword = "";
 
+      // ログイン状態を保つ合言葉を無効にする
+      discardLoginToken();
+
       if (watchPositionId !== null && navigator.geolocation) {
         navigator.geolocation.clearWatch(watchPositionId);
         watchPositionId = null;
@@ -1429,6 +1530,7 @@
 
       document.getElementById("passwordInput").value = "";
       document.getElementById("loginError").classList.add("hidden");
+      setAutoLoginState(false);
       document.getElementById("loginScreen").classList.remove("hidden");
       document.getElementById("headerControls").classList.add("hidden");
       document.getElementById("headerAreaFilter").classList.add("hidden");
@@ -2101,10 +2203,12 @@
     }
 
     // ============================================================
-    // 起動時の初期化（保存済みの文字サイズを反映）
+    // 起動時の初期化
     // ============================================================
     applyFontSize(fontSize);
     updateSettingsUI();
+    updateKeepLoginUI();
+    tryAutoLogin(); // 「ログイン状態を保つ」の合言葉があれば自動ログイン
   </script>
 </body>
 </html>
