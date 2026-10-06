@@ -126,7 +126,7 @@ function verifyToken_(token, extend) {
 
 /**
  * 認証情報（パスワード、または「token:」で始まるトークン）の検証
- * 各API（データ取得・訪問記録・報告）から使われます。
+ * 各API（データ取得・訪問記録・部屋の記録・報告）から使われます。
  */
 function verifyPassword(credential) {
   const cred = String(credential || '').trim();
@@ -513,7 +513,7 @@ function getMansionData(password, forceRefresh) {
 }
 
 // ============================================================
-// 訪問済みの記録
+// 訪問済みの記録（マンション単位）
 // ============================================================
 /**
  * 訪問日の記録・取り消し
@@ -611,6 +611,329 @@ function clearAllVisitDates() {
 
   clearMansionCache_();
   Logger.log('訪問日をクリアしました（対象セル数: ' + cleared + '）');
+}
+
+// ============================================================
+// 部屋番号シート（アプリ内で部屋ごとの訪問結果を記録）
+// ============================================================
+// 部屋番号シートの形式:
+//   ・部屋番号が横に並び、階ごとに行が分かれている
+//   ・部屋番号のすぐ下の1段に「日付（左）」と「結果（右）」が入る
+const ROOM_RESULTS = ['会', '留', 'エラー', '予約'];
+const ROOM_RE_LABEL = /^[0-9]{2,4}$/;
+const ROOM_RE_DATE = /^(\d{1,4}[\/\-.]\d{1,2}([\/\-.]\d{1,2})?|\d{4}年\d{1,2}月\d{1,2}日)$/;
+
+/**
+ * セルからリンクURLを取り出す（URLそのもの／リッチテキストのリンク／HYPERLINK関数に対応）
+ */
+function extractLink_(cell) {
+  const v = String(cell.getValue() || '').trim();
+  if (/^https?:\/\//i.test(v)) return v;
+  try {
+    const rich = cell.getRichTextValue();
+    if (rich) {
+      const u = rich.getLinkUrl();
+      if (u) return u;
+      const runs = rich.getRuns();
+      for (let i = 0; i < runs.length; i++) {
+        const ru = runs[i].getLinkUrl();
+        if (ru) return ru;
+      }
+    }
+  } catch (e) { /* 何もしない */ }
+  try {
+    const f = cell.getFormula();
+    const mm = f && f.match(/HYPERLINK\(\s*"([^"]+)"/i);
+    if (mm) return mm[1];
+  } catch (e) { /* 何もしない */ }
+  return v;
+}
+
+/**
+ * リンク（GoogleスプレッドシートのURL）から、対象のシートを開く
+ * #gid=○○ があればそのシート、なければ最初のシート
+ */
+function openRoomSheetByUrl_(url) {
+  const m = String(url || '').match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (!m) throw new Error('部屋番号のリンクがGoogleスプレッドシートではありません');
+
+  let target;
+  try {
+    target = SpreadsheetApp.openById(m[1]);
+  } catch (e) {
+    Logger.log('openById error: ' + e.toString());
+    throw new Error('部屋番号のシートを開けませんでした（編集権限を確認してください）');
+  }
+
+  let sheet = null;
+  const g = String(url).match(/[#&?]gid=(\d+)/);
+  if (g) {
+    sheet = target.getSheets().filter(s => String(s.getSheetId()) === g[1])[0] || null;
+  }
+  if (!sheet) sheet = target.getSheets()[0];
+  if (!sheet) throw new Error('部屋番号のシートが見つかりません');
+  return { ss: target, sheet: sheet };
+}
+
+/**
+ * アプリから送られたマンションの指定（シート名・行・名前）から、部屋番号シートを特定する
+ * メインのシートに登録されているリンクだけを使う（画面から任意のURLは指定できない）
+ */
+function resolveRoomSheet_(ref) {
+  if (!ref || !ref.sheetName || !ref.row || ref.sheetName === '報告') {
+    throw new Error('対象が正しくありません');
+  }
+  const main = openSpreadsheet_();
+  if (!main) throw new Error('スプレッドシートを開けませんでした');
+
+  const sheet = main.getSheetByName(ref.sheetName);
+  if (!sheet) throw new Error('シートが見つかりません');
+
+  const row = Number(ref.row);
+  if (!(row >= 2) || row > sheet.getLastRow()) {
+    throw new Error('行が見つかりません（データが更新された可能性があります）');
+  }
+
+  const lastCol = sheet.getLastColumn();
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h).trim());
+  const cols = detectColumns_(headers);
+
+  // 別のマンションを開かないよう、物件名が一致するか確認
+  const currentName = String(sheet.getRange(row, cols.name + 1).getValue() || '').trim();
+  if (currentName !== String(ref.name || '').trim()) {
+    throw new Error('データが更新されています。「更新」を押してからやり直してください');
+  }
+
+  const url = extractLink_(sheet.getRange(row, cols.link + 1));
+  const target = openRoomSheetByUrl_(url);
+  return { sheet: target.sheet, url: url };
+}
+
+/**
+ * 部屋番号シートを読み取り、階ごとの部屋一覧（番号・日付・結果）と、上部の注意書きを返す
+ */
+function parseRoomSheet_(sheet, ref) {
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  if (lastRow < 2 || lastCol < 2) return { floors: [], notes: [] };
+
+  const display = sheet.getRange(1, 1, lastRow, lastCol).getDisplayValues();
+
+  // 部屋番号の候補：2〜4桁の数字のセルで、真下が日付（または空）、右下が結果（または空）
+  const cands = [];
+  for (let r = 0; r < lastRow - 1; r++) {
+    for (let c = 0; c < lastCol - 1; c++) {
+      const label = String(display[r][c]).trim();
+      if (!ROOM_RE_LABEL.test(label)) continue;
+      const below = String(display[r + 1][c]).trim();
+      const belowRight = String(display[r + 1][c + 1]).trim();
+      if (below !== '' && !ROOM_RE_DATE.test(below)) continue;
+      if (belowRight.length > 6) continue;
+      cands.push({ r: r + 1, c: c + 1, label: label, date: below, result: belowRight });
+    }
+  }
+
+  // 上部の見出し部分にある数字を除外（部屋番号は、2室以上が並ぶ最初の行から始まる）
+  const countByRow = {};
+  cands.forEach(x => { countByRow[x.r] = (countByRow[x.r] || 0) + 1; });
+  const multi = Object.keys(countByRow).filter(k => countByRow[k] >= 2).map(Number);
+  let rooms = cands;
+  if (multi.length) {
+    const firstMulti = Math.min.apply(null, multi);
+    rooms = cands.filter(x => x.r >= firstMulti);
+  }
+
+  // 階（行）ごとにまとめる
+  const floors = [];
+  const idx = {};
+  rooms.forEach(x => {
+    if (idx[x.r] === undefined) {
+      idx[x.r] = floors.length;
+      floors.push({ r: x.r, rooms: [] });
+    }
+    floors[idx[x.r]].rooms.push({ r: x.r, c: x.c, label: x.label, date: x.date, result: x.result });
+  });
+
+  // 部屋番号より上の見出し部分の文字（マンション名は除く）を、注意書きとして返す
+  const notes = [];
+  if (rooms.length) {
+    const firstRow = rooms[0].r;
+    const nameStr = String((ref && ref.name) || '');
+    const seen = {};
+    for (let r = 0; r < firstRow - 1 && notes.length < 5; r++) {
+      for (let c = 0; c < lastCol && notes.length < 5; c++) {
+        const t = String(display[r][c]).trim();
+        if (!t || seen[t]) continue;
+        seen[t] = true;
+        if (nameStr.indexOf(t) !== -1) continue;
+        notes.push(t.length > 120 ? t.substring(0, 120) + '…' : t);
+      }
+    }
+  }
+
+  return { floors: floors, notes: notes };
+}
+
+/**
+ * 部屋番号の一覧を取得する（アプリの「部屋番号一覧を見る」から呼ばれる）
+ * ref: { sheetName, row, name }
+ */
+function getRoomSheet(credential, ref) {
+  if (!verifyPassword(credential)) {
+    return { success: false, error: '認証エラー' };
+  }
+  try {
+    const target = resolveRoomSheet_(ref);
+    const parsed = parseRoomSheet_(target.sheet, ref);
+    return { success: true, floors: parsed.floors, notes: parsed.notes };
+  } catch (e) {
+    return { success: false, error: (e && e.message) ? e.message : String(e) };
+  }
+}
+
+/**
+ * 部屋の訪問結果を記録する（日付は今日の日付が自動で入る）
+ * ref: { sheetName, row, name } / room: { r, c, label } / result: 会・留・エラー・予約（空文字なら記録を消す）
+ */
+function setRoomResult(credential, ref, room, result) {
+  if (!verifyPassword(credential)) {
+    return { success: false, error: '認証エラー' };
+  }
+
+  const value = String(result === null || result === undefined ? '' : result).trim();
+  if (value !== '' && ROOM_RESULTS.indexOf(value) === -1) {
+    return { success: false, error: '結果の値が正しくありません' };
+  }
+
+  const r = room ? Number(room.r) : 0;
+  const c = room ? Number(room.c) : 0;
+  if (!(r >= 1) || !(c >= 1) || !room.label) {
+    return { success: false, error: '部屋の指定が正しくありません' };
+  }
+
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+  } catch (e) {
+    return { success: false, error: '混み合っています。もう一度お試しください' };
+  }
+
+  try {
+    const target = resolveRoomSheet_(ref);
+    const sheet = target.sheet;
+
+    if (r + 1 > sheet.getLastRow() || c + 1 > sheet.getLastColumn()) {
+      return { success: false, error: '部屋の位置が見つかりません。開き直してからやり直してください' };
+    }
+
+    // 別の部屋を書き換えないよう、その位置の部屋番号が一致するか確認
+    const currentLabel = String(sheet.getRange(r, c).getDisplayValue()).trim();
+    if (currentLabel !== String(room.label).trim()) {
+      return { success: false, error: 'シートの内容が変わっています。開き直してからやり直してください' };
+    }
+
+    const dateCell = sheet.getRange(r + 1, c);        // 部屋番号の真下（左）：日付
+    const resultCell = sheet.getRange(r + 1, c + 1);  // 部屋番号の右下：結果
+
+    if (value) {
+      const today = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM/dd');
+      if (!/y/i.test(dateCell.getNumberFormat())) {
+        dateCell.setNumberFormat('yyyy/MM/dd');
+      }
+      dateCell.setValue(today);
+      resultCell.setValue(value);
+    } else {
+      dateCell.clearContent();
+      resultCell.clearContent();
+    }
+
+    SpreadsheetApp.flush();
+    return {
+      success: true,
+      date: String(dateCell.getDisplayValue()).trim(),
+      result: String(resultCell.getDisplayValue()).trim()
+    };
+  } catch (e) {
+    return { success: false, error: (e && e.message) ? e.message : String(e) };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * 【管理者用・手動実行】サンプルの部屋番号シートが正しく読めるか、実行ログで確認します。
+ */
+function testParseRoomSheet() {
+  const url = 'https://docs.google.com/spreadsheets/d/1zHEez4fdvrJacjKbE20FOc_OIQZWSHFdBAK-sRywWcs/edit?usp=sharing';
+  const target = openRoomSheetByUrl_(url);
+  const parsed = parseRoomSheet_(target.sheet, { name: 'ライオンズマンション此花第2' });
+
+  let total = 0;
+  parsed.floors.forEach(fl => {
+    total += fl.rooms.length;
+    Logger.log('行' + fl.r + ': ' + fl.rooms.map(rm => rm.label + '(' + (rm.result || '未') + ' ' + rm.date + ')').join(' / '));
+  });
+  Logger.log('読み取れた部屋数: ' + total + ' / 階数(行数): ' + parsed.floors.length);
+  Logger.log('上部の記載: ' + JSON.stringify(parsed.notes));
+}
+
+/**
+ * 【管理者用・手動実行】全マンションの部屋番号シートを順に確認し、
+ * 「開けない」「部屋が読み取れない」ものを実行ログに一覧表示します（数分かかります）。
+ */
+function checkAllRoomSheets() {
+  const started = Date.now();
+  const ss = openSpreadsheet_();
+  if (!ss) return;
+
+  let okCount = 0;
+  const problems = [];
+  let stopped = false;
+
+  const sheets = ss.getSheets();
+  for (let s = 0; s < sheets.length && !stopped; s++) {
+    const sheet = sheets[s];
+    const sheetName = sheet.getName();
+    if (sheetName === '報告') continue;
+
+    const data = sheet.getDataRange().getValues();
+    if (!data || data.length <= 1) continue;
+    const headers = data[0].map(h => String(h).trim());
+    const cols = detectColumns_(headers);
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const name = String(row[cols.name] || '').trim();
+      if (!name || !String(row[cols.addr] || '').trim()) continue;
+
+      if (Date.now() - started > 5 * 60 * 1000) {
+        Logger.log('時間の上限に近づいたため、ここで中断しました。もう一度実行すると最初から確認します。');
+        stopped = true;
+        break;
+      }
+
+      const link = String(row[cols.link] || '').trim();
+      if (!link) {
+        problems.push(sheetName + ' 行' + (i + 1) + ' ' + name + ' : リンク未登録');
+        continue;
+      }
+      try {
+        const target = openRoomSheetByUrl_(link);
+        const parsed = parseRoomSheet_(target.sheet, { name: name });
+        const n = parsed.floors.reduce((sum, fl) => sum + fl.rooms.length, 0);
+        if (n === 0) {
+          problems.push(sheetName + ' 行' + (i + 1) + ' ' + name + ' : 部屋が読み取れません');
+        } else {
+          okCount++;
+        }
+      } catch (e) {
+        problems.push(sheetName + ' 行' + (i + 1) + ' ' + name + ' : ' + ((e && e.message) ? e.message : String(e)));
+      }
+    }
+  }
+
+  Logger.log('確認完了: 読み取れたマンション ' + okCount + ' 件 / 要確認 ' + problems.length + ' 件');
+  problems.forEach(p => Logger.log('要確認: ' + p));
 }
 
 // ============================================================
@@ -766,7 +1089,7 @@ function migrateReportSheetLayout() {
       return [r[0], r[1], r[2], parts[0] || '', parts[1] || '', r[3]];
     });
     sheet.getRange(2, 1, converted.length, REPORT_HEADERS.length).setValues(converted);
-    sheet.getRange(2, 1, converted.length, 1).setNumberFormat('yyyy-MM-dd HH:mm:ss');
+    sheet.getRange(2, 1, converted.length, 1).setNumberFormat('yyyy/MM/dd HH:mm:ss');
   }
 
   sheet.getRange(1, 1, 1, REPORT_HEADERS.length)

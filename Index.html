@@ -346,8 +346,8 @@
       </div>
     </div>
 
-    <!-- ステータス表示（Toast） -->
-    <div id="statusToast" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-[45] bg-slate-900/90 text-white text-xs px-4 py-2.5 rounded-full shadow-lg backdrop-blur-sm flex items-center gap-2 transition-all duration-300 pointer-events-none opacity-0 max-w-[90vw]">
+    <!-- ステータス表示（Toast）：シートやモーダルが開いていても見えるよう、最前面に表示 -->
+    <div id="statusToast" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-[10004] bg-slate-900/90 text-white text-xs px-4 py-2.5 rounded-full shadow-lg backdrop-blur-sm flex items-center gap-2 transition-all duration-300 pointer-events-none opacity-0 max-w-[90vw]">
       <i id="statusSpinner" class="fas fa-circle-notch fa-spin text-blue-400"></i>
       <span id="statusText">データを読み込んでいます...</span>
     </div>
@@ -484,6 +484,52 @@
     </div>
   </div>
 
+  <!-- 部屋番号シート（部屋ごとの訪問結果を記録） -->
+  <div id="roomSheet" class="hidden fixed inset-0 z-[10002] bg-slate-950/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 btn-touch-ui" onclick="closeRoomSheet()">
+    <div onclick="event.stopPropagation()" class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-100 p-5 sm:p-6 pb-7 max-h-[90dvh] flex flex-col">
+      <div class="flex items-start justify-between gap-2 mb-3 shrink-0">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 text-slate-800 font-bold text-lg">
+            <i class="fas fa-table-cells text-emerald-600"></i>
+            <span>部屋番号</span>
+          </div>
+          <div id="roomSheetName" class="text-xs text-slate-500 mt-0.5 leading-snug"></div>
+        </div>
+        <button type="button" onclick="closeRoomSheet()" aria-label="閉じる" class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition shrink-0">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+
+      <div id="roomSheetBody" class="flex-1 min-h-0 overflow-y-auto"></div>
+
+      <a id="roomSheetOpenLink" href="#" target="_blank" rel="noopener noreferrer" class="mt-3 shrink-0 flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 py-2 no-underline">
+        <i class="fas fa-up-right-from-square text-[10px]"></i>
+        <span>スプレッドシートで開く</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 結果の選択（部屋をタップしたとき） -->
+  <div id="roomPicker" class="hidden fixed inset-0 z-[10003] bg-slate-950/50 flex items-end sm:items-center justify-center p-0 sm:p-4 btn-touch-ui" onclick="closeRoomPicker()">
+    <div onclick="event.stopPropagation()" class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-100 p-5 pb-7">
+      <div class="flex items-center justify-between mb-0.5">
+        <div id="roomPickerTitle" class="text-xl font-bold text-slate-900"></div>
+        <button type="button" onclick="closeRoomPicker()" aria-label="閉じる" class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+      <div id="roomPickerCurrent" class="text-xs text-slate-500 mb-4"></div>
+
+      <div id="roomPickerButtons" class="grid grid-cols-2 gap-2.5"></div>
+
+      <div class="flex gap-2.5 mt-3">
+        <button type="button" id="roomPickerClear" onclick="clearRoomRecord()" class="flex-1 py-3 rounded-2xl text-sm font-bold border border-red-200 text-red-500 bg-white hover:bg-red-50 transition">記録を消す</button>
+        <button type="button" onclick="closeRoomPicker()" class="flex-1 py-3 rounded-2xl text-sm font-bold border border-slate-300 text-slate-600 bg-white hover:bg-slate-50 transition">キャンセル</button>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-3 leading-snug">結果を選ぶと、今日の日付と結果がスプレッドシートに自動で入力されます。</p>
+    </div>
+  </div>
+
   <!-- 報告モーダルダイアログ -->
   <div id="reportModal" class="hidden fixed inset-0 z-[10002] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 max-h-[92dvh] overflow-y-auto">
@@ -556,6 +602,7 @@
     // ============================================================
     // 状態管理
     // ============================================================
+    // サーバーに送る認証情報（パスワード、または「token:」で始まるログイン状態保持用の合言葉）
     let userAuthPassword = "";
 
     let map = null;
@@ -593,6 +640,17 @@
     let routeTarget = null;
     let routeMode = 'walking';
     const VALID_ROUTE_MODES = ['walking', 'driving', 'bicycling'];
+
+    // 部屋番号シート
+    let roomMansionId = null;
+    let roomRef = null;
+    let roomKey = '';
+    let roomData = null;          // { floors: [...], notes: [...] }
+    let roomLoading = false;
+    let roomError = '';
+    let roomRequestSeq = 0;
+    let roomPickerPos = null;     // { fi, ri }
+    const roomCache = {};
 
     // 端末への保存キー
     const ROUTE_MODE_KEY = 'konohana_route_mode';
@@ -684,6 +742,10 @@
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
       return d.getFullYear() + '-' + mm + '-' + dd;
+    }
+
+    function todaySlash() {
+      return todayString().replace(/-/g, '/');
     }
 
     function getSheetColor(sheetName) {
@@ -935,6 +997,8 @@
 
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        closeRoomPicker();
+        closeRoomSheet();
         closeRouteSheet();
         closeReportModal();
         closeFilterSheet();
@@ -1019,11 +1083,12 @@
       const visitLine = visited ? `
         <div class="mt-2 text-xs text-slate-500"><i class="fas fa-calendar-check mr-1 text-emerald-600"></i>最終訪問: ${esc(m.visitDate)}</div>` : '';
 
+      // 「部屋番号一覧を見る」：スプレッドシートには飛ばず、アプリ内に部屋番号を表示
       const roomBtn = validRoomLink
-        ? `<a href="${esc(validRoomLink)}" target="_blank" rel="noopener noreferrer" class="mt-4 flex items-center justify-center w-full px-4 py-3.5 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] font-bold rounded-2xl text-sm transition shadow-sm gap-2 no-underline" style="color:#ffffff !important;">
-            <span style="color:#ffffff !important;">部屋番号一覧を見る</span>
-            <i class="fas fa-external-link-alt text-[11px]" style="color:#ffffff !important;"></i>
-          </a>`
+        ? `<button type="button" onclick="openRoomSheet(${Number(m.id)})" class="mt-4 flex items-center justify-center w-full px-4 py-3.5 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] text-white font-bold rounded-2xl text-sm transition shadow-sm gap-2">
+            <i class="fas fa-table-cells text-xs"></i>
+            <span>部屋番号一覧を見る</span>
+          </button>`
         : `<div class="mt-4 text-xs text-slate-400 italic">リンク未登録</div>`;
 
       const visitBtn = visited
@@ -1061,7 +1126,7 @@
     }
 
     // ============================================================
-    // 訪問済みの記録
+    // 訪問済みの記録（マンション単位）
     // ============================================================
     function toggleVisited(id) {
       const m = findMansion(id);
@@ -1108,6 +1173,302 @@
       renderDrawerList(true);
       if (currentDetailId === m.id) renderDetailSheet();
       renderFilterSheetIfOpen();
+    }
+
+    // ============================================================
+    // 部屋番号シート（部屋ごとの訪問結果を記録）
+    // ============================================================
+    const ROOM_RESULTS = ['会', '留', 'エラー', '予約'];
+    const ROOM_STYLES = {
+      '会':   { bg: '#d1fae5', bd: '#6ee7b7', tx: '#065f46', solid: '#059669' },
+      '留':   { bg: '#e0f2fe', bd: '#7dd3fc', tx: '#075985', solid: '#0284c7' },
+      'エラー': { bg: '#fee2e2', bd: '#fca5a5', tx: '#991b1b', solid: '#dc2626' },
+      '予約': { bg: '#fef3c7', bd: '#fcd34d', tx: '#92400e', solid: '#d97706' }
+    };
+    const ROOM_STYLE_OTHER = { bg: '#ede9fe', bd: '#c4b5fd', tx: '#5b21b6' };
+    const ROOM_STYLE_NONE = { bg: '#ffffff', bd: '#e2e8f0', tx: '#475569' };
+
+    function isGoogleSheetsUrl(url) {
+      return /^https?:\/\/docs\.google\.com\/spreadsheets\/d\/[a-zA-Z0-9_-]+/i.test(String(url || ''));
+    }
+
+    function roomStyle(result) {
+      if (!result) return ROOM_STYLE_NONE;
+      return ROOM_STYLES[result] || ROOM_STYLE_OTHER;
+    }
+
+    function shortDate(s) {
+      const t = String(s || '').trim();
+      const m = t.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})$/);
+      if (!m) return t;
+      const y = Number(m[1]);
+      const prefix = (y === new Date().getFullYear()) ? '' : String(y).slice(2) + '/';
+      return prefix + Number(m[2]) + '/' + Number(m[3]);
+    }
+
+    function floorLabel(floor) {
+      const first = floor.rooms[0];
+      if (!first) return '';
+      const n = parseInt(first.label, 10);
+      if (!isNaN(n) && String(first.label).length >= 3) return Math.floor(n / 100) + '階';
+      return '';
+    }
+
+    function getRoomByPos(fi, ri) {
+      if (!roomData || !roomData.floors[fi]) return null;
+      return roomData.floors[fi].rooms[ri] || null;
+    }
+
+    function openRoomSheet(id) {
+      const m = findMansion(id);
+      if (!m) return;
+      const link = safeUrl(m.roomLink);
+      if (!link) {
+        showToast("リンクが登録されていません", false);
+        return;
+      }
+      // Googleスプレッドシート以外のリンクは、従来どおり開く
+      if (!isGoogleSheetsUrl(link)) {
+        window.open(link, '_blank', 'noopener');
+        return;
+      }
+
+      closeHamburgerMenu();
+      roomMansionId = id;
+      roomRef = { sheetName: m.sheetName, row: m.row, name: m.name };
+      roomKey = mansionKey(m);
+      roomData = roomCache[roomKey] || null;
+      roomError = '';
+      roomLoading = true;
+
+      document.getElementById('roomSheetName').textContent = (m.name || '') + (m.address ? '　' + m.address : '');
+      document.getElementById('roomSheetOpenLink').href = link;
+      renderRoomSheet();
+      document.getElementById('roomSheet').classList.remove('hidden');
+      fetchRoomData();
+    }
+
+    function closeRoomSheet() {
+      closeRoomPicker();
+      const el = document.getElementById('roomSheet');
+      if (el) el.classList.add('hidden');
+      roomMansionId = null;
+      roomRequestSeq++; // 読み込み中の結果を無効にする
+      roomLoading = false;
+    }
+
+    function retryRoomLoad() {
+      roomError = '';
+      roomLoading = true;
+      renderRoomSheet();
+      fetchRoomData();
+    }
+
+    function fetchRoomData() {
+      const reqId = ++roomRequestSeq;
+      const key = roomKey;
+
+      const handle = (res) => {
+        if (reqId !== roomRequestSeq) return;
+        roomLoading = false;
+        if (res && res.success) {
+          roomData = { floors: res.floors || [], notes: res.notes || [] };
+          roomCache[key] = roomData;
+          roomError = '';
+        } else {
+          roomError = (res && res.error) ? res.error : '読み込めませんでした';
+        }
+        renderRoomSheet();
+      };
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(handle)
+          .withFailureHandler((err) => handle({ success: false, error: (err && err.message) || '通信エラー' }))
+          .getRoomSheet(userAuthPassword, roomRef);
+      } else {
+        // テスト環境（GASの外）用の見本データ
+        setTimeout(() => handle({
+          success: true,
+          notes: ['（チラシなどの無断投函禁止）と記載あり。'],
+          floors: [
+            { r: 4, rooms: [101, 102, 103, 104].map((n, i) => ({ r: 4, c: 1 + i * 2, label: String(n), date: i < 2 ? '2026/09/03' : '', result: i === 0 ? '会' : (i === 1 ? '留' : '') })) },
+            { r: 6, rooms: [201, 202, 203].map((n, i) => ({ r: 6, c: 1 + i * 2, label: String(n), date: '', result: '' })) }
+          ]
+        }), 500);
+      }
+    }
+
+    function renderRoomSheet() {
+      const body = document.getElementById('roomSheetBody');
+      if (!body) return;
+      let html = '';
+
+      if (roomError) {
+        html += `
+          <div class="mb-3 p-3 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2">
+            <i class="fas fa-exclamation-circle mt-0.5"></i>
+            <div class="flex-1">${esc(roomError)}</div>
+            <button type="button" onclick="retryRoomLoad()" class="font-bold underline shrink-0">再読み込み</button>
+          </div>`;
+      }
+
+      if (!roomData) {
+        if (roomLoading) {
+          const cell = `<div class="h-[68px] rounded-xl bg-slate-100 animate-pulse"></div>`;
+          html += `
+            <div class="text-xs text-slate-400 mb-2"><i class="fas fa-circle-notch fa-spin mr-1.5"></i>部屋番号を読み込んでいます...</div>
+            <div class="grid grid-cols-4 gap-1.5">${cell.repeat(12)}</div>`;
+        }
+        body.innerHTML = html;
+        return;
+      }
+
+      // 上部の注意書き（シート上部の記載）
+      if (roomData.notes && roomData.notes.length) {
+        html += `
+          <div class="mb-3 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
+            <i class="fas fa-circle-info mt-0.5 text-amber-600"></i>
+            <div class="flex-1 leading-relaxed">${roomData.notes.map(n => esc(n)).join('<br>')}</div>
+          </div>`;
+      }
+
+      // 集計
+      const counts = {};
+      ROOM_RESULTS.forEach(r => { counts[r] = 0; });
+      let other = 0, none = 0, total = 0;
+      roomData.floors.forEach(fl => fl.rooms.forEach(rm => {
+        total++;
+        if (!rm.result) none++;
+        else if (counts[rm.result] !== undefined) counts[rm.result]++;
+        else other++;
+      }));
+
+      if (total === 0) {
+        html += `
+          <div class="text-center py-8 text-slate-400 text-xs leading-relaxed">
+            <i class="fas fa-circle-question text-2xl mb-2 text-slate-300"></i>
+            <p>部屋番号を読み取れませんでした。</p>
+            <p>下の「スプレッドシートで開く」からご確認ください。</p>
+          </div>`;
+        body.innerHTML = html;
+        return;
+      }
+
+      const chips = ROOM_RESULTS.map(r => {
+        const st = ROOM_STYLES[r];
+        return `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold border" style="background:${st.bg};border-color:${st.bd};color:${st.tx};">${esc(r)} ${counts[r]}</span>`;
+      }).join('')
+        + (other > 0 ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold border" style="background:${ROOM_STYLE_OTHER.bg};border-color:${ROOM_STYLE_OTHER.bd};color:${ROOM_STYLE_OTHER.tx};">その他 ${other}</span>` : '')
+        + `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold border bg-white border-slate-200 text-slate-500">未 ${none}</span>`;
+
+      html += `
+        <div class="flex items-center gap-1.5 flex-wrap mb-3">
+          ${chips}
+          ${roomLoading ? '<span class="text-[11px] text-slate-400 ml-auto"><i class="fas fa-circle-notch fa-spin mr-1"></i>更新中</span>' : ''}
+        </div>`;
+
+      // 階ごとの部屋ボタン
+      roomData.floors.forEach((fl, fi) => {
+        const label = floorLabel(fl);
+        html += `<div class="mb-3">`;
+        if (label) html += `<div class="text-[11px] font-bold text-slate-400 mb-1">${esc(label)}</div>`;
+        html += `<div class="grid grid-cols-4 gap-1.5">`;
+        html += fl.rooms.map((rm, ri) => {
+          const st = roomStyle(rm.result);
+          const dateText = rm.date ? shortDate(rm.date) : '';
+          return `
+            <button type="button" onclick="openRoomPicker(${fi}, ${ri})" class="rounded-xl border px-1 py-2 text-center transition active:scale-95 ${rm._busy ? 'opacity-60' : ''}" style="background:${st.bg};border-color:${st.bd};color:${st.tx};">
+              <div class="text-sm font-bold leading-tight">${esc(rm.label)}</div>
+              <div class="text-xs font-bold leading-tight mt-0.5">${rm.result ? esc(rm.result) : '—'}</div>
+              <div class="text-[10px] leading-tight opacity-80 h-3">${esc(dateText)}</div>
+            </button>`;
+        }).join('');
+        html += `</div></div>`;
+      });
+
+      body.innerHTML = html;
+    }
+
+    function openRoomPicker(fi, ri) {
+      const rm = getRoomByPos(fi, ri);
+      if (!rm) return;
+      if (rm._busy) {
+        showToast("更新中です。少しお待ちください", false);
+        return;
+      }
+      roomPickerPos = { fi: fi, ri: ri };
+
+      document.getElementById('roomPickerTitle').textContent = rm.label + ' 号室';
+      document.getElementById('roomPickerCurrent').textContent = rm.result
+        ? `現在：${rm.result}（${rm.date || '日付なし'}）`
+        : '現在：未記録';
+
+      document.getElementById('roomPickerButtons').innerHTML = ROOM_RESULTS.map((res, i) => {
+        const st = ROOM_STYLES[res];
+        const active = rm.result === res;
+        return `<button type="button" onclick="chooseRoomResult(${i})" class="py-4 rounded-2xl text-base font-bold border-2 transition active:scale-95" style="background:${active ? st.solid : st.bg};border-color:${active ? st.solid : st.bd};color:${active ? '#ffffff' : st.tx};">${esc(res)}</button>`;
+      }).join('');
+
+      const clearBtn = document.getElementById('roomPickerClear');
+      if (clearBtn) clearBtn.classList.toggle('hidden', !(rm.result || rm.date));
+
+      document.getElementById('roomPicker').classList.remove('hidden');
+    }
+
+    function closeRoomPicker() {
+      roomPickerPos = null;
+      const el = document.getElementById('roomPicker');
+      if (el) el.classList.add('hidden');
+    }
+
+    function chooseRoomResult(i) {
+      applyRoomRecord(ROOM_RESULTS[i]);
+    }
+
+    function clearRoomRecord() {
+      applyRoomRecord('');
+    }
+
+    // 選んだ結果を反映（画面を先に更新し、スプレッドシートへ書き込む。失敗したら元に戻す）
+    function applyRoomRecord(result) {
+      if (!roomPickerPos) return;
+      const rm = getRoomByPos(roomPickerPos.fi, roomPickerPos.ri);
+      if (!rm || rm._busy) return;
+      if (result !== '' && !ROOM_RESULTS.includes(result)) return;
+
+      const dataRef = roomData;
+      const refCopy = roomRef;
+      const prev = { date: rm.date, result: rm.result };
+
+      rm._busy = true;
+      rm.result = result;
+      rm.date = result ? todaySlash() : '';
+      closeRoomPicker();
+      renderRoomSheet();
+
+      const finish = (res) => {
+        rm._busy = false;
+        if (res && res.success) {
+          rm.date = res.date || '';
+          rm.result = res.result || '';
+          showToast(result ? `${rm.label} を「${result}」で記録しました` : `${rm.label} の記録を消しました`, false);
+        } else {
+          rm.date = prev.date;
+          rm.result = prev.result;
+          showToast('記録できませんでした' + (res && res.error ? '：' + res.error : ''), false);
+        }
+        if (roomData === dataRef) renderRoomSheet();
+      };
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(finish)
+          .withFailureHandler((err) => finish({ success: false, error: (err && err.message) || '通信エラー' }))
+          .setRoomResult(userAuthPassword, refCopy, { r: rm.r, c: rm.c, label: rm.label }, result);
+      } else {
+        finish({ success: true, date: rm.date, result: rm.result });
+      }
     }
 
     // ============================================================
@@ -1421,6 +1782,8 @@
 
     function logout() {
       closeHamburgerMenu();
+      closeRoomPicker();
+      closeRoomSheet();
       closeRouteSheet();
       closeReportModal();
       closeFilterSheet();
@@ -1447,6 +1810,8 @@
       mansionMarkersMap = {};
       if (markersLayer) markersLayer.clearLayers();
       hasAppliedDataOnce = false;
+      Object.keys(roomCache).forEach(k => { delete roomCache[k]; });
+      roomData = null;
       const drawerContent = document.getElementById('drawerContent');
       if (drawerContent) drawerContent.innerHTML = '';
 
@@ -1681,7 +2046,7 @@
           onDataLoaded({
             success: true,
             data: [
-              { id: 1, name: "サンプルプレサンス此花 (急ぎ)", address: "大阪市此花区四貫島1-1", roomLink: "https://example.com", lat: 34.682, lng: 135.452, sheetName: "フロタン", row: 2, isUrgent: true, visitDate: "", note: "訪問拒否、外国語" },
+              { id: 1, name: "サンプルプレサンス此花 (急ぎ)", address: "大阪市此花区四貫島1-1", roomLink: "https://docs.google.com/spreadsheets/d/sample/edit", lat: 34.682, lng: 135.452, sheetName: "フロタン", row: 2, isUrgent: true, visitDate: "", note: "訪問拒否、外国語" },
               { id: 2, name: "福島グランドハイツ", address: "大阪市福島区海老江2-1", roomLink: "https://example.com", lat: 34.690, lng: 135.465, sheetName: "海老江", row: 2, isUrgent: false, visitDate: "2026-10-01", note: "" }
             ]
           });
@@ -1823,7 +2188,7 @@
         } else {
           btn.className = isActive
             ? "header-filter-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-white bg-[#1e293b] shadow-sm whitespace-nowrap text-center shrink-0"
-            : "header-filter-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center shrink-0";
+            : "header-filter-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center shrink-0";
         }
       });
     }
@@ -1953,7 +2318,7 @@
         const noteBadges = notes.slice(0, 2).map(n => `
           <span class="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
             <i class="fas fa-triangle-exclamation text-[9px]"></i>${esc(n)}
-          </span>`).join('') + (notes.length > 0 && notes.length > 2 ? `<span class="text-[10px] font-bold text-red-500">+${notes.length - 2}</span>` : '');
+          </span>`).join('') + (notes.length > 2 ? `<span class="text-[10px] font-bold text-red-500">+${notes.length - 2}</span>` : '');
 
         const distBadge = (m.distance !== null && m.distance !== undefined) ? `
           <span class="ml-auto bg-sky-50 text-sky-700 border border-sky-200 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
@@ -1968,10 +2333,11 @@
             <i class="fas fa-route text-[10px]"></i><span>ルート案内</span>
           </button>`;
 
+        // 「部屋番号一覧」：アプリ内に部屋番号を表示
         const roomBtn = validRoomLink
-          ? `<a href="${esc(validRoomLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="inline-flex items-center justify-center px-3 py-2.5 bg-[#13685e] hover:bg-[#0e524a] text-white font-bold rounded-xl text-xs transition shadow-sm gap-1.5 no-underline">
-              <span>部屋番号一覧</span><i class="fas fa-external-link-alt text-[10px]"></i>
-            </a>`
+          ? `<button type="button" onclick="event.stopPropagation(); openRoomSheet(${Number(m.id)})" class="inline-flex items-center justify-center px-3 py-2.5 bg-[#13685e] hover:bg-[#0e524a] text-white font-bold rounded-xl text-xs transition shadow-sm gap-1.5">
+              <i class="fas fa-table-cells text-[10px]"></i><span>部屋番号一覧</span>
+            </button>`
           : '';
 
         const visitBtn = visited
