@@ -164,7 +164,7 @@
   <header class="bg-white text-slate-800 px-3.5 sm:px-4 pt-3 pb-2.5 flex flex-col gap-2.5 shadow-sm z-[9999] shrink-0 relative border-b border-slate-100 btn-touch-ui">
     <div class="flex items-center justify-between w-full gap-2">
       <div class="flex items-center gap-2.5 shrink-0">
-        <!-- ヘッダーアイコン (SVG Data URI) -->
+        <!-- ヘッダーアイコン (SVG) -->
         <div class="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-sm shrink-0 overflow-hidden border border-slate-200">
           <svg viewBox="0 0 512 512" class="w-full h-full">
             <rect width="512" height="512" rx="110" fill="#ffffff"/>
@@ -346,7 +346,7 @@
       </div>
     </div>
 
-    <!-- ステータス表示（Toast）：シートやモーダルが開いていても見えるよう、最前面に表示 -->
+    <!-- ステータス表示（Toast）：シートやモーダルが開いていても見えるよう最前面 -->
     <div id="statusToast" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-[10004] bg-slate-900/90 text-white text-xs px-4 py-2.5 rounded-full shadow-lg backdrop-blur-sm flex items-center gap-2 transition-all duration-300 pointer-events-none opacity-0 max-w-[90vw]">
       <i id="statusSpinner" class="fas fa-circle-notch fa-spin text-blue-400"></i>
       <span id="statusText">データを読み込んでいます...</span>
@@ -364,7 +364,7 @@
     <div id="detailContent" class="px-4 pt-3 pb-5"></div>
   </div>
 
-  <!-- 絞り込みシート（区域・訪問状況） -->
+  <!-- 絞り込みシート（区域） -->
   <div id="filterSheet" class="hidden fixed inset-0 z-[10002] bg-slate-950/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 btn-touch-ui" onclick="closeFilterSheet()">
     <div onclick="event.stopPropagation()" class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-100 p-5 sm:p-6 pb-7 max-h-[88dvh] flex flex-col">
       <div class="flex items-center justify-between mb-3 shrink-0">
@@ -377,21 +377,11 @@
         </button>
       </div>
 
-      <button type="button" id="unvisitedToggle" onclick="toggleUnvisitedOnly()" class="w-full flex items-center justify-between gap-3 p-3 rounded-2xl border border-slate-200 bg-slate-50 mb-4 shrink-0 text-left">
-        <div>
-          <div class="text-sm font-bold text-slate-800">未訪問のみ表示</div>
-          <div id="filterProgress" class="text-xs text-slate-500 mt-0.5"></div>
-        </div>
-        <span id="unvisitedSwitch" class="relative inline-block w-11 h-6 rounded-full bg-slate-300 transition shrink-0">
-          <span id="unvisitedKnob" class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"></span>
-        </span>
-      </button>
-
       <div class="text-[11px] font-bold text-slate-500 mb-1.5 shrink-0">区域（丸の色がピンの色です）</div>
       <div id="filterSheetList" class="flex-1 min-h-0 overflow-y-auto space-y-1.5 mb-3"></div>
 
       <button type="button" onclick="resetFilters()" class="w-full py-3 rounded-2xl text-sm font-bold border border-slate-300 text-slate-600 bg-white hover:bg-slate-50 transition shrink-0">
-        絞り込みをすべて解除
+        絞り込みを解除
       </button>
     </div>
   </div>
@@ -616,7 +606,6 @@
 
     let currentAreaFilter = 'ALL';
     let currentSheetFilter = '';
-    let unvisitedOnly = false;
     let searchTerms = [];
     let isDrawerOpen = false;
     let searchDebounceTimer = null;
@@ -642,7 +631,6 @@
     const VALID_ROUTE_MODES = ['walking', 'driving', 'bicycling'];
 
     // 部屋番号シート
-    let roomMansionId = null;
     let roomRef = null;
     let roomKey = '';
     let roomData = null;          // { floors: [...], notes: [...] }
@@ -732,20 +720,16 @@
       return String(s ?? '')
         .normalize('NFKC')
         .toLowerCase()
-        .replace(/[\u30a1-\u30f6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60))
+        .replace(/[ァ-ヶ]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60))
         .replace(/\s+/g, ' ')
         .trim();
     }
 
-    function todayString() {
+    function todaySlash() {
       const d = new Date();
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
-      return d.getFullYear() + '-' + mm + '-' + dd;
-    }
-
-    function todaySlash() {
-      return todayString().replace(/-/g, '/');
+      return d.getFullYear() + '/' + mm + '/' + dd;
     }
 
     function getSheetColor(sheetName) {
@@ -793,7 +777,6 @@
     function prepareMansion(m) {
       const copy = Object.assign({}, m);
       copy.note = copy.note || '';
-      copy.visitDate = copy.visitDate || '';
       copy.distance = null;
       copy._search = normalizeText([copy.name, copy.address, copy.sheetName, getMansionArea(copy), copy.note].join(' '));
       return copy;
@@ -1054,17 +1037,11 @@
       const color = getSheetColor(m.sheetName);
       const area = getMansionArea(m);
       const validRoomLink = safeUrl(m.roomLink);
-      const visited = !!m.visitDate;
       const notes = parseNotes(m.note);
 
       const urgentTag = isUrgentMansion(m) ? `
         <span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
           <i class="fas fa-fire text-amber-600"></i> 急ぎ・優先
-        </span>` : '';
-
-      const visitedTag = visited ? `
-        <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
-          <i class="fas fa-check text-[9px]"></i> 訪問済み
         </span>` : '';
 
       const distTag = (m.distance !== null && m.distance !== undefined) ? `
@@ -1080,9 +1057,6 @@
           </div>
         </div>` : '';
 
-      const visitLine = visited ? `
-        <div class="mt-2 text-xs text-slate-500"><i class="fas fa-calendar-check mr-1 text-emerald-600"></i>最終訪問: ${esc(m.visitDate)}</div>` : '';
-
       // 「部屋番号一覧を見る」：スプレッドシートには飛ばず、アプリ内に部屋番号を表示
       const roomBtn = validRoomLink
         ? `<button type="button" onclick="openRoomSheet(${Number(m.id)})" class="mt-4 flex items-center justify-center w-full px-4 py-3.5 bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] text-white font-bold rounded-2xl text-sm transition shadow-sm gap-2">
@@ -1091,19 +1065,11 @@
           </button>`
         : `<div class="mt-4 text-xs text-slate-400 italic">リンク未登録</div>`;
 
-      const visitBtn = visited
-        ? `<button type="button" onclick="toggleVisited(${Number(m.id)})" class="flex items-center justify-center px-2 py-3 bg-slate-100 border-2 border-slate-300 text-slate-600 font-bold rounded-2xl text-sm transition gap-1.5 active:bg-slate-200">
-            <i class="fas fa-rotate-left text-xs"></i><span>訪問済み(取消)</span>
-          </button>`
-        : `<button type="button" onclick="toggleVisited(${Number(m.id)})" class="flex items-center justify-center px-2 py-3 bg-white border-2 border-emerald-500 text-emerald-700 font-bold rounded-2xl text-sm transition gap-1.5 hover:bg-emerald-50 active:bg-emerald-100">
-            <i class="fas fa-check-circle text-xs"></i><span>訪問済みにする</span>
-          </button>`;
-
       box.innerHTML = `
         <div class="pr-10 flex items-center gap-1.5 flex-wrap mb-2">
           ${buildAreaBadge(area)}
           <span style="background-color: ${esc(color.badgeBg)}; color: ${esc(color.badgeText)};" class="px-2 py-0.5 rounded-full text-[10px] font-bold inline-block">${esc(m.sheetName)}</span>
-          ${urgentTag}${visitedTag}${distTag}
+          ${urgentTag}${distTag}
         </div>
         <h3 class="text-base font-bold text-slate-900 leading-snug">${esc(m.name)}</h3>
         <p class="mt-1 text-sm text-slate-600 flex items-start gap-1.5">
@@ -1111,68 +1077,14 @@
           <span class="leading-snug">${esc(m.address || '住所未登録')}</span>
         </p>
         ${noteBox}
-        ${visitLine}
         ${roomBtn}
-        <div class="grid grid-cols-2 gap-2 mt-2.5">
-          <button type="button" onclick="openRouteSheet(${Number(m.id)})" class="flex items-center justify-center px-2 py-3 bg-white border-2 border-[#13685e] text-[#13685e] font-bold rounded-2xl text-sm transition gap-1.5 hover:bg-emerald-50 active:bg-emerald-100">
-            <i class="fas fa-route text-xs"></i><span>ルート案内</span>
-          </button>
-          ${visitBtn}
-        </div>
+        <button type="button" onclick="openRouteSheet(${Number(m.id)})" class="mt-2.5 flex items-center justify-center w-full px-2 py-3 bg-white border-2 border-[#13685e] text-[#13685e] font-bold rounded-2xl text-sm transition gap-1.5 hover:bg-emerald-50 active:bg-emerald-100">
+          <i class="fas fa-route text-xs"></i><span>ルート案内</span>
+        </button>
         <button type="button" onclick="openReportModal(${Number(m.id)})" class="mt-2 flex items-center justify-center w-full px-3 py-2.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 font-semibold rounded-xl text-xs transition gap-1.5">
           <i class="fas fa-pen-to-square text-[11px]"></i><span>このマンションについて報告</span>
         </button>
       `;
-    }
-
-    // ============================================================
-    // 訪問済みの記録（マンション単位）
-    // ============================================================
-    function toggleVisited(id) {
-      const m = findMansion(id);
-      if (!m) return;
-      if (!m.sheetName || !m.row) {
-        showToast("このマンションは記録できません", false);
-        return;
-      }
-      if (m._visitBusy) return;
-
-      const nextVisited = !m.visitDate;
-      const prev = m.visitDate;
-      m.visitDate = nextVisited ? todayString() : '';
-      m._visitBusy = true;
-      afterVisitChange(m);
-
-      const finish = (ok, res) => {
-        m._visitBusy = false;
-        if (ok) {
-          if (res && res.visitDate !== undefined) m.visitDate = res.visitDate || '';
-          saveCachedMansions();
-          showToast(nextVisited ? "訪問済みにしました" : "訪問済みを取り消しました", false);
-        } else {
-          m.visitDate = prev;
-          showToast("記録できませんでした" + (res && res.error ? "：" + res.error : ""), false);
-        }
-        afterVisitChange(m);
-      };
-
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run
-          .withSuccessHandler((res) => finish(!!(res && res.success), res))
-          .withFailureHandler((err) => finish(false, { error: (err && err.message) || '通信エラー' }))
-          .setVisitStatus(userAuthPassword, { sheetName: m.sheetName, row: m.row, name: m.name, visited: nextVisited });
-      } else {
-        finish(true, { visitDate: m.visitDate });
-      }
-    }
-
-    function afterVisitChange(m) {
-      const mk = mansionMarkersMap[m.id];
-      if (mk) mk.setIcon(buildPinIcon(m));
-      if (unvisitedOnly) renderMarkers(false);
-      renderDrawerList(true);
-      if (currentDetailId === m.id) renderDetailSheet();
-      renderFilterSheetIfOpen();
     }
 
     // ============================================================
@@ -1234,7 +1146,6 @@
       }
 
       closeHamburgerMenu();
-      roomMansionId = id;
       roomRef = { sheetName: m.sheetName, row: m.row, name: m.name };
       roomKey = mansionKey(m);
       roomData = roomCache[roomKey] || null;
@@ -1252,7 +1163,6 @@
       closeRoomPicker();
       const el = document.getElementById('roomSheet');
       if (el) el.classList.add('hidden');
-      roomMansionId = null;
       roomRequestSeq++; // 読み込み中の結果を無効にする
       roomLoading = false;
     }
@@ -1472,16 +1382,15 @@
     }
 
     // ============================================================
-    // 絞り込みシート
+    // 絞り込みシート（区域）
     // ============================================================
     function getSheetStats() {
       const order = [];
       const map = {};
       mansionDataList.forEach(m => {
         const key = m.sheetName || 'その他';
-        if (!map[key]) { map[key] = { name: key, total: 0, visited: 0 }; order.push(key); }
+        if (!map[key]) { map[key] = { name: key, total: 0 }; order.push(key); }
         map[key].total++;
-        if (m.visitDate) map[key].visited++;
       });
       return order.map(k => map[k]);
     }
@@ -1503,15 +1412,6 @@
     function renderFilterSheet() {
       const stats = getSheetStats();
       const totalAll = mansionDataList.length;
-      const visitedAll = mansionDataList.filter(m => m.visitDate).length;
-
-      const progress = document.getElementById('filterProgress');
-      if (progress) progress.textContent = `訪問済み ${visitedAll} / ${totalAll} 件`;
-
-      const sw = document.getElementById('unvisitedSwitch');
-      const knob = document.getElementById('unvisitedKnob');
-      if (sw) sw.className = 'relative inline-block w-11 h-6 rounded-full transition shrink-0 ' + (unvisitedOnly ? 'bg-[#13685e]' : 'bg-slate-300');
-      if (knob) knob.style.transform = unvisitedOnly ? 'translateX(20px)' : 'translateX(0)';
 
       const list = document.getElementById('filterSheetList');
       if (!list) return;
@@ -1521,7 +1421,7 @@
         <button type="button" onclick="setSheetFilterByIndex(-1)" class="w-full flex items-center gap-3 px-3 py-3 rounded-2xl border text-left transition ${allActive ? 'border-[#13685e] bg-emerald-50' : 'border-slate-200 bg-white hover:bg-slate-50'}">
           <span class="w-3.5 h-3.5 rounded-full shrink-0 bg-gradient-to-br from-blue-500 via-emerald-500 to-rose-500"></span>
           <span class="flex-1 text-sm font-bold text-slate-800">すべての区域</span>
-          <span class="text-xs text-slate-500 whitespace-nowrap">${visitedAll}/${totalAll}</span>
+          <span class="text-xs text-slate-500 whitespace-nowrap">${totalAll}件</span>
           ${allActive ? '<i class="fas fa-check text-[#13685e]"></i>' : ''}
         </button>`;
 
@@ -1532,7 +1432,7 @@
         <button type="button" onclick="setSheetFilterByIndex(${i})" class="w-full flex items-center gap-3 px-3 py-3 rounded-2xl border text-left transition ${active ? 'border-[#13685e] bg-emerald-50' : 'border-slate-200 bg-white hover:bg-slate-50'}">
           <span class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color:${esc(color.bg)};"></span>
           <span class="flex-1 text-sm font-bold text-slate-800 truncate">${esc(s.name)}</span>
-          <span class="text-xs text-slate-500 whitespace-nowrap">${s.visited}/${s.total}</span>
+          <span class="text-xs text-slate-500 whitespace-nowrap">${s.total}件</span>
           ${active ? '<i class="fas fa-check text-[#13685e]"></i>' : ''}
         </button>`;
       }).join('');
@@ -1551,14 +1451,8 @@
       closeFilterSheet();
     }
 
-    function toggleUnvisitedOnly() {
-      unvisitedOnly = !unvisitedOnly;
-      onFiltersChanged();
-    }
-
     function resetFilters() {
       currentSheetFilter = '';
-      unvisitedOnly = false;
       onFiltersChanged();
     }
 
@@ -1574,12 +1468,9 @@
       const label = document.getElementById('filterChipLabel');
       if (!btn || !label) return;
 
-      const parts = [];
-      if (currentSheetFilter) parts.push(currentSheetFilter);
-      if (unvisitedOnly) parts.push('未訪問');
-      label.textContent = parts.length ? parts.join('・') : '絞込';
+      label.textContent = currentSheetFilter ? currentSheetFilter : '絞込';
 
-      btn.className = parts.length
+      btn.className = currentSheetFilter
         ? "px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-white bg-[#13685e] border border-[#13685e] shadow-sm whitespace-nowrap text-center shrink-0 flex items-center gap-1"
         : "px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-slate-700 bg-white border border-slate-300 whitespace-nowrap text-center shrink-0 flex items-center gap-1";
     }
@@ -1818,7 +1709,6 @@
       sortByDistance = false;
       currentAreaFilter = 'ALL';
       currentSheetFilter = '';
-      unvisitedOnly = false;
       updateSortUI();
       updateFilterUI();
       updateFilterChip();
@@ -2025,7 +1915,7 @@
         const c = Object.assign({}, m);
         delete c.distance;
         delete c._search;
-        delete c._visitBusy;
+        delete c.visitDate;
         return c;
       });
       storageSet(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), data: slim }));
@@ -2046,8 +1936,8 @@
           onDataLoaded({
             success: true,
             data: [
-              { id: 1, name: "サンプルプレサンス此花 (急ぎ)", address: "大阪市此花区四貫島1-1", roomLink: "https://docs.google.com/spreadsheets/d/sample/edit", lat: 34.682, lng: 135.452, sheetName: "フロタン", row: 2, isUrgent: true, visitDate: "", note: "訪問拒否、外国語" },
-              { id: 2, name: "福島グランドハイツ", address: "大阪市福島区海老江2-1", roomLink: "https://example.com", lat: 34.690, lng: 135.465, sheetName: "海老江", row: 2, isUrgent: false, visitDate: "2026-10-01", note: "" }
+              { id: 1, name: "サンプルプレサンス此花 (急ぎ)", address: "大阪市此花区四貫島1-1", roomLink: "https://docs.google.com/spreadsheets/d/sample/edit", lat: 34.682, lng: 135.452, sheetName: "フロタン", row: 2, isUrgent: true, note: "訪問拒否、外国語" },
+              { id: 2, name: "福島グランドハイツ", address: "大阪市福島区海老江2-1", roomLink: "https://example.com", lat: 34.690, lng: 135.465, sheetName: "海老江", row: 2, isUrgent: false, note: "" }
             ]
           });
         }, 600);
@@ -2135,10 +2025,6 @@
         list = list.filter(m => m.sheetName === currentSheetFilter);
       }
 
-      if (unvisitedOnly) {
-        list = list.filter(m => !m.visitDate);
-      }
-
       if (searchTerms.length) {
         list = list.filter(m => searchTerms.every(t => m._search.includes(t)));
       }
@@ -2199,7 +2085,6 @@
     function buildPinIcon(m) {
       const color = getSheetColor(m.sheetName);
       const isUrgent = isUrgentMansion(m);
-      const visited = !!m.visitDate;
       const hasNote = !!m.note;
 
       const urgentBadge = isUrgent ? `
@@ -2210,21 +2095,15 @@
       const noteBadge = hasNote ? `
         <div style="position: absolute; top: -5px; left: -7px; background: #dc2626; color: #ffffff; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10;">!</div>` : '';
 
-      const visitedBadge = visited ? `
-        <div style="position: absolute; bottom: -4px; right: -7px; background: #059669; color: #ffffff; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 9px; border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10;">
-          <i class="fas fa-check"></i>
-        </div>` : '';
-
-      const urgentPulseHtml = (isUrgent && !visited) ? `<div class="urgent-pin-pulse"></div>` : '';
-      const fade = visited ? 'opacity: 0.5; filter: saturate(0.5);' : '';
+      const urgentPulseHtml = isUrgent ? `<div class="urgent-pin-pulse"></div>` : '';
 
       const pinHtml = `
         <div class="custom-mansion-pin" style="position: relative; display: flex; align-items: center; justify-content: center;">
           ${urgentPulseHtml}
-          <div style="${fade} background-color: ${color.bg}; color: ${color.text}; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid #ffffff; position: relative; z-index: 1;">
+          <div style="background-color: ${color.bg}; color: ${color.text}; width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid #ffffff; position: relative; z-index: 1;">
             <i class="fas fa-building" style="transform: rotate(45deg); font-size: 13px;"></i>
           </div>
-          ${urgentBadge}${noteBadge}${visitedBadge}
+          ${urgentBadge}${noteBadge}
         </div>`;
 
       return L.divIcon({
@@ -2302,17 +2181,11 @@
         const area = getMansionArea(m);
         const areaStyle = getAreaStyle(area);
         const isUrgent = isUrgentMansion(m);
-        const visited = !!m.visitDate;
         const notes = parseNotes(m.note);
 
         const urgentCardBadge = isUrgent ? `
           <span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
             <i class="fas fa-fire text-amber-600"></i> 急ぎ・優先
-          </span>` : '';
-
-        const visitedBadge = visited ? `
-          <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
-            <i class="fas fa-check text-[9px]"></i> 訪問済 ${esc(m.visitDate.slice(5))}
           </span>` : '';
 
         const noteBadges = notes.slice(0, 2).map(n => `
@@ -2340,14 +2213,6 @@
             </button>`
           : '';
 
-        const visitBtn = visited
-          ? `<button type="button" onclick="event.stopPropagation(); toggleVisited(${Number(m.id)})" class="inline-flex items-center justify-center px-3 py-2.5 bg-slate-100 border border-slate-300 text-slate-600 font-bold rounded-xl text-xs transition gap-1.5">
-              <i class="fas fa-rotate-left text-[10px]"></i><span>訪問取消</span>
-            </button>`
-          : `<button type="button" onclick="event.stopPropagation(); toggleVisited(${Number(m.id)})" class="inline-flex items-center justify-center px-3 py-2.5 bg-white border border-emerald-500 text-emerald-700 font-bold rounded-xl text-xs transition gap-1.5 hover:bg-emerald-50">
-              <i class="fas fa-check-circle text-[10px]"></i><span>訪問済みにする</span>
-            </button>`;
-
         const reportBtn = `
           <button type="button" onclick="event.stopPropagation(); openReportModal(${Number(m.id)})"
             class="inline-flex items-center justify-center px-3 py-2.5 bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 font-bold rounded-xl text-xs transition gap-1.5">
@@ -2357,11 +2222,11 @@
         const noLinkNote = validRoomLink ? '' : `<div class="text-[11px] text-slate-400 italic">リンク未登録</div>`;
 
         return `
-          <div onclick="focusMansionOnMap(${Number(m.id)})" style="border-left-color: ${esc(areaStyle.bg)};" class="p-3 ${visited ? 'bg-slate-50' : 'bg-white'} hover:bg-emerald-50/40 rounded-2xl border border-l-4 ${isUrgent ? 'border-t-amber-300 border-r-amber-300 border-b-amber-300' : 'border-t-slate-200 border-r-slate-200 border-b-slate-200'} shadow-sm transition cursor-pointer flex flex-col gap-1 relative overflow-hidden">
+          <div onclick="focusMansionOnMap(${Number(m.id)})" style="border-left-color: ${esc(areaStyle.bg)};" class="p-3 bg-white hover:bg-emerald-50/40 rounded-2xl border border-l-4 ${isUrgent ? 'border-t-amber-300 border-r-amber-300 border-b-amber-300' : 'border-t-slate-200 border-r-slate-200 border-b-slate-200'} shadow-sm transition cursor-pointer flex flex-col gap-1 relative overflow-hidden">
             <div class="flex items-center gap-1.5 flex-wrap">
               ${buildAreaBadge(area)}
               <span style="background-color: ${esc(color.badgeBg)}; color: ${esc(color.badgeText)};" class="px-2 py-0.5 rounded-full text-[10px] font-bold">${esc(m.sheetName)}</span>
-              ${urgentCardBadge}${visitedBadge}${distBadge}
+              ${urgentCardBadge}${distBadge}
             </div>
             ${noteBadges ? `<div class="flex items-center gap-1.5 flex-wrap">${noteBadges}</div>` : ''}
             <h4 class="font-bold text-slate-900 text-sm mt-0.5 flex items-center gap-1.5"><span>${esc(m.name)}</span></h4>
@@ -2370,7 +2235,7 @@
             </p>
             <div class="grid ${validRoomLink ? 'grid-cols-2' : 'grid-cols-1'} gap-2 mt-1">${routeBtn}${roomBtn}</div>
             ${noLinkNote}
-            <div class="grid grid-cols-2 gap-2">${visitBtn}${reportBtn}</div>
+            <div class="grid grid-cols-1 gap-2">${reportBtn}</div>
           </div>`;
       }).join('');
 

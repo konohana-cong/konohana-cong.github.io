@@ -126,7 +126,7 @@ function verifyToken_(token, extend) {
 
 /**
  * 認証情報（パスワード、または「token:」で始まるトークン）の検証
- * 各API（データ取得・訪問記録・部屋の記録・報告）から使われます。
+ * 各API（データ取得・部屋の記録・報告）から使われます。
  */
 function verifyPassword(credential) {
   const cred = String(credential || '').trim();
@@ -387,7 +387,7 @@ function syncAllSheetCoordinates() {
 // ============================================================
 /**
  * 見出し行から各列の位置を判定する
- * （物件名・住所・リンク・緯度・経度・優先・訪問日・注意）
+ * （物件名・住所・リンク・緯度・経度・優先・注意）
  */
 function detectColumns_(headers) {
   const find = (fn) => headers.findIndex(fn);
@@ -398,7 +398,6 @@ function detectColumns_(headers) {
     lat: find(h => h.includes('緯度') || h.toLowerCase().includes('lat')),
     lng: find(h => h.includes('経度') || h.toLowerCase().includes('lng') || h.toLowerCase().includes('lon')),
     priority: find(h => h.includes('優先') || h.includes('急ぎ') || h.includes('ステータス')),
-    visit: find(h => h.includes('訪問日')),
     note: find(h => h.includes('注意'))
   };
 
@@ -409,16 +408,6 @@ function detectColumns_(headers) {
   if (cols.lat === -1) cols.lat = 3;
   if (cols.lng === -1) cols.lng = 4;
   return cols;
-}
-
-/**
- * 訪問日セルの値を「yyyy-MM-dd」の文字列にそろえる
- */
-function formatVisitValue_(v) {
-  if (v instanceof Date) {
-    return Utilities.formatDate(v, 'Asia/Tokyo', 'yyyy-MM-dd');
-  }
-  return String(v === null || v === undefined ? '' : v).trim();
 }
 
 /**
@@ -496,9 +485,8 @@ function getMansionData(password, forceRefresh) {
             lat: lat,
             lng: lng,
             sheetName: sheetName,
-            row: i + 1,                                                        // シート上の行番号（訪問記録用）
+            row: i + 1,                                                        // シート上の行番号（部屋記録の対象特定用）
             isUrgent: isUrgent,
-            visitDate: cols.visit !== -1 ? formatVisitValue_(row[cols.visit]) : '',
             note: cols.note !== -1 ? String(row[cols.note] || '').trim() : ''
           });
         }
@@ -510,107 +498,6 @@ function getMansionData(password, forceRefresh) {
   } catch (e) {
     return { success: false, error: e.toString() };
   }
-}
-
-// ============================================================
-// 訪問済みの記録（マンション単位）
-// ============================================================
-/**
- * 訪問日の記録・取り消し
- * payload: { sheetName, row, name, visited }
- * 「訪問日」列がないシートには、右端に自動で追加します。
- */
-function setVisitStatus(password, payload) {
-  if (!verifyPassword(password)) {
-    return { success: false, error: '認証エラー' };
-  }
-  if (!payload || !payload.sheetName || !payload.row || payload.sheetName === '報告') {
-    return { success: false, error: '対象が正しくありません' };
-  }
-
-  const lock = LockService.getScriptLock();
-  try {
-    lock.waitLock(10000);
-  } catch (e) {
-    return { success: false, error: '混み合っています。もう一度お試しください' };
-  }
-
-  try {
-    const ss = openSpreadsheet_();
-    if (!ss) return { success: false, error: 'スプレッドシートを開けませんでした' };
-
-    const sheet = ss.getSheetByName(payload.sheetName);
-    if (!sheet) return { success: false, error: 'シートが見つかりません' };
-
-    const row = Number(payload.row);
-    if (!(row >= 2) || row > sheet.getLastRow()) {
-      return { success: false, error: '行が見つかりません（データが更新された可能性があります）' };
-    }
-
-    const lastCol = sheet.getLastColumn();
-    const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h).trim());
-    const cols = detectColumns_(headers);
-
-    // 別の行を書き換えないよう、物件名が一致するか確認
-    const currentName = String(sheet.getRange(row, cols.name + 1).getValue() || '').trim();
-    if (currentName !== String(payload.name || '').trim()) {
-      return { success: false, error: 'データが更新されています。「更新」を押してからやり直してください' };
-    }
-
-    // 「訪問日」列がなければ右端に追加
-    let visitCol = cols.visit;
-    if (visitCol === -1) {
-      visitCol = lastCol; // 0始まりの次の列
-      const headerCell = sheet.getRange(1, visitCol + 1);
-      headerCell.setValue('訪問日');
-      headerCell.setFontWeight('bold');
-    }
-
-    const cell = sheet.getRange(row, visitCol + 1);
-    let visitDate = '';
-    if (payload.visited) {
-      const today = new Date();
-      cell.setNumberFormat('yyyy-mm-dd');
-      cell.setValue(today);
-      visitDate = Utilities.formatDate(today, 'Asia/Tokyo', 'yyyy-MM-dd');
-    } else {
-      cell.clearContent();
-    }
-
-    clearMansionCache_();
-    return { success: true, visitDate: visitDate };
-  } catch (e) {
-    return { success: false, error: e.toString() };
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-/**
- * 【管理者用・手動実行】すべてのシートの「訪問日」を一括でクリアします。
- * 新しい期間・新しいキャンペーンを始めるときなどに使います。実行前にバックアップをおすすめします。
- */
-function clearAllVisitDates() {
-  const ss = openSpreadsheet_();
-  if (!ss) return;
-  let cleared = 0;
-
-  ss.getSheets().forEach(sheet => {
-    if (sheet.getName() === '報告') return;
-    const lastRow = sheet.getLastRow();
-    const lastCol = sheet.getLastColumn();
-    if (lastRow < 2 || lastCol < 1) return;
-
-    const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h).trim());
-    const visitIdx = headers.findIndex(h => h.includes('訪問日'));
-    if (visitIdx === -1) return;
-
-    sheet.getRange(2, visitIdx + 1, lastRow - 1, 1).clearContent();
-    cleared += lastRow - 1;
-  });
-
-  clearMansionCache_();
-  Logger.log('訪問日をクリアしました（対象セル数: ' + cleared + '）');
 }
 
 // ============================================================
@@ -1089,7 +976,7 @@ function migrateReportSheetLayout() {
       return [r[0], r[1], r[2], parts[0] || '', parts[1] || '', r[3]];
     });
     sheet.getRange(2, 1, converted.length, REPORT_HEADERS.length).setValues(converted);
-    sheet.getRange(2, 1, converted.length, 1).setNumberFormat('yyyy/MM/dd HH:mm:ss');
+    sheet.getRange(2, 1, converted.length, 1).setNumberFormat('yyyy-MM-dd HH:mm:ss');
   }
 
   sheet.getRange(1, 1, 1, REPORT_HEADERS.length)
