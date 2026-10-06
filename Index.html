@@ -213,11 +213,11 @@
         <button onclick="setAreaFilter('ALL')" id="header-tab-ALL" class="header-filter-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-white bg-[#1e293b] shadow-sm whitespace-nowrap text-center shrink-0">
           すべて <span id="count-ALL" class="opacity-80 ml-0.5 text-[10px] sm:text-[11px]">(0)</span>
         </button>
-        <button onclick="setAreaFilter('此花区')" id="header-tab-此花区" class="header-filter-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center shrink-0">
-          <span class="inline-block w-2 h-2 rounded-full mr-0.5 sm:mr-1 align-middle ring-1 ring-white/70" style="background-color:#2563eb;"></span>此花区 <span id="count-此花区" class="opacity-80 ml-0.5 text-[10px] sm:text-[11px]">(0)</span>
+        <button onclick="setAreaFilter('此花区')" id="header-tab-此花区" style="background-color:#dbeafe;color:#1e40af;" class="header-filter-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center shrink-0">
+          <span class="inline-block w-2 h-2 rounded-full mr-0.5 sm:mr-1 align-middle ring-1 ring-white/70" style="background-color:#93c5fd;"></span>此花区 <span id="count-此花区" class="opacity-80 ml-0.5 text-[10px] sm:text-[11px]">(0)</span>
         </button>
-        <button onclick="setAreaFilter('福島区')" id="header-tab-福島区" class="header-filter-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center shrink-0">
-          <span class="inline-block w-2 h-2 rounded-full mr-0.5 sm:mr-1 align-middle ring-1 ring-white/70" style="background-color:#7c3aed;"></span>福島区 <span id="count-福島区" class="opacity-80 ml-0.5 text-[10px] sm:text-[11px]">(0)</span>
+        <button onclick="setAreaFilter('福島区')" id="header-tab-福島区" style="background-color:#d1fae5;color:#065f46;" class="header-filter-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all text-slate-600 bg-[#edf2f4] hover:bg-slate-200 whitespace-nowrap text-center shrink-0">
+          <span class="inline-block w-2 h-2 rounded-full mr-0.5 sm:mr-1 align-middle ring-1 ring-white/70" style="background-color:#6ee7b7;"></span>福島区 <span id="count-福島区" class="opacity-80 ml-0.5 text-[10px] sm:text-[11px]">(0)</span>
         </button>
         <button onclick="setAreaFilter('急ぎ・優先')" id="header-tab-急ぎ・優先" class="header-filter-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-[#854d0e] bg-[#fef3c7] hover:bg-[#fde68a] whitespace-nowrap text-center shrink-0 flex items-center gap-1">
           <i class="fas fa-fire text-[#854d0e] text-[10px] sm:text-[11px]"></i>
@@ -313,7 +313,7 @@
     <div id="listDrawer" class="absolute top-0 right-0 h-full w-full sm:w-80 bg-white/95 backdrop-blur-md shadow-2xl z-30 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-l border-slate-200">
       <div class="p-4 bg-[#13685e] text-white flex items-center justify-between btn-touch-ui">
         <h3 class="font-bold text-sm flex items-center gap-2">
-          <i class="fas fa-building text-emerald-200"></i>
+          <i class="fas fa-building text-white"></i>
           <span>マンション一覧</span>
         </h3>
         <button onclick="toggleMansionListDrawer()" aria-label="一覧を閉じる" class="text-emerald-100 hover:text-white p-2">
@@ -2060,6 +2060,11 @@
       renderDrawerList();
     }
 
+    const AREA_CHIP = {
+      '此花区': { bg: '#dbeafe', text: '#1e40af', activeBg: '#93c5fd', activeText: '#1e3a8a' },
+      '福島区': { bg: '#d1fae5', text: '#065f46', activeBg: '#6ee7b7', activeText: '#064e3b' }
+    };
+
     function updateFilterUI() {
       const filters = ['ALL', '此花区', '福島区', '急ぎ・優先'];
       filters.forEach(f => {
@@ -2069,8 +2074,13 @@
 
         if (f === '急ぎ・優先') {
           btn.className = isActive
-            ? "header-filter-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-[#854d0e] bg-[#fef3c7] border border-[#fde68a] shadow-sm whitespace-nowrap text-center shrink-0 flex items-center gap-1"
-            : "header-filter-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-[#854d0e] bg-[#fef3c7]/60 hover:bg-[#fef3c7] whitespace-nowrap text-center shrink-0 flex items-center gap-1";
+            ? "header-filter-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-[#713f12] bg-[#fcd34d] shadow-sm whitespace-nowrap text-center shrink-0 flex items-center gap-1"
+            : "header-filter-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-[#854d0e] bg-[#fef3c7] hover:bg-[#fde68a] whitespace-nowrap text-center shrink-0 flex items-center gap-1";
+        } else if (AREA_CHIP[f]) {
+          const c = AREA_CHIP[f];
+          btn.className = "header-filter-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs " + (isActive ? "font-bold shadow-sm" : "font-semibold") + " transition-all whitespace-nowrap text-center shrink-0";
+          btn.style.backgroundColor = isActive ? c.activeBg : c.bg;
+          btn.style.color = isActive ? c.activeText : c.text;
         } else {
           btn.className = isActive
             ? "header-filter-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-white bg-[#1e293b] shadow-sm whitespace-nowrap text-center shrink-0"
