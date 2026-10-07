@@ -179,7 +179,7 @@
       </div>
 
       <div id="headerControls" class="hidden flex items-center justify-end gap-2">
-        <button onclick="openSearchScreen()" aria-label="検索" title="検索"
+        <button id="btnSearch" onclick="openSearchScreen()" aria-label="検索" title="検索"
           class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 rounded-xl text-base transition flex items-center justify-center w-10 h-10 border border-slate-200 bg-white shadow-sm">
           <i class="fas fa-search"></i>
         </button>
@@ -559,6 +559,20 @@
         </div>
       </form>
     </div>
+  </div>
+
+  <!-- 検索の窓（虫眼鏡ボタンで開く） -->
+  <div id="searchWindow" class="hidden fixed inset-0 z-[10002] bg-slate-950/30" onclick="closeSearchWindow()">
+    <form onsubmit="event.preventDefault(); closeSearchWindow();" onclick="event.stopPropagation()" class="absolute left-3 right-3 top-20 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[28rem] bg-white rounded-2xl shadow-2xl border border-slate-200 p-2.5 flex items-center gap-2">
+      <div class="relative flex-1">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+        <input type="search" id="searchWindowInput" oninput="onSearchWindowInput()" autocomplete="off" enterkeyhint="search" placeholder="名前・住所・区域で検索（ひらがなOK）" class="w-full pl-8 pr-8 py-2.5 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#13685e] focus:border-transparent text-slate-700">
+        <button type="button" id="searchWindowClear" onclick="clearSearchWindow()" aria-label="入力を消す" class="hidden absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center">
+          <i class="fas fa-times-circle"></i>
+        </button>
+      </div>
+      <button type="button" onclick="closeSearchWindow()" class="shrink-0 px-3 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl">閉じる</button>
+    </form>
   </div>
 
   <!-- 報告モーダルダイアログ -->
@@ -2160,6 +2174,7 @@
       const input = document.getElementById("mansionSearchInput");
       const normalized = input ? normalizeText(input.value) : '';
       searchTerms = normalized ? normalized.split(' ').filter(Boolean) : [];
+      updateSearchBtn();
       renderMarkers(false);
       renderDrawerList();
     }
@@ -2417,14 +2432,56 @@
       openDetailSheet(id);
     }
 
-    // 検索ボタン：マンション一覧（検索画面）を開き、検索欄に入力できる状態にする
+    // 検索ボタン：検索の窓だけを開く（入力すると地図のピン・一覧が絞り込まれる）
     function openSearchScreen() {
       closeHamburgerMenu();
-      if (!isDrawerOpen) toggleMansionListDrawer();
-      setTimeout(() => {
-        const input = document.getElementById('mansionSearchInput');
-        if (input) { input.focus(); input.select(); }
-      }, 350);
+      const main = document.getElementById('mansionSearchInput');
+      const inp = document.getElementById('searchWindowInput');
+      if (!inp) return;
+      inp.value = main ? main.value : '';
+      document.getElementById('searchWindow').classList.remove('hidden');
+      updateSearchWindowClear();
+      setTimeout(() => { inp.focus(); inp.select(); }, 50);
+    }
+
+    function closeSearchWindow() {
+      const el = document.getElementById('searchWindow');
+      if (el) el.classList.add('hidden');
+      const inp = document.getElementById('searchWindowInput');
+      if (inp) inp.blur();
+    }
+
+    function onSearchWindowInput() {
+      const main = document.getElementById('mansionSearchInput');
+      const inp = document.getElementById('searchWindowInput');
+      if (main && inp) main.value = inp.value;
+      updateSearchWindowClear();
+      debouncedSearchInput();
+    }
+
+    function clearSearchWindow() {
+      const inp = document.getElementById('searchWindowInput');
+      if (inp) { inp.value = ''; inp.focus(); }
+      onSearchWindowInput();
+    }
+
+    function updateSearchWindowClear() {
+      const inp = document.getElementById('searchWindowInput');
+      const btn = document.getElementById('searchWindowClear');
+      if (btn && inp) btn.classList.toggle('hidden', !inp.value);
+    }
+
+    // 絞り込み中は虫眼鏡ボタンを緑にして、検索中だとわかるようにする
+    function updateSearchBtn() {
+      const btn = document.getElementById('btnSearch');
+      if (!btn) return;
+      const active = searchTerms.length > 0;
+      btn.classList.toggle('bg-[#13685e]', active);
+      btn.classList.toggle('text-white', active);
+      btn.classList.toggle('border-[#13685e]', active);
+      btn.classList.toggle('bg-white', !active);
+      btn.classList.toggle('text-slate-600', !active);
+      btn.classList.toggle('border-slate-200', !active);
     }
 
     function toggleMansionListDrawer() {
