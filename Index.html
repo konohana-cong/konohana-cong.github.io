@@ -417,15 +417,18 @@
       </div>
 
       <div class="text-[11px] font-bold text-slate-500 mb-1.5">地図の種類</div>
-      <div class="grid grid-cols-2 gap-2">
+      <div class="grid grid-cols-3 gap-2">
         <button type="button" id="set-map-standard" onclick="applyMapType('standard')" class="py-3 rounded-xl text-sm font-bold border transition flex items-center justify-center gap-1.5">
           <i class="fas fa-map"></i><span>標準</span>
+        </button>
+        <button type="button" id="set-map-pale" onclick="applyMapType('pale')" class="py-3 rounded-xl text-sm font-bold border transition flex items-center justify-center gap-1.5">
+          <i class="fas fa-layer-group"></i><span>淡色</span>
         </button>
         <button type="button" id="set-map-photo" onclick="applyMapType('photo')" class="py-3 rounded-xl text-sm font-bold border transition flex items-center justify-center gap-1.5">
           <i class="fas fa-satellite"></i><span>航空写真</span>
         </button>
       </div>
-      <p class="text-[11px] text-slate-400 mt-3 leading-snug">航空写真は国土地理院のタイルを使用しています（日本国内のみ）。</p>
+      <p class="text-[11px] text-slate-400 mt-3 leading-snug">淡色・航空写真は国土地理院のタイルを使用しています（日本国内のみ）。淡色は色を抑えた地図で、ピンが見やすくなります。</p>
     </div>
   </div>
 
@@ -726,7 +729,7 @@
       const f = storageGet(FONT_KEY);
       if (f === 'large' || f === 'normal') fontSize = f;
       const t = storageGet(MAPTYPE_KEY);
-      if (t === 'standard' || t === 'photo') mapType = t;
+      if (t === 'standard' || t === 'pale' || t === 'photo') mapType = t;
       keepLogin = (storageGet(KEEP_KEY) === '1') || !!storageGet(TOKEN_KEY);
     })();
 
@@ -856,6 +859,10 @@
         url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         options: { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }
       },
+      pale: {
+        url: 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png',
+        options: { maxZoom: 19, maxNativeZoom: 18, attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>' }
+      },
       photo: {
         url: 'https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg',
         options: { maxZoom: 19, maxNativeZoom: 18, attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>' }
@@ -884,6 +891,7 @@
       set('set-font-normal', fontSize === 'normal', 'text-sm');
       set('set-font-large', fontSize === 'large', 'text-base');
       set('set-map-standard', mapType === 'standard', 'text-sm');
+      set('set-map-pale', mapType === 'pale', 'text-sm');
       set('set-map-photo', mapType === 'photo', 'text-sm');
     }
 
