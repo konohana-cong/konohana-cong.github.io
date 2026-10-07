@@ -641,21 +641,52 @@ function parseRoomSheet_(sheet, ref) {
     floors[idx[x.r]].rooms.push({ r: x.r, c: x.c, label: x.label, date: x.date, result: x.result });
   });
 
-  // 部屋番号より上の見出し部分の文字（マンション名は除く）を、注意書きとして返す
+  // 部屋番号より上の見出し部分を読み取る。
+  // 並び：マンション名（左上）／地名（その右）と番地（地名の真下）／それ以外は注意事項
+  // 返す順番：1行目＝「地名 番地」、2行目以降＝注意事項（1セルにつき1行）
   const notes = [];
   if (rooms.length) {
     const firstRow = rooms[0].r;
     const nameStr = String((ref && ref.name) || '');
-    const seen = {};
-    for (let r = 0; r < firstRow - 1 && notes.length < 5; r++) {
-      for (let c = 0; c < lastCol && notes.length < 5; c++) {
+    const norm = (t) => String(t).replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 65248)).trim();
+    const RE_ADDR = /^[0-9]+([-ー－‐−][0-9]+)*$/;
+
+    // 見出し部分のセルを、上から下・左から右の順に集める
+    const cells = [];
+    for (let r = 0; r < firstRow - 1; r++) {
+      for (let c = 0; c < lastCol; c++) {
         const t = String(display[r][c]).trim();
-        if (!t || seen[t]) continue;
-        seen[t] = true;
-        if (nameStr.indexOf(t) !== -1) continue;
-        notes.push(t.length > 120 ? t.substring(0, 120) + '…' : t);
+        if (t) cells.push({ r: r, c: c, t: t, used: false });
       }
     }
+    const find = (r, c) => cells.filter(x => x.r === r && x.c === c)[0];
+
+    // 左上で最初に見つかったセルはマンション名（住所の形式でなければ）
+    if (cells.length && !RE_ADDR.test(norm(cells[0].t))) cells[0].used = true;
+    cells.forEach(x => { if (!x.used && nameStr.indexOf(x.t) !== -1 && !RE_ADDR.test(norm(x.t))) x.used = true; });
+
+    // 番地（例: 2-3-23）と、その真上の地名を1行にまとめる
+    const addrParts = [];
+    cells.forEach(x => {
+      if (x.used || !RE_ADDR.test(norm(x.t))) return;
+      const above = find(x.r - 1, x.c);
+      x.used = true;
+      if (above && !above.used) {
+        above.used = true;
+        addrParts.push(above.t + ' ' + x.t);
+      } else {
+        addrParts.push(x.t);
+      }
+    });
+    if (addrParts.length) notes.push(addrParts.join(' / '));
+
+    // 残りは注意事項（同じ内容は1回だけ）
+    const seen = {};
+    cells.forEach(x => {
+      if (x.used || seen[x.t] || notes.length >= 6) return;
+      seen[x.t] = true;
+      notes.push(x.t.length > 120 ? x.t.substring(0, 120) + '…' : x.t);
+    });
   }
 
   return { floors: floors, notes: notes };
