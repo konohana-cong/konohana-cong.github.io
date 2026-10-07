@@ -161,11 +161,11 @@
 <body class="bg-slate-100 flex flex-col h-[100dvh]">
 
   <!-- 上部ヘッダー -->
-  <header class="bg-white text-slate-800 px-3.5 sm:px-4 pt-3 pb-2.5 flex flex-col gap-2.5 shadow-sm z-[9999] shrink-0 relative border-b border-slate-100 btn-touch-ui">
+  <header class="bg-white text-slate-800 px-3.5 sm:px-4 pt-2.5 pb-2 flex flex-col gap-2 shadow-sm z-[9999] shrink-0 relative border-b border-slate-100 btn-touch-ui">
     <div class="flex items-center justify-between w-full gap-2">
-      <div class="flex items-center gap-2.5 shrink-0">
+      <div class="flex items-center gap-2 shrink-0">
         <!-- ヘッダーアイコン (SVG) -->
-        <div class="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-sm shrink-0 overflow-hidden border border-slate-200">
+        <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm shrink-0 overflow-hidden border border-slate-200">
           <svg viewBox="0 0 512 512" class="w-full h-full">
             <rect width="512" height="512" rx="110" fill="#ffffff"/>
             <path fill="#0e4d45" d="M 176 100 C 153.9 100 136 117.9 136 140 L 136 348 C 136 354.6 141.4 360 148 360 L 216 360 L 216 304 C 216 281.9 233.9 264 256 264 C 278.1 264 296 281.9 296 304 L 296 360 L 364 360 C 370.6 360 376 354.6 376 348 L 376 140 C 376 117.9 358.1 100 336 100 Z M 184 148 A 16 16 0 0 1 216 148 A 16 16 0 0 1 184 148 Z M 240 148 A 16 16 0 0 1 272 148 A 16 16 0 0 1 240 148 Z M 296 148 A 16 16 0 0 1 328 148 A 16 16 0 0 1 296 148 Z M 184 204 A 16 16 0 0 1 216 204 A 16 16 0 0 1 184 204 Z M 240 204 A 16 16 0 0 1 272 204 A 16 16 0 0 1 240 204 Z M 296 204 A 16 16 0 0 1 328 204 A 16 16 0 0 1 296 204 Z"/>
@@ -178,17 +178,18 @@
         </div>
       </div>
 
-      <div id="headerControls" class="hidden flex items-center justify-end gap-2">
+      <div id="headerControls" class="hidden flex items-center justify-end gap-1">
         <button id="btnSearch" onclick="openSearchScreen()" aria-label="検索" title="検索"
-          class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 rounded-xl text-base transition flex items-center justify-center w-10 h-10 border border-slate-200 bg-white shadow-sm">
+          class="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 rounded-xl text-base transition flex items-center justify-center w-10 h-10 bg-transparent">
           <i class="fas fa-search"></i>
+          <span id="searchBadge" class="hidden absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
         </button>
         <button onclick="moveToCurrentLocation()" aria-label="現在地に移動" title="現在地に移動"
-          class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 rounded-xl text-base transition flex items-center justify-center w-10 h-10 border border-slate-200 bg-white shadow-sm">
+          class="p-2 text-white bg-[#13685e] hover:bg-[#0e524a] active:bg-[#0a3f39] rounded-xl text-base transition flex items-center justify-center w-10 h-10 shadow-sm">
           <i class="fas fa-crosshairs"></i>
         </button>
         <button id="btnHamburger" onclick="toggleHamburgerMenu(event)" aria-label="メニューを開く" title="メニュー"
-          class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 rounded-xl text-base transition flex items-center justify-center w-10 h-10 border border-slate-200 bg-white shadow-sm">
+          class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 rounded-xl text-base transition flex items-center justify-center w-10 h-10 bg-transparent">
           <i class="fas fa-bars"></i>
         </button>
       </div>
@@ -217,7 +218,7 @@
 
     <!-- 2行目：エリアフィルター ＆ 絞込 -->
     <div id="headerAreaFilter" class="hidden items-center justify-between gap-1 w-full pt-0.5 relative">
-      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 pb-0.5 pr-6">
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 min-w-0 pb-0.5">
         <button onclick="setAreaFilter('ALL')" id="header-tab-ALL" class="header-filter-btn px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-white bg-[#1e293b] shadow-sm whitespace-nowrap text-center shrink-0">
           すべて <span id="count-ALL" class="opacity-80 ml-0.5 text-[10px] sm:text-[11px]">(0)</span>
         </button>
@@ -231,14 +232,14 @@
           <i class="fas fa-fire text-[#854d0e] text-[10px] sm:text-[11px]"></i>
           <span>急ぎ<span class="hidden sm:inline">・優先</span> <span id="count-急ぎ・優先" class="opacity-90 ml-0.5 text-[10px] sm:text-[11px]">(0)</span></span>
         </button>
-        <button onclick="openFilterSheet()" id="header-tab-FILTER" class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-slate-700 bg-white border border-slate-300 whitespace-nowrap text-center shrink-0 flex items-center gap-1">
+      </div>
+
+      <div class="relative shrink-0 flex items-center pl-1">
+        <div class="absolute right-full top-0 bottom-0 w-5 bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
+        <button onclick="openFilterSheet()" id="header-tab-FILTER" class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-slate-700 bg-white border border-slate-300 whitespace-nowrap text-center shrink-0 flex items-center gap-1">
           <i class="fas fa-sliders text-[10px] sm:text-[11px]"></i>
           <span id="filterChipLabel" class="max-w-[7rem] truncate">絞込</span>
         </button>
-      </div>
-
-      <div class="absolute right-0 top-0 bottom-0 w-7 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none flex items-center justify-end pr-0.5 text-slate-400 text-[10px]">
-        <i class="fas fa-chevron-right opacity-60 animate-pulse"></i>
       </div>
     </div>
   </header>
@@ -319,39 +320,41 @@
 
     <!-- マンション一覧ドロワー -->
     <div id="listDrawer" class="absolute top-0 right-0 h-full w-full sm:w-80 bg-white/95 backdrop-blur-md shadow-2xl z-30 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-l border-slate-200">
-      <div class="p-4 bg-[#13685e] text-white flex items-center justify-between btn-touch-ui">
-        <h3 class="font-bold text-sm flex items-center gap-2">
-          <i class="fas fa-building text-white"></i>
-          <span>マンション一覧</span>
-        </h3>
-        <button onclick="toggleMansionListDrawer()" aria-label="一覧を閉じる" class="text-emerald-100 hover:text-white p-2">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-
-      <div class="p-3 bg-slate-50/90 border-b border-slate-200 flex flex-col gap-2 shrink-0">
+      <div class="px-3 pt-3 pb-2.5 bg-[#13685e] text-white flex flex-col gap-2.5 shrink-0 btn-touch-ui">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-sm flex items-center gap-2">
+            <i class="fas fa-building text-white"></i>
+            <span>マンション一覧</span>
+          </h3>
+          <button onclick="toggleMansionListDrawer()" aria-label="一覧を閉じる" class="text-emerald-100 hover:text-white w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
         <div class="relative">
           <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-          <input type="text" id="mansionSearchInput" oninput="debouncedSearchInput()" placeholder="名前・住所・区域で検索（ひらがなOK）" class="w-full pl-8 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#13685e] focus:border-transparent text-slate-700 shadow-sm">
+          <input type="text" id="mansionSearchInput" oninput="debouncedSearchInput()" placeholder="名前・住所・区域で検索（ひらがなOK）" class="w-full pl-8 pr-3 py-2 text-xs bg-white border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-300 text-slate-700 shadow-sm">
         </div>
-        <div class="flex items-center justify-between gap-2 text-xs text-slate-600 px-1 pt-0.5 btn-touch-ui">
-          <div class="whitespace-nowrap">該当数: <span id="mansionSearchCount" class="font-bold text-slate-900">0</span> 件</div>
-          <div class="flex items-center gap-2">
-            <button type="button" id="btnSortDistance" onclick="toggleSortByDistance()" class="px-2.5 py-1 rounded-full text-[11px] font-bold border transition flex items-center gap-1 bg-white text-slate-600 border-slate-300">
-              <i class="fas fa-sort text-[10px]"></i>
+        <div class="flex items-center gap-2 text-xs">
+          <div class="whitespace-nowrap text-emerald-50">該当 <span id="mansionSearchCount" class="font-bold text-white text-sm">0</span> 件</div>
+          <div class="ml-auto flex items-center gap-1.5">
+            <button type="button" id="btnSortDistance" onclick="toggleSortByDistance()" class="px-2.5 py-1 rounded-full text-[11px] font-bold border transition flex items-center gap-1 bg-white/10 text-white border-white/30">
+              <i class="fas fa-location-arrow text-[10px]"></i>
               <span>近い順</span>
             </button>
-            <button onclick="loadMansionData(true)" class="text-[#13685e] hover:text-[#0a3f39] font-semibold flex items-center gap-1 transition">
-              <i class="fas fa-sync-alt text-xs"></i>
+            <button onclick="loadMansionData(true)" class="px-2.5 py-1 rounded-full text-[11px] font-bold border border-white/30 bg-white/10 text-white flex items-center gap-1 transition hover:bg-white/20">
+              <i class="fas fa-sync-alt text-[10px]"></i>
               <span>更新</span>
             </button>
           </div>
         </div>
       </div>
 
-      <div id="drawerContent" class="flex-1 overflow-y-auto p-3 space-y-2">
+      <div id="drawerContent" class="flex-1 overflow-y-auto p-3 space-y-2" onscroll="onDrawerScroll()">
         <!-- JSで動的挿入 -->
       </div>
+      <button type="button" id="btnDrawerTop" onclick="scrollDrawerTop()" aria-label="先頭に戻る" class="hidden absolute bottom-5 right-4 w-11 h-11 rounded-full bg-[#13685e] text-white shadow-lg flex items-center justify-center hover:bg-[#0e524a] active:bg-[#0a3f39] z-10">
+        <i class="fas fa-arrow-up"></i>
+      </button>
     </div>
 
     <!-- ステータス表示（Toast）：シートやモーダルが開いていても見えるよう最前面 -->
@@ -753,7 +756,7 @@
 
     const AREA_STYLES = {
       '此花区': { bg: '#2563eb', text: '#ffffff' },
-      '福島区': { bg: '#7c3aed', text: '#ffffff' },
+      '福島区': { bg: '#059669', text: '#ffffff' },
       'その他': { bg: '#64748b', text: '#ffffff' }
     };
 
@@ -934,8 +937,8 @@
       const btn = document.getElementById("btnSortDistance");
       if (!btn) return;
       btn.className = sortByDistance
-        ? "px-2.5 py-1 rounded-full text-[11px] font-bold border transition flex items-center gap-1 bg-sky-600 text-white border-sky-600"
-        : "px-2.5 py-1 rounded-full text-[11px] font-bold border transition flex items-center gap-1 bg-white text-slate-600 border-slate-300";
+        ? "px-2.5 py-1 rounded-full text-[11px] font-bold border transition flex items-center gap-1 bg-white text-[#13685e] border-white"
+        : "px-2.5 py-1 rounded-full text-[11px] font-bold border transition flex items-center gap-1 bg-white/10 text-white border-white/30";
     }
 
     function onLocationUpdated() {
@@ -1053,6 +1056,7 @@
       const m = findMansion(id);
       if (!m) return;
       currentDetailId = id;
+      addRecentMansion(m);
       closeHamburgerMenu();
       renderDetailSheet();
       const sheet = document.getElementById('detailSheet');
@@ -2354,7 +2358,8 @@
         return;
       }
 
-      container.innerHTML = filteredList.map(m => {
+      const recentHtml = searchTerms.length ? '' : buildRecentHtml();
+      container.innerHTML = recentHtml + filteredList.map(m => {
         const color = getSheetColor(m.sheetName);
         const area = getMansionArea(m);
         const areaStyle = getAreaStyle(area);
@@ -2366,14 +2371,15 @@
             <i class="fas fa-fire text-amber-600"></i> 急ぎ・優先
           </span>` : '';
 
-        const noteBadges = notes.slice(0, 2).map(n => `
-          <span class="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
-            <i class="fas fa-triangle-exclamation text-[9px]"></i>${esc(n)}
-          </span>`).join('') + (notes.length > 2 ? `<span class="text-[10px] font-bold text-red-500">+${notes.length - 2}</span>` : '');
+        const noteLine = notes.length ? `
+          <div class="flex items-start gap-1.5 text-[11px] font-bold text-red-700 bg-red-50 border border-red-100 rounded-lg px-2 py-1 leading-snug">
+            <i class="fas fa-triangle-exclamation text-[10px] mt-0.5 shrink-0"></i>
+            <span class="min-w-0 truncate">${notes.map(n => esc(n)).join(' ／ ')}</span>
+          </div>` : '';
 
         const distBadge = (m.distance !== null && m.distance !== undefined) ? `
-          <span class="ml-auto bg-sky-50 text-sky-700 border border-sky-200 px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1">
-            <i class="fas fa-location-arrow text-[9px]"></i>${esc(formatDistance(m.distance))}
+          <span class="ml-auto text-sky-700 text-sm font-extrabold inline-flex items-center gap-1 whitespace-nowrap">
+            <i class="fas fa-location-arrow text-[10px]"></i>${esc(formatDistance(m.distance))}
           </span>` : '';
 
         const validRoomLink = m.hasRoom ? 'yes' : '';
@@ -2393,31 +2399,87 @@
 
         const reportBtn = `
           <button type="button" onclick="event.stopPropagation(); openReportModal(${Number(m.id)})"
-            class="inline-flex items-center justify-center px-3 py-2.5 bg-white border border-slate-300 text-slate-600 hover:bg-slate-50 font-bold rounded-xl text-xs transition gap-1.5">
-            <i class="fas fa-pen-to-square text-[10px]"></i><span>報告</span>
+            class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-slate-600 px-1 py-1.5 transition">
+            <i class="fas fa-pen-to-square text-[10px]"></i><span>報告する</span>
           </button>`;
 
         const noLinkNote = validRoomLink ? '' : `<div class="text-[11px] text-slate-400 italic">リンク未登録</div>`;
 
         return `
-          <div onclick="focusMansionOnMap(${Number(m.id)})" style="border-left-color: ${esc(areaStyle.bg)};" class="p-3 bg-white hover:bg-emerald-50/40 rounded-2xl border border-l-4 ${isUrgent ? 'border-t-amber-300 border-r-amber-300 border-b-amber-300' : 'border-t-slate-200 border-r-slate-200 border-b-slate-200'} shadow-sm transition cursor-pointer flex flex-col gap-1 relative overflow-hidden">
+          <div onclick="focusMansionOnMap(${Number(m.id)})" style="border-left-color: ${esc(areaStyle.bg)};" class="p-3 pt-2.5 bg-white hover:bg-emerald-50/40 rounded-2xl border border-l-4 ${isUrgent ? 'border-t-amber-300 border-r-amber-300 border-b-amber-300' : 'border-t-slate-200 border-r-slate-200 border-b-slate-200'} shadow-sm transition cursor-pointer flex flex-col gap-1 relative overflow-hidden">
             <div class="flex items-center gap-1.5 flex-wrap">
               ${buildAreaBadge(area)}
               <span style="background-color: ${esc(color.badgeBg)}; color: ${esc(color.badgeText)};" class="px-2 py-0.5 rounded-full text-[10px] font-bold">${esc(m.sheetName)}</span>
               ${urgentCardBadge}${distBadge}
             </div>
-            ${noteBadges ? `<div class="flex items-center gap-1.5 flex-wrap">${noteBadges}</div>` : ''}
+            ${noteLine}
             <h4 class="font-bold text-slate-900 text-sm mt-0.5 flex items-center gap-1.5"><span>${esc(m.name)}</span></h4>
             <p class="text-xs text-slate-500 flex items-center gap-1 mb-1">
               <i class="fas fa-location-dot text-slate-400 shrink-0"></i><span>${esc(m.address || '住所未登録')}</span>
             </p>
             <div class="grid ${validRoomLink ? 'grid-cols-2' : 'grid-cols-1'} gap-2 mt-1">${routeBtn}${roomBtn}</div>
-            ${noLinkNote}
-            <div class="grid grid-cols-1 gap-2">${reportBtn}</div>
+            <div class="flex items-center justify-between gap-2">
+              <div class="min-w-0">${noLinkNote}</div>
+              ${reportBtn}
+            </div>
           </div>`;
       }).join('');
 
       if (preserveScroll) container.scrollTop = prevScroll;
+    }
+
+    // ============================================================
+    // 最近開いたマンション（端末に最大5件まで保存）
+    // ============================================================
+    const RECENT_KEY = 'konohana_recent_v1';
+    const RECENT_MAX = 5;
+
+    function loadRecentKeys() {
+      try {
+        const a = JSON.parse(storageGet(RECENT_KEY) || '[]');
+        return Array.isArray(a) ? a.filter(x => typeof x === 'string').slice(0, RECENT_MAX) : [];
+      } catch (e) { return []; }
+    }
+
+    function addRecentMansion(m) {
+      if (!m) return;
+      const key = mansionKey(m);
+      const list = loadRecentKeys().filter(k => k !== key);
+      list.unshift(key);
+      storageSet(RECENT_KEY, JSON.stringify(list.slice(0, RECENT_MAX)));
+    }
+
+    function clearRecentMansions() {
+      storageSet(RECENT_KEY, '[]');
+      renderDrawerList(true);
+    }
+
+    function buildRecentHtml() {
+      const keys = loadRecentKeys();
+      if (!keys.length) return '';
+      const items = keys.map(k => mansionDataList.find(m => mansionKey(m) === k)).filter(Boolean);
+      if (!items.length) return '';
+      return `
+        <div class="bg-white border border-slate-200 rounded-2xl p-2.5">
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="text-[11px] font-bold text-slate-500 flex items-center gap-1.5"><i class="fas fa-clock-rotate-left text-[10px]"></i>最近開いたマンション</div>
+            <button type="button" onclick="clearRecentMansions()" class="text-[10px] font-semibold text-slate-400 hover:text-slate-600">消す</button>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            ${items.map(m => `<button type="button" onclick="focusMansionOnMap(${Number(m.id)})" class="max-w-full truncate px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200">${esc(m.name)}</button>`).join('')}
+          </div>
+        </div>`;
+    }
+
+    function onDrawerScroll() {
+      const c = document.getElementById('drawerContent');
+      const b = document.getElementById('btnDrawerTop');
+      if (c && b) b.classList.toggle('hidden', c.scrollTop < 400);
+    }
+
+    function scrollDrawerTop() {
+      const c = document.getElementById('drawerContent');
+      if (c) c.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function focusMansionOnMap(id) {
@@ -2474,14 +2536,14 @@
     // 絞り込み中は虫眼鏡ボタンを緑にして、検索中だとわかるようにする
     function updateSearchBtn() {
       const btn = document.getElementById('btnSearch');
-      if (!btn) return;
+      const badge = document.getElementById('searchBadge');
       const active = searchTerms.length > 0;
-      btn.classList.toggle('bg-[#13685e]', active);
-      btn.classList.toggle('text-white', active);
-      btn.classList.toggle('border-[#13685e]', active);
-      btn.classList.toggle('bg-white', !active);
-      btn.classList.toggle('text-slate-600', !active);
-      btn.classList.toggle('border-slate-200', !active);
+      if (badge) badge.classList.toggle('hidden', !active);
+      if (btn) {
+        btn.classList.toggle('bg-emerald-50', active);
+        btn.classList.toggle('text-[#13685e]', active);
+        btn.classList.toggle('text-slate-600', !active);
+      }
     }
 
     function toggleMansionListDrawer() {
