@@ -200,6 +200,10 @@
         <i class="fas fa-pen-to-square text-emerald-600 w-4"></i>
         <span>報告</span>
       </button>
+      <button id="adminMenuBtn" onclick="toggleAdminMode()" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2 transition font-semibold">
+        <i id="adminMenuIcon" class="fas fa-lock text-slate-500 w-4"></i>
+        <span id="adminMenuLabel">管理者モード</span>
+      </button>
       <div class="h-px bg-slate-100 my-0.5"></div>
       <button onclick="logout()" class="w-full text-left px-3.5 py-2.5 text-xs text-red-500 hover:bg-red-50 rounded-xl flex items-center gap-2 transition font-semibold">
         <i class="fas fa-sign-out-alt text-red-500 w-4"></i>
@@ -492,10 +496,10 @@
 
       <div id="roomSheetBody" class="flex-1 min-h-0 overflow-y-auto"></div>
 
-      <a id="roomSheetOpenLink" href="#" target="_blank" rel="noopener noreferrer" class="mt-3 shrink-0 flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 py-2 no-underline">
+      <button type="button" id="roomSheetOpenLink" onclick="openRoomSpreadsheetAsAdmin()" class="hidden mt-3 shrink-0 flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 py-2">
         <i class="fas fa-up-right-from-square text-[10px]"></i>
-        <span>スプレッドシートで開く</span>
-      </a>
+        <span>スプレッドシートで開く（管理者）</span>
+      </button>
     </div>
   </div>
 
@@ -532,6 +536,24 @@
         <button type="button" onclick="closeRoomConfirm()" class="flex-1 py-3 rounded-2xl text-sm font-bold border border-slate-300 text-slate-600 bg-white hover:bg-slate-50 transition">やめる</button>
         <button type="button" onclick="confirmRoomChange()" class="flex-1 py-3 rounded-2xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 transition">変更する</button>
       </div>
+    </div>
+  </div>
+
+  <!-- 管理者パスワードの入力 -->
+  <div id="adminModal" class="hidden fixed inset-0 z-[10005] bg-slate-950/60 flex items-center justify-center p-4 btn-touch-ui" onclick="closeAdminModal()">
+    <div onclick="event.stopPropagation()" class="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-slate-100 p-6">
+      <div class="flex items-center gap-2 text-slate-800 font-bold text-lg mb-1">
+        <i class="fas fa-lock text-slate-500"></i><span>管理者モード</span>
+      </div>
+      <p class="text-xs text-slate-500 mb-3 leading-relaxed">管理者パスワードを入力すると、部屋番号シートをスプレッドシートで開けるようになります。</p>
+      <form onsubmit="submitAdminPassword(event)">
+        <input id="adminPasswordInput" type="password" autocomplete="off" placeholder="管理者パスワード" class="w-full border border-slate-300 rounded-2xl px-4 py-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100">
+        <div id="adminError" class="text-xs text-red-500 mt-2 min-h-[1rem]"></div>
+        <div class="flex gap-2.5 mt-2">
+          <button type="button" onclick="closeAdminModal()" class="flex-1 py-3 rounded-2xl text-sm font-bold border border-slate-300 text-slate-600 bg-white hover:bg-slate-50 transition">キャンセル</button>
+          <button type="submit" id="adminSubmitBtn" class="flex-1 py-3 rounded-2xl text-sm font-bold text-white bg-[#13685e] hover:bg-[#0e524a] transition">確認</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -657,7 +679,8 @@
 
     // 端末への保存キー
     const ROUTE_MODE_KEY = 'konohana_route_mode';
-    const CACHE_KEY = 'konohana_mansion_cache_v1';
+    const CACHE_KEY = 'konohana_mansion_cache_v2';
+    const OLD_CACHE_KEYS = ['konohana_mansion_cache_v1'];   // 旧版（リンクURLが入っていた）は削除する
     const PWHASH_KEY = 'konohana_pw_hash_v1';
     const VIEW_KEY = 'konohana_map_view_v1';
     const FONT_KEY = 'konohana_font_size';
@@ -1051,7 +1074,7 @@
 
       const color = getSheetColor(m.sheetName);
       const area = getMansionArea(m);
-      const validRoomLink = safeUrl(m.roomLink);
+      const validRoomLink = m.hasRoom ? 'yes' : '';
       const notes = parseNotes(m.note);
 
       const urgentTag = isUrgentMansion(m) ? `
@@ -1149,14 +1172,8 @@
     function openRoomSheet(id) {
       const m = findMansion(id);
       if (!m) return;
-      const link = safeUrl(m.roomLink);
-      if (!link) {
+      if (!m.hasRoom) {
         showToast("リンクが登録されていません", false);
-        return;
-      }
-      // Googleスプレッドシート以外のリンクは、従来どおり開く
-      if (!isGoogleSheetsUrl(link)) {
-        window.open(link, '_blank', 'noopener');
         return;
       }
 
@@ -1168,10 +1185,103 @@
       roomLoading = true;
 
       document.getElementById('roomSheetName').textContent = (m.name || '') + (m.address ? '　' + m.address : '');
-      document.getElementById('roomSheetOpenLink').href = link;
+      updateAdminUI();
       renderRoomSheet();
       document.getElementById('roomSheet').classList.remove('hidden');
       fetchRoomData();
+    }
+
+
+    // ============================================================
+    // 管理者モード（スプレッドシートを直接開く）
+    // パスワードは画面を閉じると消える（端末には保存しない）
+    // ============================================================
+    let adminPasswordMem = '';
+
+    function updateAdminUI() {
+      const on = !!adminPasswordMem;
+      const lbl = document.getElementById('adminMenuLabel');
+      const ico = document.getElementById('adminMenuIcon');
+      if (lbl) lbl.textContent = on ? '管理者モードを終了' : '管理者モード';
+      if (ico) ico.className = on ? 'fas fa-lock-open text-emerald-600 w-4' : 'fas fa-lock text-slate-500 w-4';
+      const btn = document.getElementById('roomSheetOpenLink');
+      if (btn) btn.classList.toggle('hidden', !on);
+    }
+
+    function toggleAdminMode() {
+      closeHamburgerMenu();
+      if (adminPasswordMem) {
+        adminPasswordMem = '';
+        updateAdminUI();
+        showToast('管理者モードを終了しました', false);
+        return;
+      }
+      document.getElementById('adminError').textContent = '';
+      document.getElementById('adminPasswordInput').value = '';
+      document.getElementById('adminModal').classList.remove('hidden');
+      setTimeout(() => { const i = document.getElementById('adminPasswordInput'); if (i) i.focus(); }, 50);
+    }
+
+    function closeAdminModal() {
+      const el = document.getElementById('adminModal');
+      if (el) el.classList.add('hidden');
+    }
+
+    function submitAdminPassword(e) {
+      e.preventDefault();
+      const pw = document.getElementById('adminPasswordInput').value;
+      const errEl = document.getElementById('adminError');
+      const btn = document.getElementById('adminSubmitBtn');
+      if (!pw) { errEl.textContent = 'パスワードを入力してください'; return; }
+      if (btn) btn.disabled = true;
+      errEl.textContent = '確認中...';
+
+      const done = (res) => {
+        if (btn) btn.disabled = false;
+        if (res && res.success) {
+          adminPasswordMem = pw;
+          closeAdminModal();
+          updateAdminUI();
+          showToast('管理者モードになりました', false);
+        } else {
+          errEl.textContent = (res && res.error) ? res.error : '確認できませんでした';
+        }
+      };
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(done)
+          .withFailureHandler((err) => done({ success: false, error: (err && err.message) || '通信エラー' }))
+          .checkAdminPassword(userAuthPassword, pw);
+      } else {
+        done({ success: true });
+      }
+    }
+
+    function openRoomSpreadsheetAsAdmin() {
+      if (!adminPasswordMem || !roomRef) return;
+      // 先に空のタブを開いておく（あとからURLを入れる。ポップアップのブロック対策）
+      const w = window.open('', '_blank');
+      const fail = (msg) => {
+        if (w) w.close();
+        if (/パスワード/.test(msg || '')) { adminPasswordMem = ''; updateAdminUI(); }
+        showToast(msg || '開けませんでした', false);
+      };
+      const ok = (res) => {
+        if (res && res.success && res.url && /^https:\/\/docs\.google\.com\//.test(res.url)) {
+          if (w) w.location.href = res.url; else window.location.href = res.url;
+        } else {
+          fail((res && res.error) || '開けませんでした');
+        }
+      };
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(ok)
+          .withFailureHandler((err) => fail((err && err.message) || '通信エラー'))
+          .getRoomSheetUrl(userAuthPassword, adminPasswordMem, roomRef);
+      } else {
+        fail('テスト環境では開けません');
+      }
     }
 
     function closeRoomSheet() {
@@ -1708,6 +1818,8 @@
     }
 
     function logout() {
+      adminPasswordMem = '';
+      updateAdminUI();
       closeHamburgerMenu();
       closeRoomPicker();
       closeRoomSheet();
@@ -1936,6 +2048,7 @@
     // データ読み込み・端末キャッシュ
     // ============================================================
     function loadCachedMansions() {
+      OLD_CACHE_KEYS.forEach(k => { try { storageRemove(k); } catch (e) { /* 何もしない */ } });
       const raw = storageGet(CACHE_KEY);
       if (!raw) return null;
       try {
@@ -1972,8 +2085,8 @@
           onDataLoaded({
             success: true,
             data: [
-              { id: 1, name: "サンプルプレサンス此花 (急ぎ)", address: "大阪市此花区四貫島1-1", roomLink: "https://docs.google.com/spreadsheets/d/sample/edit", lat: 34.682, lng: 135.452, sheetName: "フロタン", row: 2, isUrgent: true, note: "訪問拒否、外国語" },
-              { id: 2, name: "福島グランドハイツ", address: "大阪市福島区海老江2-1", roomLink: "https://example.com", lat: 34.690, lng: 135.465, sheetName: "海老江", row: 2, isUrgent: false, note: "" }
+              { id: 1, name: "サンプルプレサンス此花 (急ぎ)", address: "大阪市此花区四貫島1-1", hasRoom: true, lat: 34.682, lng: 135.452, sheetName: "フロタン", row: 2, isUrgent: true, note: "訪問拒否、外国語" },
+              { id: 2, name: "福島グランドハイツ", address: "大阪市福島区海老江2-1", hasRoom: true, lat: 34.690, lng: 135.465, sheetName: "海老江", row: 2, isUrgent: false, note: "" }
             ]
           });
         }, 600);
@@ -2244,7 +2357,7 @@
             <i class="fas fa-location-arrow text-[9px]"></i>${esc(formatDistance(m.distance))}
           </span>` : '';
 
-        const validRoomLink = safeUrl(m.roomLink);
+        const validRoomLink = m.hasRoom ? 'yes' : '';
 
         const routeBtn = `
           <button type="button" onclick="event.stopPropagation(); openRouteSheet(${Number(m.id)})"

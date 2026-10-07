@@ -16,7 +16,7 @@ function doGet() {
 // 設定値
 // ============================================================
 const SPREADSHEET_ID = '1ht3s0_fMP0_n89zeRYUD0_iUv9cMhdhOmeCyXgr6vbQ';
-const MANSION_CACHE_KEY = 'mansion_data_v3';
+const MANSION_CACHE_KEY = 'mansion_data_v4';
 const MANSION_CACHE_TTL_SEC = 300;     // マンションデータのサーバー側キャッシュ（秒）
 const MANSION_CACHE_CHUNK = 30000;     // キャッシュ1件あたりの最大文字数（分割保存用）
 const REPORT_HEADERS = ['送信日時', '奉仕者名', '項目', 'マンション名', '住所', '詳細内容'];
@@ -481,7 +481,7 @@ function getMansionData(password, forceRefresh) {
             id: globalId++,
             name: nameStr,
             address: addressStr,
-            roomLink: String(row[cols.link] || '').trim(),
+            hasRoom: String(row[cols.link] || '').trim() !== '',   // リンクの実体は画面へ送らない（管理者のみ別途取得）
             lat: lat,
             lng: lng,
             sheetName: sheetName,
@@ -704,6 +704,54 @@ function getRoomSheet(credential, ref) {
     const target = resolveRoomSheet_(ref);
     const parsed = parseRoomSheet_(target.sheet, ref);
     return { success: true, floors: parsed.floors, notes: parsed.notes };
+  } catch (e) {
+    return { success: false, error: (e && e.message) ? e.message : String(e) };
+  }
+}
+
+// ============================================================
+// 管理者（スプレッドシートを直接開く操作）
+// スクリプトプロパティ ADMIN_PASSWORD に管理者パスワードを設定すると有効になります。
+// 部屋番号シートのURLは、このパスワードが合っているときだけサーバーから返します。
+// ============================================================
+const ADMIN_FAIL_KEY = 'admin_fail_count';
+const ADMIN_FAIL_MAX = 5;            // 連続で間違えられる回数
+const ADMIN_LOCK_SEC = 900;          // 上限に達したあと、操作できない時間（秒）
+
+function verifyAdmin_(adminPassword) {
+  const real = getProp_('ADMIN_PASSWORD');
+  if (!real) return { ok: false, error: '管理者パスワードが未設定です（スクリプトプロパティ ADMIN_PASSWORD を設定してください）' };
+
+  const cache = CacheService.getScriptCache();
+  const fails = Number(cache.get(ADMIN_FAIL_KEY) || 0);
+  if (fails >= ADMIN_FAIL_MAX) {
+    return { ok: false, error: '間違いが続いたため、しばらく操作できません。時間をおいてお試しください' };
+  }
+
+  const input = String(adminPassword === null || adminPassword === undefined ? '' : adminPassword);
+  if (sha256Hex_('admin:' + input) === sha256Hex_('admin:' + real)) {
+    cache.remove(ADMIN_FAIL_KEY);
+    return { ok: true };
+  }
+  cache.put(ADMIN_FAIL_KEY, String(fails + 1), ADMIN_LOCK_SEC);
+  return { ok: false, error: '管理者パスワードが違います' };
+}
+
+/** 管理者パスワードの確認（画面で管理者モードに切り替えるときに使う） */
+function checkAdminPassword(credential, adminPassword) {
+  if (!verifyPassword(credential)) return { success: false, error: '認証エラー' };
+  const v = verifyAdmin_(adminPassword);
+  return v.ok ? { success: true } : { success: false, error: v.error };
+}
+
+/** 管理者のみ：部屋番号シート（スプレッドシート）のURLを返す */
+function getRoomSheetUrl(credential, adminPassword, ref) {
+  if (!verifyPassword(credential)) return { success: false, error: '認証エラー' };
+  const v = verifyAdmin_(adminPassword);
+  if (!v.ok) return { success: false, error: v.error };
+  try {
+    const target = resolveRoomSheet_(ref);
+    return { success: true, url: target.url };
   } catch (e) {
     return { success: false, error: (e && e.message) ? e.message : String(e) };
   }
