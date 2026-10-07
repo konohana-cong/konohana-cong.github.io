@@ -179,6 +179,10 @@
       </div>
 
       <div id="headerControls" class="hidden flex items-center justify-end gap-2">
+        <button onclick="openSearchScreen()" aria-label="検索" title="検索"
+          class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 rounded-xl text-base transition flex items-center justify-center w-10 h-10 border border-slate-200 bg-white shadow-sm">
+          <i class="fas fa-search"></i>
+        </button>
         <button onclick="moveToCurrentLocation()" aria-label="現在地に移動" title="現在地に移動"
           class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 rounded-xl text-base transition flex items-center justify-center w-10 h-10 border border-slate-200 bg-white shadow-sm">
           <i class="fas fa-crosshairs"></i>
@@ -2411,6 +2415,16 @@
 
       map.setView([mansion.lat, mansion.lng], 17, { animate: false });
       openDetailSheet(id);
+    }
+
+    // 検索ボタン：マンション一覧（検索画面）を開き、検索欄に入力できる状態にする
+    function openSearchScreen() {
+      closeHamburgerMenu();
+      if (!isDrawerOpen) toggleMansionListDrawer();
+      setTimeout(() => {
+        const input = document.getElementById('mansionSearchInput');
+        if (input) { input.focus(); input.select(); }
+      }, 350);
     }
 
     function toggleMansionListDrawer() {
