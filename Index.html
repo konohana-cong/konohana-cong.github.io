@@ -427,8 +427,14 @@
         <button type="button" id="set-map-photo" onclick="applyMapType('photo')" class="py-3 rounded-xl text-sm font-bold border transition flex items-center justify-center gap-1.5">
           <i class="fas fa-satellite"></i><span>航空写真</span>
         </button>
+        <button type="button" id="set-map-positron" onclick="applyMapType('positron')" class="py-3 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5">
+          <i class="fas fa-sun"></i><span>CARTO 淡色</span>
+        </button>
+        <button type="button" id="set-map-voyager" onclick="applyMapType('voyager')" class="py-3 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5">
+          <i class="fas fa-compass"></i><span>CARTO 標準</span>
+        </button>
       </div>
-      <p class="text-[11px] text-slate-400 mt-3 leading-snug">淡色・航空写真は国土地理院のタイルを使用しています（日本国内のみ）。淡色は色を抑えた地図で、ピンが見やすくなります。</p>
+      <p class="text-[11px] text-slate-400 mt-3 leading-snug">淡色・航空写真は国土地理院のタイルを使用しています（日本国内のみ）。CARTOは海外の地図サービスで、読み込めない場合は自動で標準に戻ります。</p>
     </div>
   </div>
 
@@ -708,12 +714,12 @@
     const PWHASH_KEY = 'konohana_pw_hash_v1';
     const VIEW_KEY = 'konohana_map_view_v1';
     const FONT_KEY = 'konohana_font_size';
-    const MAPTYPE_KEY = 'konohana_map_type';
+    const MAPTYPE_KEY = 'konohana_map_type_v2';
     const TOKEN_KEY = 'konohana_login_token_v1';
     const KEEP_KEY = 'konohana_keep_login_v1';
 
     let fontSize = 'normal';
-    let mapType = 'standard';
+    let mapType = 'voyager';
     let keepLogin = false;
 
     // ============================================================
@@ -729,7 +735,7 @@
       const f = storageGet(FONT_KEY);
       if (f === 'large' || f === 'normal') fontSize = f;
       const t = storageGet(MAPTYPE_KEY);
-      if (t === 'standard' || t === 'pale' || t === 'photo') mapType = t;
+      if (['standard', 'pale', 'photo', 'positron', 'voyager'].includes(t)) mapType = t;
       keepLogin = (storageGet(KEEP_KEY) === '1') || !!storageGet(TOKEN_KEY);
     })();
 
@@ -854,7 +860,14 @@
       updateSettingsUI();
     }
 
+    // CARTO地図のAPIキー（無料・メールアドレスで取得: https://carto.com/basemaps/）。取得したら '' の中に貼り付けてください。
+    const CARTO_API_KEY = 'cb1_4d71_1_db7eb5bb075e7d55f43b0ab8';
+    const cartoUrl = (style) => 'https://basemaps.cartocdn.com/rastertiles/' + style + '/{z}/{x}/{y}{r}.png' + (CARTO_API_KEY ? '?key=' + encodeURIComponent(CARTO_API_KEY) : '');
+    const CARTO_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>';
+
     const TILE_DEFS = {
+      positron: { url: cartoUrl('light_all'), options: { maxZoom: 19, attribution: CARTO_ATTR }, carto: true },
+      voyager:  { url: cartoUrl('voyager'),   options: { maxZoom: 19, attribution: CARTO_ATTR }, carto: true },
       standard: {
         url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         options: { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }
@@ -875,8 +888,29 @@
       storageSet(MAPTYPE_KEY, type);
       if (map) {
         if (baseLayer) map.removeLayer(baseLayer);
-        baseLayer = L.tileLayer(TILE_DEFS[type].url, TILE_DEFS[type].options).addTo(map);
+        const def = TILE_DEFS[type];
+        baseLayer = L.tileLayer(def.url, def.options).addTo(map);
         baseLayer.bringToBack();
+
+        // CARTOの地図が読み込めないとき（キーが必要な場合など）は、標準の地図に戻す
+        if (def.carto) {
+          let errCount = 0;
+          let okCount = 0;
+          const layer = baseLayer;
+          layer.on('tileload', () => { okCount++; });
+          layer.on('tileerror', () => {
+            errCount++;
+            if (errCount >= 4 && okCount === 0 && baseLayer === layer && mapType === type) {
+              showToast('CARTOの地図を読み込めませんでした。標準の地図に戻します', false);
+              mapType = 'standard';
+              storageSet(MAPTYPE_KEY, 'standard');
+              map.removeLayer(layer);
+              baseLayer = L.tileLayer(TILE_DEFS.standard.url, TILE_DEFS.standard.options).addTo(map);
+              baseLayer.bringToBack();
+              updateSettingsUI();
+            }
+          });
+        }
       }
       updateSettingsUI();
     }
@@ -893,6 +927,8 @@
       set('set-map-standard', mapType === 'standard', 'text-sm');
       set('set-map-pale', mapType === 'pale', 'text-sm');
       set('set-map-photo', mapType === 'photo', 'text-sm');
+      set('set-map-positron', mapType === 'positron', 'text-xs');
+      set('set-map-voyager', mapType === 'voyager', 'text-xs');
     }
 
     function openSettingsSheet() {
