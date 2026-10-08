@@ -552,13 +552,38 @@ function openRoomSheetByUrl_(url) {
     throw new Error('部屋番号のシートを開けませんでした（編集権限を確認してください）');
   }
 
+  const sheets = target.getSheets();
   let sheet = null;
   const g = String(url).match(/[#&?]gid=(\d+)/);
   if (g) {
-    sheet = target.getSheets().filter(s => String(s.getSheetId()) === g[1])[0] || null;
+    sheet = sheets.filter(s => String(s.getSheetId()) === g[1])[0] || null;
   }
-  if (!sheet) sheet = target.getSheets()[0];
+  if (!sheet) sheet = sheets[0];
   if (!sheet) throw new Error('部屋番号のシートが見つかりません');
+
+  // 指定されたタブに部屋番号が見つからないときは、同じファイルの他のタブから部屋番号があるタブを探す
+  // （探した結果は6時間覚えておき、読み取りと書き込みで同じタブを使う）
+  if (sheets.length > 1) {
+    const cache = CacheService.getScriptCache();
+    const cacheKey = 'room_tab_' + m[1] + '_' + sheet.getSheetId();
+    const cachedId = cache.get(cacheKey);
+    if (cachedId) {
+      const hit = sheets.filter(x => String(x.getSheetId()) === cachedId)[0];
+      if (hit) sheet = hit;
+    } else {
+      let chosen = sheet;
+      try {
+        if (parseRoomSheet_(sheet, null).floors.length === 0) {
+          for (let k = 0; k < sheets.length; k++) {
+            if (sheets[k].getSheetId() === sheet.getSheetId()) continue;
+            if (parseRoomSheet_(sheets[k], null).floors.length > 0) { chosen = sheets[k]; break; }
+          }
+        }
+      } catch (e) { /* 何もしない */ }
+      cache.put(cacheKey, String(chosen.getSheetId()), 21600);
+      sheet = chosen;
+    }
+  }
   return { ss: target, sheet: sheet };
 }
 

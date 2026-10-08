@@ -133,6 +133,11 @@
       100% { transform: scale(1.6); opacity: 0; }
     }
 
+    /* 検索窓：ブラウザ標準の「×」は消し、自前の×だけを使う */
+    input[type="search"]::-webkit-search-cancel-button,
+    input[type="search"]::-webkit-search-decoration { -webkit-appearance: none; appearance: none; display: none; }
+    input[type="search"] { -webkit-appearance: none; appearance: none; }
+
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -1450,7 +1455,7 @@
           <div class="text-center py-8 text-slate-400 text-xs leading-relaxed">
             <i class="fas fa-circle-question text-2xl mb-2 text-slate-300"></i>
             <p>部屋番号を読み取れませんでした。</p>
-            <p>下の「スプレッドシートで開く」からご確認ください。</p>
+            <p>管理者にご連絡ください（スプレッドシートの並びが想定と違う可能性があります）。</p>
           </div>`;
         body.innerHTML = html;
         return;
@@ -2225,6 +2230,10 @@
       updateSearchBtn();
       renderMarkers(false);
       renderDrawerList();
+      if (pendingSearchFit) {
+        pendingSearchFit = false;
+        fitToSearchResults();
+      }
     }
 
     function getFilteredMansionList() {
@@ -2557,11 +2566,27 @@
       if (inp) inp.blur();
     }
 
+    // 検索窓から検索したとき、該当したマンションのピンの付近へ地図を移動・拡大する
+    let pendingSearchFit = false;
+
+    function fitToSearchResults() {
+      if (!map || !searchTerms.length) return;
+      const list = getFilteredMansionList().filter(m => isFinite(m.lat) && isFinite(m.lng));
+      if (!list.length) return;
+      if (list.length === 1) {
+        map.setView([list[0].lat, list[0].lng], 17, { animate: true });
+        return;
+      }
+      const bounds = L.latLngBounds(list.map(m => [m.lat, m.lng]));
+      map.fitBounds(bounds, { paddingTopLeft: [24, 110], paddingBottomRight: [24, 24], maxZoom: 17, animate: true });
+    }
+
     function onSearchWindowInput() {
       const main = document.getElementById('mansionSearchInput');
       const inp = document.getElementById('searchWindowInput');
       if (main && inp) main.value = inp.value;
       updateSearchWindowClear();
+      pendingSearchFit = true;
       debouncedSearchInput();
     }
 
