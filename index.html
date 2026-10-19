@@ -222,6 +222,7 @@
     .kpin { position: relative; width: 100%; height: 100%; }
     .kpin-ring { position: absolute; left: 0; top: 0; border-radius: 50%; background: #ffffff; box-shadow: 0 3px 8px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; }
     .kpin-core { border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .kpin-num { font-weight: 800; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
     .kpin-tail { position: absolute; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 8px solid #ffffff; filter: drop-shadow(0 2px 1px rgba(0,0,0,0.25)); }
     .kpin-dot { position: absolute; left: 0; top: 0; border-radius: 50%; border: 2px solid #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.45); box-sizing: border-box; }
     .kpin-note { position: absolute; top: -4px; left: -5px; width: 15px; height: 15px; background: #dc2626; color: #fff; border-radius: 50%; border: 2px solid #fff; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; z-index: 5; }
@@ -1208,7 +1209,7 @@
     const CACHE_KEY = 'konohana_mansion_cache_v2';
     const OLD_CACHE_KEYS = ['konohana_mansion_cache_v1'];   // 旧版（リンクURLが入っていた）は削除する
     const PWHASH_KEY = 'konohana_pw_hash_v1';
-    const APP_VERSION = '2026.10.19-2';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
+    const APP_VERSION = '2026.10.19-3';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
     // オフライン対応：地図の画像とアプリ本体を、端末に保存する（HTTPSで開いたときだけ）
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* 登録できなくても、アプリは通常どおり使えます */ }); });
@@ -1492,6 +1493,15 @@
     // 最後に訪問した日（一覧の並び替え・「未訪問のみ」・各カードの表示）
     // ============================================================
     let visitMap = null;          // { 'シート名|物件名': '2026/10/12 14:00' }
+    let roomCountMap = null;      // { 'シート名|物件名': [部屋数, 訪問済みの部屋数] }（ピンの中の「未訪問の数」に使う）
+    function visitKeyOf(m) { return m.sheetName + '|' + m.name; }
+    // ピンに出す文字。数がまだ読めていないときは null（ビルのアイコンのまま）、部屋の情報がないときは「−」
+    function pinCountText(m) {
+      if (!roomCountMap) return null;
+      const e = roomCountMap[visitKeyOf(m)];
+      if (!e || !(e[0] > 0)) return '−';
+      return String(Math.max(0, e[0] - e[1]));
+    }
     let visitLoadedAt = 0;
     let sortOldest = false;
     let onlyUnvisited = false;
@@ -1531,6 +1541,8 @@
         .withSuccessHandler((res) => {
           if (res && res.success) {
             visitMap = res.visits || {};
+            roomCountMap = res.rooms || {};
+            try { refreshPinIcons(); } catch (e) { /* ピンの更新に失敗しても、ほかの表示は続ける */ }
             if (sortOldest || onlyUnvisited) { onFiltersChanged(); }
             else if (isDrawerOpen) renderDrawerList(true);
             if (currentDetailId !== null) renderDetailSheet();
@@ -2103,9 +2115,29 @@
         .getRoomSheet(userAuthPassword, roomRef);
     }
 
+    // 開いている部屋の一覧から、そのマンションの「未訪問の数」を最新にして、ピンも更新する
+    function syncPinCountFromRooms() {
+      try {
+        if (!roomData || !roomRef || !roomData.floors) return;
+        let total = 0, done = 0;
+        roomData.floors.forEach(fl => (fl.rooms || []).forEach(rm => { total++; if (rm.result) done++; }));
+        if (!total) return;
+        if (!roomCountMap) roomCountMap = {};
+        const key = roomRef.sheetName + '|' + roomRef.name;
+        const old = roomCountMap[key];
+        if (old && old[0] === total && old[1] === done) return;
+        roomCountMap[key] = [total, done];
+        const m = (mansionDataList || []).find(x => x.sheetName === roomRef.sheetName && x.row === roomRef.row);
+        const mk = m && mansionMarkersMap[m.id];
+        if (mk && mk.setIcon) mk.setIcon(buildPinIcon(m));
+        applyPinSelection();
+      } catch (e) { /* ピンの数字が更新できなくても、部屋の画面は続ける */ }
+    }
+
     function renderRoomSheet() {
       const body = document.getElementById('roomSheetBody');
       if (!body) return;
+      syncPinCountFromRooms();
       let html = '';
 
       if (roomError) {
@@ -3408,12 +3440,17 @@
       const pulse = isUrgent ? `<div class="urgent-pin-pulse" style="width:${outer}px;height:${outer}px;left:0;top:0;"></div>` : '';
       const label = full ? `<div class="kpin-label">${esc(m.name)}</div>` : '';
 
+      const cnt = pinCountText(m);
+      const cntSize = cnt === null ? 0 : (cnt.length >= 3 ? (full ? 11 : 9) : cnt.length === 2 ? (full ? 15 : 12) : (full ? 16 : 13));
+      const inner = cnt === null
+        ? `<i class="fas fa-building" style="font-size:${full ? 13 : 10}px;"></i>`
+        : `<span class="kpin-num" style="font-size:${cntSize}px;">${cnt}</span>`;
       const html = `
         <div class="kpin">
           ${pulse}
           <div class="kpin-ring" style="width:${outer}px;height:${outer}px;">
             <div class="kpin-core" style="width:${core}px;height:${core}px;background:${color.bg};color:${color.text};">
-              <i class="fas fa-building" style="font-size:${full ? 13 : 10}px;"></i>
+              ${inner}
             </div>
           </div>
           <div class="kpin-tail" style="top:${outer - 2}px;"></div>
