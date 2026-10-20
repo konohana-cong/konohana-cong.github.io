@@ -222,6 +222,53 @@
     .kpin { position: relative; width: 100%; height: 100%; }
     .kpin-ring { position: absolute; left: 0; top: 0; border-radius: 50%; background: #ffffff; box-shadow: 0 3px 8px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; }
     .kpin-core { border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+    /* 報告画面の「ご案内」（マニュアルなど） */
+    .guide-wrap { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #e8eef0; }
+    .guide-title { font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: .08em; margin-bottom: .5rem; display: flex; align-items: center; gap: .4rem; }
+    .guide-card { border: 1px solid #e2e8ec; border-radius: 16px; background: #fafcfc; margin-bottom: .6rem; overflow: hidden; }
+    .guide-card > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: .65rem; padding: .75rem .85rem; font-size: 13px; font-weight: 800; color: #0e4d45; }
+    .guide-card > summary::-webkit-details-marker { display: none; }
+    .guide-card > summary .gi { width: 30px; height: 30px; border-radius: 10px; background: #e3f2ef; color: #13685e; display: flex; align-items: center; justify-content: center; font-size: 13px; flex: none; }
+    .guide-card > summary .gs { flex: 1; min-width: 0; line-height: 1.25; }
+    .guide-card > summary .gs small { display: block; font-size: 10.5px; font-weight: 600; color: #7b8b95; margin-top: 2px; }
+    .guide-card > summary .gc { color: #94a3b8; font-size: 11px; transition: transform .2s; }
+    .guide-card[open] > summary .gc { transform: rotate(180deg); }
+    .guide-body { padding: 0 .95rem .95rem; font-size: 12.5px; line-height: 1.75; color: #334155; }
+    .guide-body h4 { font-size: 12px; font-weight: 800; color: #0e4d45; margin: .85rem 0 .3rem; }
+    .guide-body ol, .guide-body ul { margin: .2rem 0 .2rem 0; padding: 0; list-style: none; }
+    .guide-body li { position: relative; padding-left: 1.5rem; margin: .25rem 0; }
+    .guide-body ol { counter-reset: g; }
+    .guide-body ol > li { counter-increment: g; }
+    .guide-body ol > li::before { content: counter(g); position: absolute; left: 0; top: .2rem; width: 1.15rem; height: 1.15rem; border-radius: 50%; background: #13685e; color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; line-height: 1; }
+    .guide-body ul > li::before { content: ''; position: absolute; left: .45rem; top: .75em; width: 5px; height: 5px; border-radius: 50%; background: #13685e; }
+    .guide-body .g-note { background: #fff7e6; border: 1px solid #f6dfae; color: #7a5410; border-radius: 12px; padding: .55rem .7rem; margin: .5rem 0; font-size: 12px; }
+    .guide-body .g-key { display: inline-flex; align-items: center; justify-content: center; min-width: 1.35rem; height: 1.35rem; padding: 0 .3rem; border-radius: 7px; background: #0e4d45; color: #fff; font-weight: 800; font-size: 11px; margin-right: .2rem; }
+    .guide-body .g-link { display: flex; align-items: center; gap: .5rem; width: 100%; margin-top: .5rem; padding: .7rem .85rem; border-radius: 14px; background: #13685e; color: #fff !important; font-weight: 800; font-size: 13px; text-decoration: none; }
+    .guide-body .g-link.alt { background: #fff; color: #0e4d45 !important; border: 1.5px solid #13685e; }
+    .guide-body .g-link i:last-child { margin-left: auto; font-size: 11px; opacity: .8; }
+    .guide-body a.g-mail { color: #13685e; font-weight: 700; word-break: break-all; }
+    .guide-body .g-foot { text-align: right; font-size: 11px; color: #94a3b8; margin-top: .7rem; }
+    .guide-body .g-note.g-red { background: #fdecec; border-color: #f3c2c2; color: #8a2525; }
+    .report-hint { display: none; margin-top: .5rem; padding: .55rem .7rem; border-radius: 12px; background: #e9f6f3; color: #0e4d45; font-size: 12px; font-weight: 700; line-height: 1.5; }
+    .report-hint button { display: block; margin-top: .25rem; background: none; border: 0; padding: 0; color: #13685e; font-weight: 800; font-size: 12px; text-decoration: underline; cursor: pointer; }
+    .dark .guide-wrap { border-top-color: #2b3b49; }
+    .dark .guide-title { color: #8fa3b3; }
+    .dark .guide-card { background: #1a2732; border-color: #2b3b49; }
+    .dark .guide-card > summary { color: #7fe0cb; }
+    .dark .guide-card > summary .gi { background: #12302b; color: #7fe0cb; }
+    .dark .guide-card > summary .gs small { color: #8fa3b3; }
+    .dark .guide-body { color: #d3dde5; }
+    .dark .guide-body h4 { color: #7fe0cb; }
+    .dark .guide-body ol > li::before { background: #1f8e80; }
+    .dark .guide-body ul > li::before { background: #5eead4; }
+    .dark .guide-body .g-note { background: #33280f; border-color: #5c4a1c; color: #f3d99b; }
+    .dark .guide-body .g-key { background: #1f8e80; }
+    .dark .guide-body .g-link.alt { background: transparent; color: #7fe0cb !important; border-color: #3aa597; }
+    .dark .guide-body a.g-mail { color: #5eead4; }
+    .dark .guide-body .g-note.g-red { background: #3a1c1f; border-color: #6a2f35; color: #f5b9bd; }
+    .dark .report-hint { background: #12302b; color: #bdf3e8; }
+    .dark .report-hint button { color: #5eead4; }
     .kpin-num { font-weight: 800; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
     .kpin-tail { position: absolute; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 8px solid #ffffff; filter: drop-shadow(0 2px 1px rgba(0,0,0,0.25)); }
     .kpin-dot { position: absolute; left: 0; top: 0; border-radius: 50%; border: 2px solid #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.45); box-sizing: border-box; }
@@ -1133,10 +1180,8 @@
               <option value="外国人情報">外国人情報</option>
               <option value="その他">その他</option>
             </select>
-            <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
-              <i class="fas fa-chevron-down"></i>
-            </div>
           </div>
+          <div id="reportHint" class="report-hint"></div>
         </div>
 
         <div>
@@ -1151,6 +1196,81 @@
           <span>送信</span>
         </button>
       </form>
+      <div class="pg-guide guide-wrap">
+        <div class="guide-title"><i class="fas fa-book-open"></i>マニュアル・ご案内</div>
+
+        <details class="guide-card" id="guideTerritory">
+          <summary><span class="gi"><i class="fas fa-map-location-dot"></i></span><span class="gs">家から家の区域マニュアル<small>区域カードの使い方・注意情報(2026/1/24)</small></span><i class="fas fa-chevron-down gc"></i></summary>
+          <div class="guide-body">
+            <ol>
+              <li>裏面の枠の色で囲まれている範囲を訪問します。右の数字は、その区域が全部で何枚あるかを表しています。<br>留守だった家は<b>斜線</b>、会えた家は<b>×</b>を付けます。留守宅を訪問して留守だった場合は<b>✓</b>(チェックマーク)を付けます。</li>
+              <li>「別」マークがある建物は、裏面に記載されています。</li>
+              <li>訪問する前に「外国人・拒否・注意情報」をご覧ください。
+                <div style="margin-top:.3rem"><span class="g-key">M</span>オンライン区域として取り分けられているもの<br><span class="g-key">K</span>拒否<br><span class="g-key">G</span>外国語の区域として取り分けられているもの(下の「外国語の区域と外国人の情報」を参照)</div>
+                <div class="g-note">以上の記載がある所は訪問しないでください。</div></li>
+              <li>奉仕後、日付と曜日を記入し、祝日ならば☑を付けます。奉仕した時間帯(朝・昼・夜)を選んで〇で囲みます。</li>
+              <li>区域を徹底的に奉仕できたら、区域係に返却します(<b>4か月以内</b>)。</li>
+            </ol>
+            <h4>そのほか</h4>
+            <ul><li>個人区域が必要なときや、オンライン区域の操作で困ったときは、区域係までお近づきください。</li></ul>
+            <div class="g-foot">2026/1/24　区域係</div>
+          </div>
+        </details>
+
+        <details class="guide-card" id="guideForeign">
+          <summary><span class="gi"><i class="fas fa-language"></i></span><span class="gs">外国語の区域と外国人の情報<small>報告のしかた・言語ごとの注意</small></span><i class="fas fa-chevron-down gc"></i></summary>
+          <div class="guide-body">
+            <h4>外国語の区域として取り分けられている言語</h4>
+            <p>ネパール語、英語、日本手話、中国語、インドネシア語、マレー語、タガログ語(フィリピン人)、ポルトガル語、スペイン語です。これらの言語を話す方や、その方の情報を入手した場合は、区域係に報告してください。</p>
+            <div class="g-note">中国語とタガログ語は、阪神高速5号湾岸線より<b>東側</b>にお住まいの方の情報のみ、区域係にお知らせください。</div>
+            <p>他の言語を話す方で関心があるようなら、「引き続きその人の関心を高めるために最善を尽くします。」(組織の本9章40節)</p>
+
+            <h4>インドネシア語・マレー語</h4>
+            <p>母語とされる方は、すでに特定の宗教を持っていて、ほとんどはイスラム教徒です。初めて会ってすぐに聖書について話すと誤解を招きやすく、場合によってはスマホで撮影されSNSなどにアップされることがあり得ます。まずは一般的な話題にして友好関係を持つと会話が続きやすいようです。自己紹介のときは、クリスチャンと言わずに「エホバの証人」と名乗ると効果的です。</p>
+
+            <h4>スペイン語</h4>
+            <p>聖書への関心の有無にかかわらず、区域情報を提供してください。住所と、可能であれば曜日や時間を含めると助けになります。家の人に会えなくても、表札がアルファベットで外国人であることが明らかな場合は報告してください。</p>
+
+            <h4>英語</h4>
+            <p>関心の有無に関わらず報告してください。</p>
+
+            <h4>ネパール語</h4>
+            <ol>
+              <li>ネパール語を話す方に、自分にはネパール語を話せる知り合いがいることを伝えます。</li>
+              <li>「あなたのお名前や住所を私の知り合いに伝えてもよいか」と尋ねます。</li>
+              <li>了承してくれた場合、その方の情報をプレグループの窓口となる兄弟たちに伝えるか、プレグループの兄弟姉妹に直接伝えます。</li>
+            </ol>
+            <div class="g-note g-red">
+              <b>窓口の連絡先</b><br>
+              大正会衆 奉仕監督　福本 浩二 兄弟<br><a class="g-mail" href="mailto:koji.jw.pc@gmail.com">koji.jw.pc@gmail.com</a><br>
+              大正会衆 ネパール語プレグループ　地濃 力 兄弟<br><a class="g-mail" href="mailto:chippy.jw@gmail.com">chippy.jw@gmail.com</a>
+            </div>
+          </div>
+        </details>
+
+        <details class="guide-card" id="guideDeaf">
+          <summary><span class="gi"><i class="fas fa-hands"></i></span><span class="gs">ろう者の情報提供のお願い<small>大阪市浪速手話会衆</small></span><i class="fas fa-chevron-down gc"></i></summary>
+          <div class="guide-body">
+            <p>大阪市浪速手話会衆は成員41名で、400件ほどの少ない区域を奉仕しています。そのため、ろう者の区域をさらに開拓したいという強い願いを持っています(マタイ 28:19,20)。区域の中にはたくさんのろう者が生活しておられるようですが、探し出すことはとても難しいと言われています。来年の記念式に向けて、まだ真理を伝えられていないろう者の家を探し出したいと思っています。</p>
+            <p>会衆の区域内で、下の特徴がある家を見つけたら、会えた・会えないに関係なく、フォームから情報をお寄せください。情報が重なっても構いません。いただいた情報をもとに、手話会衆で調査します。</p>
+            <h4>ろう者の方が住んでいそうな特徴</h4>
+            <ul>
+              <li><b>インターホンに特徴がある</b>
+                <ul style="margin-top:.2rem">
+                  <li>不自然に2つある・後から工事した形跡がある</li>
+                  <li>音が鳴らない窓際を見ると、光の点滅がある</li>
+                  <li>「何度も押してください」などの張り紙がある</li>
+                </ul></li>
+              <li>車に蝶々のマークがある</li>
+              <li>何も言わずに身振りだけで断る</li>
+              <li>オートロックマンションで、何も言わずに扉が開く</li>
+            </ul>
+            <a class="g-link" href="https://docs.google.com/forms/d/e/1FAIpQLSdFtZh98qeoHiR-YsZq2cy1XUdRzim1N9_9ZWJ7hkkMRpW5ag/viewform?usp=dialog" target="_blank" rel="noopener noreferrer"><i class="fas fa-house-circle-check"></i>特徴がある家を見つけたとき<i class="fas fa-arrow-up-right-from-square"></i></a>
+            <a class="g-link alt" href="https://docs.google.com/forms/d/e/1FAIpQLSdnrrw2_Rw1V-7rgpMnqwX7X30KGpO7RsjyMhzwfkd6qYKZ-w/viewform?usp=dialog" target="_blank" rel="noopener noreferrer"><i class="fas fa-handshake"></i>区域内でろう者の方にお会いしたとき<i class="fas fa-arrow-up-right-from-square"></i></a>
+            <div class="g-foot">兄弟姉妹のご協力に感謝いたします。大阪市浪速手話会衆</div>
+          </div>
+        </details>
+      </div>
     </div>
   </div>
 
@@ -1209,7 +1329,7 @@
     const CACHE_KEY = 'konohana_mansion_cache_v2';
     const OLD_CACHE_KEYS = ['konohana_mansion_cache_v1'];   // 旧版（リンクURLが入っていた）は削除する
     const PWHASH_KEY = 'konohana_pw_hash_v1';
-    const APP_VERSION = '2026.10.19-3';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
+    const APP_VERSION = '2026.10.19-4';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
     // オフライン対応：地図の画像とアプリ本体を、端末に保存する（HTTPSで開いたときだけ）
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* 登録できなくても、アプリは通常どおり使えます */ }); });
@@ -3051,6 +3171,28 @@
       } else {
         detailsInput.placeholder = "詳細を入力";
       }
+      showReportHint(category);
+    }
+
+    // 項目に合わせて、関係するマニュアルへ案内する
+    function showReportHint(category) {
+      const box = document.getElementById('reportHint');
+      if (!box) return;
+      const map = {
+        '外国人情報': { text: '外国語の区域や、言語ごとの報告のしかたがあります。', label: '「外国語の区域と外国人の情報」を見る', id: 'guideForeign' },
+        '訪問拒否情報': { text: '「K」の記載がある所は訪問しない決まりです。', label: '「家から家の区域マニュアル」を見る', id: 'guideTerritory' }
+      };
+      const h = map[category];
+      if (!h) { box.style.display = 'none'; box.innerHTML = ''; return; }
+      box.innerHTML = esc(h.text) + '<button type="button" onclick="openGuide(\'' + h.id + '\')">' + esc(h.label) + '</button>';
+      box.style.display = 'block';
+    }
+
+    function openGuide(id) {
+      const d = document.getElementById(id);
+      if (!d) return;
+      d.open = true;
+      try { d.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { d.scrollIntoView(); }
     }
 
     function handleReportSubmit(e) {
@@ -3085,7 +3227,7 @@
             closeReportModal();
             showToast("報告を送信しました", false);
             document.getElementById("reportName").value = "";
-            document.getElementById("reportCategory").value = "";
+            document.getElementById("reportCategory").value = ""; showReportHint("");
             document.getElementById("reportDetails").value = "";
             document.getElementById("reportDetails").placeholder = "詳細を入力";
             reportTarget = null;
