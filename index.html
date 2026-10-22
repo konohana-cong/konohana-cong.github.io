@@ -224,7 +224,7 @@
     .kpin-core { border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 
     /* 報告画面の「ご案内」（マニュアルなど） */
-    .guide-wrap { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #e8eef0; }
+    .guide-wrap { margin: 0; padding: 0; }
     .guide-title { font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: .08em; margin-bottom: .5rem; display: flex; align-items: center; gap: .4rem; }
     .guide-card { border: 1px solid #e2e8ec; border-radius: 16px; background: #fafcfc; margin-bottom: .6rem; overflow: hidden; }
     .guide-card > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: .65rem; padding: .75rem .85rem; font-size: 13px; font-weight: 800; color: #0e4d45; }
@@ -286,7 +286,7 @@
     .navi form { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; padding: 0; }
     .navi form .nv-full { grid-column: 1 / -1; }
     .navi label { display: flex; flex-direction: column; gap: .2rem; font-size: 11.5px; font-weight: 700; color: #64748b; min-width: 0; }
-    .navi input, .navi textarea { font: inherit; font-size: 13px; font-weight: 500; color: #1e293b; border: 1px solid #edf1f3; border-radius: 12px; padding: .5rem .65rem; width: 100%; }
+    .navi input, .navi textarea { background: #f6f8f9; font: inherit; font-size: 13px; font-weight: 500; color: #1e293b; border: 1px solid #edf1f3; border-radius: 12px; padding: .5rem .65rem; width: 100%; }
     .navi textarea { resize: vertical; min-height: 4.2rem; }
     .navi .nv-memo { white-space: pre-wrap; background: #f6f8f9; border: 1px dashed #cdd8dc; border-radius: 12px; padding: .65rem; margin: .7rem 0 .5rem; font: inherit; font-size: 12px; color: #334155; }
     .navi .nv-row { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; }
@@ -648,6 +648,11 @@
       <button onclick="openReportModal()" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2 transition font-semibold">
         <i class="fas fa-pen-to-square text-emerald-600 w-4"></i>
         <span>報告</span>
+        <i class="fas fa-chevron-right menu-chev"></i>
+      </button>
+      <button onclick="openManual()" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2 transition font-semibold">
+        <i class="fas fa-book-open text-amber-500 w-4"></i>
+        <span>マニュアル</span>
         <i class="fas fa-chevron-right menu-chev"></i>
       </button>
       <button onclick="openStats()" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2 transition font-semibold">
@@ -1256,8 +1261,23 @@
           <span>送信</span>
         </button>
       </form>
+    </div>
+  </div>
+
+  <!-- マニュアル（メニューから開く。報告画面の「項目」から案内されることもある） -->
+  <div id="manualModal" class="page-modal page-anim hidden fixed inset-0 z-[10004] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 max-h-[92dvh] overflow-y-auto">
+      <div class="p-5 sm:p-6 pb-2 flex items-center justify-between btn-touch-ui">
+        <div class="flex items-center gap-2 text-slate-800 font-bold text-lg sm:text-xl">
+          <i class="fas fa-book-open text-amber-500"></i>
+          <span>マニュアル</span>
+        </div>
+        <button type="button" onclick="closeManual()" aria-label="マニュアルを閉じる" class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition">
+          <i class="fas fa-times text-lg ic-desk"></i><i class="fas fa-chevron-left text-lg ic-mob"></i>
+        </button>
+      </div>
+      <div class="p-5 sm:p-6 pt-3">
       <div class="pg-guide guide-wrap">
-        <div class="guide-title"><i class="fas fa-book-open"></i>マニュアル・ご案内</div>
 
         <details class="guide-card" id="guideTerritory">
           <summary><span class="gi"><i class="fas fa-map-location-dot"></i></span><span class="gs">家から家の区域マニュアル<small>区域カードの使い方・注意情報(2026/1/24)</small></span><i class="fas fa-chevron-down gc"></i></summary>
@@ -1302,6 +1322,7 @@
             </div>
           </div>
         </details>
+      </div>
       </div>
     </div>
   </div>
@@ -1361,14 +1382,14 @@
     const CACHE_KEY = 'konohana_mansion_cache_v2';
     const OLD_CACHE_KEYS = ['konohana_mansion_cache_v1'];   // 旧版（リンクURLが入っていた）は削除する
     const PWHASH_KEY = 'konohana_pw_hash_v1';
-    const APP_VERSION = '2026.10.22-1';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
+    const APP_VERSION = '2026.10.22-2';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
     // オフライン対応：地図の画像とアプリ本体を、端末に保存する（HTTPSで開いたときだけ）
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* 登録できなくても、アプリは通常どおり使えます */ }); });
     }
     // 各ページの本文を .pg-body で包む（パソコンでは display:contents で見た目は変わらず、スマホでは白いカードになる）
     document.addEventListener('DOMContentLoaded', () => {
-      ['settingsSheet', 'statsModal', 'adminCheckModal', 'reportModal', 'adminModal', 'filterSheet'].forEach(id => {
+      ['settingsSheet', 'statsModal', 'adminCheckModal', 'reportModal', 'manualModal', 'adminModal', 'filterSheet'].forEach(id => {
         const inner = document.querySelector('#' + id + ' > div');
         if (!inner || inner.querySelector(':scope > .pg-body')) return;
         const kids = Array.from(inner.children).slice(1);
@@ -1882,6 +1903,7 @@
         closeRoomPicker();
         closeRoomSheet();
         closeRouteSheet();
+        closeManual();
         closeReportModal();
         closeFilterSheet();
         closeSettingsSheet();
@@ -3063,6 +3085,7 @@
       closeRoomPicker();
       closeRoomSheet();
       closeRouteSheet();
+      closeManual();
       closeReportModal();
       closeFilterSheet();
       closeSettingsSheet();
@@ -3169,7 +3192,6 @@
       }
       showPage(document.getElementById("reportModal"));
       setTimeout(updateReportTargetUI, 0);
-      setTimeout(() => { try { NAVI.init(); } catch (e) { /* ナビが開けなくても、報告は送れる */ } }, 60);
     }
 
     function closeReportModal() {
@@ -3362,13 +3384,23 @@
       box.style.display = 'block';
     }
 
-    function openGuide(id) {
-      const d = document.getElementById(id);
-      if (!d) return;
-      if (id === 'guideNavi') NAVI.init();
-      d.open = true;
-      try { d.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { d.scrollIntoView(); }
+    // マニュアルのページを開く。id を渡すと、そのカードを開いた状態にする
+    function openManual(id) {
+      closeHamburgerMenu(true);
+      showPage(document.getElementById('manualModal'));
+      setTimeout(() => {
+        try { NAVI.init(); } catch (e) { /* ナビが開けなくても、マニュアルは読める */ }
+        const d = id ? document.getElementById(id) : null;
+        if (d) {
+          d.open = true;
+          try { d.scrollIntoView({ block: 'start' }); } catch (e) { /* そのまま */ }
+        }
+      }, 60);
     }
+    function closeManual() {
+      hidePage(document.getElementById('manualModal'));
+    }
+    function openGuide(id) { openManual(id); }
 
     function handleReportSubmit(e) {
       e.preventDefault();
