@@ -250,6 +250,66 @@
     .guide-body a.g-mail { color: #13685e; font-weight: 700; word-break: break-all; }
     .guide-body .g-foot { text-align: right; font-size: 11px; color: #94a3b8; margin-top: .7rem; }
     .guide-body .g-note.g-red { background: #fdecec; border-color: #f3c2c2; color: #8a2525; }
+
+    /* 外国語区域 報告ナビ（報告画面のご案内の中） */
+    .navi .nv-sec { border: 1px solid #e2e8ec; border-radius: 14px; background: #fff; padding: .75rem .8rem; margin-top: .6rem; }
+    .navi .nv-sec[hidden] { display: none; }
+    .navi .nv-step { display: flex; align-items: center; gap: .5rem; margin-bottom: .55rem; }
+    .navi .nv-step b { width: 1.35rem; height: 1.35rem; border-radius: 50%; background: #13685e; color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none; }
+    .navi .nv-step h4 { margin: 0; }
+    .navi .nv-langs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .4rem; }
+    .navi .nv-chip { font: inherit; text-align: left; border: 1.5px solid #e2e8ec; background: #f6f8f9; color: #1e293b; border-radius: 12px; padding: .5rem .65rem; cursor: pointer; line-height: 1.3; font-size: 12.5px; font-weight: 700; transition: background .15s, border-color .15s; }
+    .navi .nv-chip small { display: block; color: #7b8b95; font-size: 10.5px; font-weight: 600; margin-top: 1px; }
+    .navi .nv-chip[aria-pressed="true"] { background: #13685e; border-color: #13685e; color: #fff; }
+    .navi .nv-chip[aria-pressed="true"] small { color: #fff; opacity: .85; }
+    .navi .nv-q { margin-bottom: .7rem; }
+    .navi .nv-q p { margin: 0 0 .35rem; font-weight: 700; color: #334155; }
+    .navi .nv-opts { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .navi .nv-opts .nv-chip { padding: .4rem .8rem; border-radius: 999px; }
+    .navi .nv-hint { margin: 0; color: #7b8b95; font-size: 12px; }
+    .navi .nv-verdict { border-radius: 12px; padding: .7rem .8rem; display: flex; flex-direction: column; gap: .2rem; margin-top: .2rem; }
+    .navi .nv-verdict .tag { font-size: 10.5px; font-weight: 800; letter-spacing: .06em; }
+    .navi .nv-verdict h5 { margin: 0; font-size: 13.5px; font-weight: 800; line-height: 1.4; }
+    .navi .nv-verdict p { margin: 0; color: #334155; font-size: 12px; }
+    .navi .nv-verdict.ok { background: #e3f2e8; color: #2e7046; }
+    .navi .nv-verdict.warn { background: #fbefe1; color: #a35a12; }
+    .navi .nv-verdict.no { background: #f4e8e8; color: #7a4b4b; }
+    .navi ol.nv-todo, .navi ul.nv-notes { margin: .6rem 0 0; }
+    .navi .nv-quote { border-left: 3px solid #13685e; padding: .1rem 0 .1rem .7rem; margin: .6rem 0 0; color: #64748b; font-size: 12px; }
+    .navi .nv-contacts { display: flex; flex-direction: column; gap: .4rem; margin-top: .6rem; }
+    .navi .nv-contact { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .6rem; border: 1px solid #e2e8ec; border-radius: 12px; padding: .55rem .7rem; }
+    .navi .nv-contact .who { flex: 1 1 11rem; min-width: 0; font-weight: 700; }
+    .navi .nv-contact .who small { display: block; color: #7b8b95; font-size: 10.5px; font-weight: 600; }
+    .navi .nv-contact code { font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; user-select: all; word-break: break-all; color: #0e4d45; }
+    .navi .nv-btn { font: inherit; font-size: 12px; font-weight: 800; border: 1.5px solid #13685e; background: transparent; color: #13685e; border-radius: 999px; padding: .35rem .85rem; cursor: pointer; text-decoration: none; display: inline-block; }
+    .navi .nv-btn.primary { background: #13685e; color: #fff; }
+    .navi form { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; padding: 0; }
+    .navi form .nv-full { grid-column: 1 / -1; }
+    .navi label { display: flex; flex-direction: column; gap: .2rem; font-size: 11.5px; font-weight: 700; color: #64748b; min-width: 0; }
+    .navi input, .navi textarea { font: inherit; font-size: 13px; font-weight: 500; color: #1e293b; border: 1px solid #edf1f3; border-radius: 12px; padding: .5rem .65rem; width: 100%; }
+    .navi textarea { resize: vertical; min-height: 4.2rem; }
+    .navi .nv-memo { white-space: pre-wrap; background: #f6f8f9; border: 1px dashed #cdd8dc; border-radius: 12px; padding: .65rem; margin: .7rem 0 .5rem; font: inherit; font-size: 12px; color: #334155; }
+    .navi .nv-row { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; }
+    .navi .nv-toast { color: #2e7046; font-size: 11.5px; font-weight: 700; }
+    @media (max-width: 360px) { .navi form { grid-template-columns: 1fr; } }
+    .dark .navi .nv-sec { background: #17222c; border-color: #2b3b49; }
+    .dark .navi .nv-chip { background: #1c2a36; border-color: #2b3b49; color: #e6eef4; }
+    .dark .navi .nv-chip small { color: #8fa3b3; }
+    .dark .navi .nv-chip[aria-pressed="true"] { background: #13685e; border-color: #3aa597; color: #fff; }
+    .dark .navi .nv-q p, .dark .navi .nv-verdict p { color: #d3dde5; }
+    .dark .navi .nv-verdict.ok { background: #1f3326; color: #86c99d; }
+    .dark .navi .nv-verdict.warn { background: #3a2b1c; color: #e6a76a; }
+    .dark .navi .nv-verdict.no { background: #3a2626; color: #d6a1a1; }
+    .dark .navi .nv-quote { color: #9aaaa9; border-left-color: #3aa597; }
+    .dark .navi .nv-contact { border-color: #2b3b49; }
+    .dark .navi .nv-contact code { color: #7fe0cb; }
+    .dark .navi .nv-btn { color: #7fe0cb; border-color: #3aa597; }
+    .dark .navi .nv-btn.primary { background: #13685e; color: #fff; }
+    .dark .navi label { color: #8fa3b3; }
+    .dark .navi input, .dark .navi textarea { background: #1c2a36 !important; border-color: #2b3b49 !important; color: #e6eef4 !important; }
+    .dark .navi .nv-memo { background: #1c2a36; border-color: #2b3b49; color: #d3dde5; }
+    .dark .navi .nv-toast { color: #86c99d; }
+    .dark .navi .nv-hint { color: #8fa3b3; }
     .report-hint { display: none; margin-top: .5rem; padding: .55rem .7rem; border-radius: 12px; background: #e9f6f3; color: #0e4d45; font-size: 12px; font-weight: 700; line-height: 1.5; }
     .report-hint button { display: block; margin-top: .25rem; background: none; border: 0; padding: 0; color: #13685e; font-weight: 800; font-size: 12px; text-decoration: underline; cursor: pointer; }
     .dark .guide-wrap { border-top-color: #2b3b49; }
@@ -1206,7 +1266,7 @@
               <li>裏面の枠の色で囲まれている範囲を訪問します。右の数字は、その区域が全部で何枚あるかを表しています。<br>留守だった家は<b>斜線</b>、会えた家は<b>×</b>を付けます。留守宅を訪問して留守だった場合は<b>✓</b>(チェックマーク)を付けます。</li>
               <li>「別」マークがある建物は、裏面に記載されています。</li>
               <li>訪問する前に「外国人・拒否・注意情報」をご覧ください。
-                <div style="margin-top:.3rem"><span class="g-key">M</span>オンライン区域として取り分けられているもの<br><span class="g-key">K</span>拒否<br><span class="g-key">G</span>外国語の区域として取り分けられているもの(下の「外国語の区域と外国人の情報」を参照)</div>
+                <div style="margin-top:.3rem"><span class="g-key">M</span>オンライン区域として取り分けられているもの<br><span class="g-key">K</span>拒否<br><span class="g-key">G</span>外国語の区域として取り分けられているもの(下の「外国語区域 報告ナビ」を参照)</div>
                 <div class="g-note">以上の記載がある所は訪問しないでください。</div></li>
               <li>奉仕後、日付と曜日を記入し、祝日ならば☑を付けます。奉仕した時間帯(朝・昼・夜)を選んで〇で囲みます。</li>
               <li>区域を徹底的に奉仕できたら、区域係に返却します(<b>4か月以内</b>)。</li>
@@ -1217,57 +1277,29 @@
           </div>
         </details>
 
-        <details class="guide-card" id="guideForeign">
-          <summary><span class="gi"><i class="fas fa-language"></i></span><span class="gs">外国語の区域と外国人の情報<small>報告のしかた・言語ごとの注意</small></span><i class="fas fa-chevron-down gc"></i></summary>
-          <div class="guide-body">
-            <h4>外国語の区域として取り分けられている言語</h4>
-            <p>ネパール語、英語、日本手話、中国語、インドネシア語、マレー語、タガログ語(フィリピン人)、ポルトガル語、スペイン語です。これらの言語を話す方や、その方の情報を入手した場合は、区域係に報告してください。</p>
-            <div class="g-note">中国語とタガログ語は、阪神高速5号湾岸線より<b>東側</b>にお住まいの方の情報のみ、区域係にお知らせください。</div>
-            <p>他の言語を話す方で関心があるようなら、「引き続きその人の関心を高めるために最善を尽くします。」(組織の本9章40節)</p>
-
-            <h4>インドネシア語・マレー語</h4>
-            <p>母語とされる方は、すでに特定の宗教を持っていて、ほとんどはイスラム教徒です。初めて会ってすぐに聖書について話すと誤解を招きやすく、場合によってはスマホで撮影されSNSなどにアップされることがあり得ます。まずは一般的な話題にして友好関係を持つと会話が続きやすいようです。自己紹介のときは、クリスチャンと言わずに「エホバの証人」と名乗ると効果的です。</p>
-
-            <h4>スペイン語</h4>
-            <p>聖書への関心の有無にかかわらず、区域情報を提供してください。住所と、可能であれば曜日や時間を含めると助けになります。家の人に会えなくても、表札がアルファベットで外国人であることが明らかな場合は報告してください。</p>
-
-            <h4>英語</h4>
-            <p>関心の有無に関わらず報告してください。</p>
-
-            <h4>ネパール語</h4>
-            <ol>
-              <li>ネパール語を話す方に、自分にはネパール語を話せる知り合いがいることを伝えます。</li>
-              <li>「あなたのお名前や住所を私の知り合いに伝えてもよいか」と尋ねます。</li>
-              <li>了承してくれた場合、その方の情報をプレグループの窓口となる兄弟たちに伝えるか、プレグループの兄弟姉妹に直接伝えます。</li>
-            </ol>
-            <div class="g-note g-red">
-              <b>窓口の連絡先</b><br>
-              大正会衆 奉仕監督　福本 浩二 兄弟<br><a class="g-mail" href="mailto:koji.jw.pc@gmail.com">koji.jw.pc@gmail.com</a><br>
-              大正会衆 ネパール語プレグループ　地濃 力 兄弟<br><a class="g-mail" href="mailto:chippy.jw@gmail.com">chippy.jw@gmail.com</a>
+        <details class="guide-card" id="guideNavi">
+          <summary><span class="gi"><i class="fas fa-language"></i></span><span class="gs">外国語区域 報告ナビ<small>言語と状況を選ぶと、報告の要否と伝える内容が分かります</small></span><i class="fas fa-chevron-down gc"></i></summary>
+          <div class="guide-body navi" id="naviRoot">
+            <div class="nv-sec">
+              <div class="nv-step"><b>1</b><h4>相手の言語</h4></div>
+              <div class="nv-langs" id="naviLangs"></div>
             </div>
-          </div>
-        </details>
-
-        <details class="guide-card" id="guideDeaf">
-          <summary><span class="gi"><i class="fas fa-hands"></i></span><span class="gs">ろう者の情報提供のお願い<small>大阪市浪速手話会衆</small></span><i class="fas fa-chevron-down gc"></i></summary>
-          <div class="guide-body">
-            <p>大阪市浪速手話会衆は成員41名で、400件ほどの少ない区域を奉仕しています。そのため、ろう者の区域をさらに開拓したいという強い願いを持っています(マタイ 28:19,20)。区域の中にはたくさんのろう者が生活しておられるようですが、探し出すことはとても難しいと言われています。来年の記念式に向けて、まだ真理を伝えられていないろう者の家を探し出したいと思っています。</p>
-            <p>会衆の区域内で、下の特徴がある家を見つけたら、会えた・会えないに関係なく、フォームから情報をお寄せください。情報が重なっても構いません。いただいた情報をもとに、手話会衆で調査します。</p>
-            <h4>ろう者の方が住んでいそうな特徴</h4>
-            <ul>
-              <li><b>インターホンに特徴がある</b>
-                <ul style="margin-top:.2rem">
-                  <li>不自然に2つある・後から工事した形跡がある</li>
-                  <li>音が鳴らない窓際を見ると、光の点滅がある</li>
-                  <li>「何度も押してください」などの張り紙がある</li>
-                </ul></li>
-              <li>車に蝶々のマークがある</li>
-              <li>何も言わずに身振りだけで断る</li>
-              <li>オートロックマンションで、何も言わずに扉が開く</li>
-            </ul>
-            <a class="g-link" href="https://docs.google.com/forms/d/e/1FAIpQLSdFtZh98qeoHiR-YsZq2cy1XUdRzim1N9_9ZWJ7hkkMRpW5ag/viewform?usp=dialog" target="_blank" rel="noopener noreferrer"><i class="fas fa-house-circle-check"></i>特徴がある家を見つけたとき<i class="fas fa-arrow-up-right-from-square"></i></a>
-            <a class="g-link alt" href="https://docs.google.com/forms/d/e/1FAIpQLSdnrrw2_Rw1V-7rgpMnqwX7X30KGpO7RsjyMhzwfkd6qYKZ-w/viewform?usp=dialog" target="_blank" rel="noopener noreferrer"><i class="fas fa-handshake"></i>区域内でろう者の方にお会いしたとき<i class="fas fa-arrow-up-right-from-square"></i></a>
-            <div class="g-foot">兄弟姉妹のご協力に感謝いたします。大阪市浪速手話会衆</div>
+            <div class="nv-sec">
+              <div class="nv-step"><b>2</b><h4>状況</h4></div>
+              <div id="naviQuestions"></div>
+              <div id="naviResult"></div>
+            </div>
+            <div class="nv-sec" id="naviSec3" hidden>
+              <div class="nv-step"><b>3</b><h4>報告メモ</h4></div>
+              <form id="naviMemoForm" autocomplete="off" onsubmit="return false">
+                <label class="nv-full">住所(部屋番号まで)<input id="navi-addr" placeholder="例:此花区春日出北1-2-3 ○○マンション 405"></label>
+                <label>お名前・表札<input id="navi-name" placeholder="例:GARCIA"></label>
+                <label>会えた曜日・時間<input id="navi-when" placeholder="例:土曜 午前10時ごろ"></label>
+                <label class="nv-full">関心の様子・メモ<textarea id="navi-note" rows="3" placeholder="例:家族4人。聖書に少し関心あり。"></textarea></label>
+              </form>
+              <pre class="nv-memo" id="naviMemo"></pre>
+              <div class="nv-row"><button class="nv-btn primary" id="naviCopyMemo" type="button">メモをコピー</button><button class="nv-btn" id="naviClearMemo" type="button">入力を消す</button><span class="nv-toast" id="naviToast" aria-live="polite"></span></div>
+            </div>
           </div>
         </details>
       </div>
@@ -1329,7 +1361,7 @@
     const CACHE_KEY = 'konohana_mansion_cache_v2';
     const OLD_CACHE_KEYS = ['konohana_mansion_cache_v1'];   // 旧版（リンクURLが入っていた）は削除する
     const PWHASH_KEY = 'konohana_pw_hash_v1';
-    const APP_VERSION = '2026.10.19-4';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
+    const APP_VERSION = '2026.10.22-1';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
     // オフライン対応：地図の画像とアプリ本体を、端末に保存する（HTTPSで開いたときだけ）
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* 登録できなくても、アプリは通常どおり使えます */ }); });
@@ -3137,6 +3169,7 @@
       }
       showPage(document.getElementById("reportModal"));
       setTimeout(updateReportTargetUI, 0);
+      setTimeout(() => { try { NAVI.init(); } catch (e) { /* ナビが開けなくても、報告は送れる */ } }, 60);
     }
 
     function closeReportModal() {
@@ -3174,12 +3207,153 @@
       showReportHint(category);
     }
 
+
+    // ============================================================
+    // 外国語区域 報告ナビ（報告画面のご案内の中）
+    // ============================================================
+    const NAVI = (function () {
+      const LANGS = [
+        { id: 'ne', name: 'ネパール語', en: 'Nepali' },
+        { id: 'en', name: '英語', en: 'English' },
+        { id: 'es', name: 'スペイン語', en: 'Español' },
+        { id: 'zh', name: '中国語', en: '中文' },
+        { id: 'tl', name: 'タガログ語', en: 'Tagalog(フィリピン)' },
+        { id: 'id', name: 'インドネシア語', en: 'Bahasa Indonesia' },
+        { id: 'ms', name: 'マレー語', en: 'Bahasa Melayu' },
+        { id: 'pt', name: 'ポルトガル語', en: 'Português' },
+        { id: 'jsl', name: '日本手話', en: 'JSL' },
+        { id: 'other', name: 'その他の言語', en: '上記以外' }
+      ];
+      const Q = {
+        area: { text: 'お住まいは阪神高速5号湾岸線より東側ですか?', opts: [['east', '東側'], ['west', '西側'], ['unk', '分からない']] },
+        met: { text: '家の人に会えましたか?', opts: [['yes', '会えた'], ['plate', '不在・表札がアルファベット']] },
+        consent: { text: '名前と住所を知り合いに伝えてよいか尋ねましたか?', opts: [['ok', '了承してくれた'], ['notyet', 'まだ尋ねていない'], ['ng', '断られた']] },
+        deaf: { text: 'どのような状況ですか?', opts: [['house', '特徴のある家を見つけた'], ['met', 'ろう者の方に会えた']] },
+        interest: { text: '関心がありそうですか?', opts: [['yes', '関心あり'], ['no', '関心なし']] }
+      };
+      const FLOW = { jsl: ['deaf'], ne: ['consent'], es: ['met'], zh: ['area'], tl: ['area'], other: ['interest'] };
+      const CONTACTS = [
+        { who: '福本 浩二 兄弟', role: '大正会衆 奉仕監督(プレグループ窓口)', mail: 'koji.jw.pc@gmail.com' },
+        { who: '地濃 力 兄弟', role: '大正会衆 ネパール語プレグループ', mail: 'chippy.jw@gmail.com' }
+      ];
+      const FORM_HOUSE = 'https://docs.google.com/forms/d/e/1FAIpQLSdFtZh98qeoHiR-YsZq2cy1XUdRzim1N9_9ZWJ7hkkMRpW5ag/viewform?usp=dialog';
+      const FORM_MET = 'https://docs.google.com/forms/d/e/1FAIpQLSdnrrw2_Rw1V-7rgpMnqwX7X30KGpO7RsjyMhzwfkd6qYKZ-w/viewform?usp=dialog';
+      const REPORT = '区域係に報告', NOREP = '報告は不要', WAIT = '確認が必要';
+      const DRAFT_KEY = 'naviMemoDraft';
+      let state = { lang: null, ans: {} };
+      let ready = false;
+
+      const root = () => document.getElementById('naviRoot');
+      const $ = (sel) => { const r = root(); return r ? r.querySelector(sel) : null; };
+
+      function verdict(kind, tag, title, body) {
+        return '<div class="nv-verdict ' + kind + '"><span class="tag">' + tag + '</span><h5>' + title + '</h5>' + (body ? '<p>' + body + '</p>' : '') + '</div>';
+      }
+      function contactsHTML() {
+        return '<div class="nv-contacts">' + CONTACTS.map(c => '<div class="nv-contact"><div class="who">' + esc(c.who) + '<small>' + esc(c.role) + '</small><code>' + esc(c.mail) + '</code></div><button type="button" class="nv-btn" data-copy="' + esc(c.mail) + '">コピー</button></div>').join('') + '</div>';
+      }
+      function renderLangs() {
+        $('#naviLangs').innerHTML = LANGS.map(l => '<button type="button" class="nv-chip" data-lang="' + l.id + '" aria-pressed="' + (state.lang === l.id) + '">' + esc(l.name) + '<small>' + esc(l.en) + '</small></button>').join('');
+      }
+      function renderQuestions() {
+        const keys = FLOW[state.lang] || [];
+        $('#naviQuestions').innerHTML = keys.map(k => '<div class="nv-q"><p>' + Q[k].text + '</p><div class="nv-opts">' + Q[k].opts.map(o => '<button type="button" class="nv-chip" data-q="' + k + '" data-v="' + o[0] + '" aria-pressed="' + (state.ans[k] === o[0]) + '">' + o[1] + '</button>').join('') + '</div></div>').join('');
+      }
+      function renderResult() {
+        const l = state.lang, a = state.ans; let h = '';
+        if (!l) {
+          h = '<p class="nv-hint">まず言語を選んでください。</p>';
+        } else if (l === 'jsl') {
+          const feats = '<h4>ろう者の方が住んでいそうな特徴</h4><ul class="nv-notes"><li>インターホンに特徴がある<ul><li>不自然に2つある・後から工事した形跡がある</li><li>音が鳴らない。実際に見ると光が点滅している</li><li>「何度も押してください」などの張り紙がある</li></ul></li><li>車に蝶々のマーク(緑の円に黄色の蝶の聴覚障害者標識)がある</li><li>何も言わずに身振りだけで断られる</li><li>オートロックマンションで、何も言わずに扉が開く</li></ul>';
+          const links = '<div class="nv-contacts"><div class="nv-contact"><div class="who">特徴がある家を見つけた時<small>会えた・会えないに関係なく報告</small></div><a class="nv-btn' + (a.deaf === 'house' ? ' primary' : '') + '" href="' + FORM_HOUSE + '" target="_blank" rel="noopener noreferrer">フォームを開く</a></div><div class="nv-contact"><div class="who">区域内でろう者の方に会えた時<small>関心の有無に関係なく報告</small></div><a class="nv-btn' + (a.deaf === 'met' ? ' primary' : '') + '" href="' + FORM_MET + '" target="_blank" rel="noopener noreferrer">フォームを開く</a></div></div>';
+          const head = !a.deaf ? verdict('warn', WAIT, '状況を選んでください', '下の特徴に一つでも当てはまれば、会えなくても情報提供の対象です。')
+            : a.deaf === 'house' ? verdict('ok', '浪速手話会衆に情報提供', '特徴のある家の情報をフォームで送ってください', '会えた・会えないに関係なく報告します。情報が重なってもかまいません。')
+            : verdict('ok', '浪速手話会衆に情報提供', '会えた方の情報をフォームで送ってください', '情報が重なってもかまいません。いただいた情報を基に手話会衆で調査します。');
+          h = head + links + feats + '<p class="nv-quote">大阪市浪速手話会衆は、来年の記念式に向けて、まだ真理を伝えられていないろう者の方の家を探しています。</p>';
+        } else if (l === 'en' || l === 'pt') {
+          h = verdict('ok', REPORT, '区域係に報告してください', l === 'en' ? '関心の有無にかかわらず報告します。' : '取り分けられている言語区域です。この言語を話す方、またはその方の情報を得たら報告します。');
+        } else if (l === 'es') {
+          if (!a.met) h = verdict('warn', WAIT, '家の人に会えたか選んでください');
+          else if (a.met === 'yes') h = verdict('ok', REPORT, '区域係に報告してください', '聖書への関心の有無にかかわらず報告します。') + '<ul class="nv-notes"><li>住所を必ず書く</li><li>できれば会えた曜日と時間も添える</li></ul>';
+          else h = verdict('ok', REPORT, '表札だけでも報告できます', '会えなくても、表札がアルファベットで外国人と明らかな場合は報告をお願いします。住所と表札の名前を記録してください。');
+        } else if (l === 'zh' || l === 'tl') {
+          if (!a.area) h = verdict('warn', WAIT, 'お住まいの場所を選んでください');
+          else if (a.area === 'east') h = verdict('ok', REPORT, '区域係に報告してください', '阪神高速5号湾岸線より東側の方なので対象です。');
+          else if (a.area === 'west') h = verdict('no', NOREP, '区域係への報告は不要です', '中国語・タガログ語は、湾岸線より東側にお住まいの方の情報だけを報告します。');
+          else h = verdict('warn', WAIT, '住所が湾岸線の東か西かを確認してから判断してください', '東側なら報告、西側なら報告不要です。');
+        } else if (l === 'id' || l === 'ms') {
+          h = verdict('ok', REPORT, '区域係に報告してください', '取り分けられている言語区域です。') +
+            '<ul class="nv-notes"><li>母語とする方の多くはイスラム教徒で、すでに特定の宗教を持っています。</li><li>初対面ですぐ聖書の話をすると誤解を招きやすく、スマホで撮影されSNSに上げられることもあり得ます。</li><li>まず一般的な話題で友好関係を築くと会話が続きやすいようです。</li><li>自己紹介では「クリスチャン」ではなく「エホバの証人」と名乗ると効果的です。</li></ul>';
+        } else if (l === 'ne') {
+          const steps = '<ol class="nv-todo"><li>自分にはネパール語を話せる知り合いがいることを伝える。</li><li>「あなたのお名前や住所を私の知り合いに伝えてもよいですか」と尋ねる。</li><li>了承してくれたら、下の窓口の兄弟たちか、プレグループの兄弟姉妹に直接伝える。</li></ol>';
+          if (!a.consent) h = verdict('warn', WAIT, '次の手順で進めてください') + steps;
+          else if (a.consent === 'ok') h = verdict('ok', 'プレグループに連絡', '窓口の兄弟たちに伝えてください', '了承が得られました。名前と住所を伝えます。') + contactsHTML() + steps;
+          else if (a.consent === 'notyet') h = verdict('warn', WAIT, '先に本人の了承を得てください') + steps;
+          else h = verdict('no', '伝えない', '了承がないので情報は伝えません', '本人の意向を尊重します。');
+        } else if (l === 'other') {
+          if (!a.interest) h = verdict('warn', WAIT, '関心の様子を選んでください');
+          else if (a.interest === 'yes') h = verdict('no', NOREP, '区域係への報告は不要です。ご自身で関心を育ててください') + '<p class="nv-quote">「引き続きその人の関心を高めるために最善を尽くします。」(組織の本 9章40節)</p>';
+          else h = verdict('no', NOREP, '区域係への報告は不要です');
+        }
+        $('#naviResult').innerHTML = h;
+        $('#naviSec3').hidden = !$('#naviResult .nv-verdict.ok') || state.lang === 'jsl';
+        renderMemo();
+      }
+      function renderMemo() {
+        const L = LANGS.find(x => x.id === state.lang);
+        const v = (id) => ($(id).value || '').trim();
+        const lines = ['【外国語区域 報告】', '言語:' + (L ? L.name : '')];
+        if (state.lang === 'zh' || state.lang === 'tl') lines.push('場所:湾岸線より東側');
+        if (state.lang === 'es' && state.ans.met === 'plate') lines.push('状況:不在(表札がアルファベット)');
+        if (state.lang === 'ne' && state.ans.consent === 'ok') lines.push('本人の了承:あり');
+        lines.push('住所:' + v('#navi-addr'));
+        if (v('#navi-name')) lines.push('名前・表札:' + v('#navi-name'));
+        if (v('#navi-when')) lines.push('曜日・時間:' + v('#navi-when'));
+        if (v('#navi-note')) lines.push('メモ:' + v('#navi-note'));
+        $('#naviMemo').textContent = lines.join('\n');
+        try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ a: v('#navi-addr'), n: v('#navi-name'), w: v('#navi-when'), t: v('#navi-note') })); } catch (e) { /* 保存できなくても使える */ }
+      }
+      function flash(el, msg) {
+        if (el && el.id === 'naviCopyMemo') {
+          const t = $('#naviToast'); t.textContent = msg; setTimeout(() => { t.textContent = ''; }, 2500);
+        } else if (el) {
+          const o = el.textContent; el.textContent = 'コピー済'; setTimeout(() => { el.textContent = o; }, 1800);
+        }
+      }
+      async function copy(text, el) {
+        try { await navigator.clipboard.writeText(text); flash(el, 'コピーしました'); }
+        catch (e) {
+          try { const r = document.createRange(); r.selectNodeContents($('#naviMemo')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } catch (e2) { /* 何もしない */ }
+          flash(el, '選択しました。長押しでコピーしてください');
+        }
+      }
+      function init() {
+        if (ready || !root()) return;
+        ready = true;
+        root().addEventListener('click', (e) => {
+          const b = e.target.closest('button'); if (!b) return;
+          if (b.dataset.lang) { state = { lang: b.dataset.lang, ans: {} }; renderLangs(); renderQuestions(); renderResult(); }
+          else if (b.dataset.q) { state.ans[b.dataset.q] = b.dataset.v; renderQuestions(); renderResult(); }
+          else if (b.dataset.copy) { copy(b.dataset.copy, b); }
+          else if (b.id === 'naviCopyMemo') { copy($('#naviMemo').textContent, b); }
+          else if (b.id === 'naviClearMemo') { ['#navi-addr', '#navi-name', '#navi-when', '#navi-note'].forEach(i => { $(i).value = ''; }); renderMemo(); }
+        });
+        $('#naviMemoForm').addEventListener('input', renderMemo);
+        try {
+          const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+          if (d) { $('#navi-addr').value = d.a || ''; $('#navi-name').value = d.n || ''; $('#navi-when').value = d.w || ''; $('#navi-note').value = d.t || ''; }
+        } catch (e) { /* 読めなくても使える */ }
+        renderLangs(); renderQuestions(); renderResult();
+      }
+      return { init: init, select: function (lang) { init(); state = { lang: lang, ans: {} }; renderLangs(); renderQuestions(); renderResult(); } };
+    })();
+
     // 項目に合わせて、関係するマニュアルへ案内する
     function showReportHint(category) {
       const box = document.getElementById('reportHint');
       if (!box) return;
       const map = {
-        '外国人情報': { text: '外国語の区域や、言語ごとの報告のしかたがあります。', label: '「外国語の区域と外国人の情報」を見る', id: 'guideForeign' },
+        '外国人情報': { text: '言語と状況を選ぶと、報告するかどうかが分かります。', label: '「外国語区域 報告ナビ」を開く', id: 'guideNavi' },
         '訪問拒否情報': { text: '「K」の記載がある所は訪問しない決まりです。', label: '「家から家の区域マニュアル」を見る', id: 'guideTerritory' }
       };
       const h = map[category];
@@ -3191,6 +3365,7 @@
     function openGuide(id) {
       const d = document.getElementById(id);
       if (!d) return;
+      if (id === 'guideNavi') NAVI.init();
       d.open = true;
       try { d.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { d.scrollIntoView(); }
     }
