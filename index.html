@@ -698,7 +698,6 @@
       </div>
 
       <div class="relative shrink-0 flex items-center pl-1">
-        <div class="absolute right-full top-0 bottom-0 w-5 bg-gradient-to-l from-white to-transparent pointer-events-none"></div>
         <button onclick="openFilterSheet()" id="header-tab-FILTER" class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all text-slate-700 bg-white border border-slate-300 whitespace-nowrap text-center shrink-0 flex items-center gap-1">
           <i class="fas fa-sliders text-[10px] sm:text-[11px]"></i>
           <span id="filterChipLabel" class="max-w-[7rem] truncate">絞込</span>
@@ -1382,7 +1381,7 @@
     const CACHE_KEY = 'konohana_mansion_cache_v2';
     const OLD_CACHE_KEYS = ['konohana_mansion_cache_v1'];   // 旧版（リンクURLが入っていた）は削除する
     const PWHASH_KEY = 'konohana_pw_hash_v1';
-    const APP_VERSION = '2026.10.22-2';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
+    const APP_VERSION = '2026.11.05-1';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
     // オフライン対応：地図の画像とアプリ本体を、端末に保存する（HTTPSで開いたときだけ）
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* 登録できなくても、アプリは通常どおり使えます */ }); });
