@@ -1329,13 +1329,13 @@
       </div>
       <div class="sm:p-6 sm:pt-3">
         <button type="button" class="sched-row" onclick="openSchedule('weekday')">
-          <span class="sched-ic"><i class="fas fa-sun"></i></span>
-          <span class="sched-tx">週日の集会予定<small>平日の集会の予定表</small></span>
+          <span class="sched-ic"><i class="fas fa-calendar-week"></i></span>
+          <span class="sched-tx">週日の集会予定<small>生活と奉仕の集会予定</small></span>
           <i class="fas fa-chevron-right sched-go"></i>
         </button>
         <button type="button" class="sched-row" onclick="openSchedule('weekend')">
           <span class="sched-ic"><i class="fas fa-calendar-week"></i></span>
-          <span class="sched-tx">週末の集会予定<small>週末の集会の予定表</small></span>
+          <span class="sched-tx">週末の集会予定<small>公開講演・ものみの塔研究予定</small></span>
           <i class="fas fa-chevron-right sched-go"></i>
         </button>
       </div>
@@ -1483,7 +1483,7 @@
     const CACHE_KEY = 'konohana_mansion_cache_v2';
     const OLD_CACHE_KEYS = ['konohana_mansion_cache_v1'];   // 旧版（リンクURLが入っていた）は削除する
     const PWHASH_KEY = 'konohana_pw_hash_v1';
-    const APP_VERSION = '2026.11.09-4';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
+    const APP_VERSION = '2026.11.09-5';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
     // オフライン対応：地図の画像とアプリ本体を、端末に保存する（HTTPSで開いたときだけ）
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* 登録できなくても、アプリは通常どおり使えます */ }); });
