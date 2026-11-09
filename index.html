@@ -226,23 +226,24 @@
     /* 報告画面の「ご案内」（マニュアルなど） */
     .guide-wrap { margin: 0; padding: 0; }
     .guide-title { font-size: 11px; font-weight: 800; color: #64748b; letter-spacing: .08em; margin-bottom: .5rem; display: flex; align-items: center; gap: .4rem; }
-    .guide-card { border: 1px solid #e2e8ec; border-radius: 16px; background: #fafcfc; margin-bottom: .6rem; overflow: hidden; }
-    .guide-card > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: .65rem; padding: .75rem .85rem; font-size: 13px; font-weight: 800; color: #0e4d45; }
+    .guide-card { border: 1px solid #e2e8ec; border-radius: 18px; background: #fafcfc; margin-bottom: .6rem; overflow: hidden; }
+    .guide-wrap > .guide-card:last-child { margin-bottom: 0; }
+    .guide-card > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: .9rem; padding: .95rem 1rem; font-size: 1rem; font-weight: 800; color: #0e4d45; }
     .guide-card > summary::-webkit-details-marker { display: none; }
-    .guide-card > summary .gi { width: 30px; height: 30px; border-radius: 10px; background: #e3f2ef; color: #13685e; display: flex; align-items: center; justify-content: center; font-size: 13px; flex: none; }
+    .guide-card > summary .gi { width: 2.6rem; height: 2.6rem; border-radius: 13px; background: #e3f2ef; color: #13685e; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex: none; }
     .guide-card > summary .gs { flex: 1; min-width: 0; line-height: 1.25; }
-    .guide-card > summary .gs small { display: block; font-size: 10.5px; font-weight: 600; color: #7b8b95; margin-top: 2px; }
-    .guide-card > summary .gc { color: #94a3b8; font-size: 11px; transition: transform .2s; }
+    .guide-card > summary .gs small { display: block; font-size: 12.5px; font-weight: 600; color: #7b8b95; margin-top: 3px; line-height: 1.4; }
+    .guide-card > summary .gc { color: #94a3b8; font-size: .8rem; transition: transform .2s; }
     .guide-card[open] > summary .gc { transform: rotate(180deg); }
-    .guide-body { padding: 0 .95rem .95rem; font-size: 12.5px; line-height: 1.75; color: #334155; }
-    .guide-body h4 { font-size: 12px; font-weight: 800; color: #0e4d45; margin: .85rem 0 .3rem; }
+    .guide-body { padding: 0 1rem 1rem; font-size: 14px; line-height: 1.8; color: #334155; }
+    .guide-body h4 { font-size: 13.5px; font-weight: 800; color: #0e4d45; margin: .85rem 0 .3rem; }
     .guide-body ol, .guide-body ul { margin: .2rem 0 .2rem 0; padding: 0; list-style: none; }
     .guide-body li { position: relative; padding-left: 1.5rem; margin: .25rem 0; }
     .guide-body ol { counter-reset: g; }
     .guide-body ol > li { counter-increment: g; }
     .guide-body ol > li::before { content: counter(g); position: absolute; left: 0; top: .2rem; width: 1.15rem; height: 1.15rem; border-radius: 50%; background: #13685e; color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; line-height: 1; }
     .guide-body ul > li::before { content: ''; position: absolute; left: .45rem; top: .75em; width: 5px; height: 5px; border-radius: 50%; background: #13685e; }
-    .guide-body .g-note { background: #fff7e6; border: 1px solid #f6dfae; color: #7a5410; border-radius: 12px; padding: .55rem .7rem; margin: .5rem 0; font-size: 12px; }
+    .guide-body .g-note { background: #fff7e6; border: 1px solid #f6dfae; color: #7a5410; border-radius: 12px; padding: .6rem .75rem; margin: .5rem 0; font-size: 13px; }
     .guide-body .g-key { display: inline-flex; align-items: center; justify-content: center; min-width: 1.35rem; height: 1.35rem; padding: 0 .3rem; border-radius: 7px; background: #0e4d45; color: #fff; font-weight: 800; font-size: 11px; margin-right: .2rem; }
     .guide-body .g-link { display: flex; align-items: center; gap: .5rem; width: 100%; margin-top: .5rem; padding: .7rem .85rem; border-radius: 14px; background: #13685e; color: #fff !important; font-weight: 800; font-size: 13px; text-decoration: none; }
     .guide-body .g-link.alt { background: #fff; color: #0e4d45 !important; border: 1.5px solid #13685e; }
@@ -258,19 +259,19 @@
     .navi .nv-step b { width: 1.35rem; height: 1.35rem; border-radius: 50%; background: #13685e; color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none; }
     .navi .nv-step h4 { margin: 0; }
     .navi .nv-langs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .4rem; }
-    .navi .nv-chip { font: inherit; text-align: left; border: 1.5px solid #e2e8ec; background: #f6f8f9; color: #1e293b; border-radius: 12px; padding: .5rem .65rem; cursor: pointer; line-height: 1.3; font-size: 12.5px; font-weight: 700; transition: background .15s, border-color .15s; }
-    .navi .nv-chip small { display: block; color: #7b8b95; font-size: 10.5px; font-weight: 600; margin-top: 1px; }
+    .navi .nv-chip { font: inherit; text-align: left; border: 1.5px solid #e2e8ec; background: #f6f8f9; color: #1e293b; border-radius: 12px; padding: .6rem .7rem; cursor: pointer; line-height: 1.3; font-size: 14px; font-weight: 700; transition: background .15s, border-color .15s; }
+    .navi .nv-chip small { display: block; color: #7b8b95; font-size: 11.5px; font-weight: 600; margin-top: 1px; }
     .navi .nv-chip[aria-pressed="true"] { background: #13685e; border-color: #13685e; color: #fff; }
     .navi .nv-chip[aria-pressed="true"] small { color: #fff; opacity: .85; }
     .navi .nv-q { margin-bottom: .7rem; }
     .navi .nv-q p { margin: 0 0 .35rem; font-weight: 700; color: #334155; }
     .navi .nv-opts { display: flex; flex-wrap: wrap; gap: .4rem; }
     .navi .nv-opts .nv-chip { padding: .4rem .8rem; border-radius: 999px; }
-    .navi .nv-hint { margin: 0; color: #7b8b95; font-size: 12px; }
+    .navi .nv-hint { margin: 0; color: #7b8b95; font-size: 13px; }
     .navi .nv-verdict { border-radius: 12px; padding: .7rem .8rem; display: flex; flex-direction: column; gap: .2rem; margin-top: .2rem; }
-    .navi .nv-verdict .tag { font-size: 10.5px; font-weight: 800; letter-spacing: .06em; }
-    .navi .nv-verdict h5 { margin: 0; font-size: 13.5px; font-weight: 800; line-height: 1.4; }
-    .navi .nv-verdict p { margin: 0; color: #334155; font-size: 12px; }
+    .navi .nv-verdict .tag { font-size: 11px; font-weight: 800; letter-spacing: .06em; }
+    .navi .nv-verdict h5 { margin: 0; font-size: 15px; font-weight: 800; line-height: 1.4; }
+    .navi .nv-verdict p { margin: 0; color: #334155; font-size: 13px; }
     .navi .nv-verdict.ok { background: #e3f2e8; color: #2e7046; }
     .navi .nv-verdict.warn { background: #fbefe1; color: #a35a12; }
     .navi .nv-verdict.no { background: #f4e8e8; color: #7a4b4b; }
@@ -281,14 +282,14 @@
     .navi .nv-contact .who { flex: 1 1 11rem; min-width: 0; font-weight: 700; }
     .navi .nv-contact .who small { display: block; color: #7b8b95; font-size: 10.5px; font-weight: 600; }
     .navi .nv-contact code { font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; user-select: all; word-break: break-all; color: #0e4d45; }
-    .navi .nv-btn { font: inherit; font-size: 12px; font-weight: 800; border: 1.5px solid #13685e; background: transparent; color: #13685e; border-radius: 999px; padding: .35rem .85rem; cursor: pointer; text-decoration: none; display: inline-block; }
+    .navi .nv-btn { font: inherit; font-size: 13px; font-weight: 800; border: 1.5px solid #13685e; background: transparent; color: #13685e; border-radius: 999px; padding: .35rem .85rem; cursor: pointer; text-decoration: none; display: inline-block; }
     .navi .nv-btn.primary { background: #13685e; color: #fff; }
     .navi form { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; padding: 0; }
     .navi form .nv-full { grid-column: 1 / -1; }
-    .navi label { display: flex; flex-direction: column; gap: .2rem; font-size: 11.5px; font-weight: 700; color: #64748b; min-width: 0; }
-    .navi input, .navi textarea { background: #f6f8f9; font: inherit; font-size: 13px; font-weight: 500; color: #1e293b; border: 1px solid #edf1f3; border-radius: 12px; padding: .5rem .65rem; width: 100%; }
+    .navi label { display: flex; flex-direction: column; gap: .2rem; font-size: 12.5px; font-weight: 700; color: #64748b; min-width: 0; }
+    .navi input, .navi textarea { background: #f6f8f9; font: inherit; font-size: 14px; font-weight: 500; color: #1e293b; border: 1px solid #edf1f3; border-radius: 12px; padding: .5rem .65rem; width: 100%; }
     .navi textarea { resize: vertical; min-height: 4.2rem; }
-    .navi .nv-memo { white-space: pre-wrap; background: #f6f8f9; border: 1px dashed #cdd8dc; border-radius: 12px; padding: .65rem; margin: .7rem 0 .5rem; font: inherit; font-size: 12px; color: #334155; }
+    .navi .nv-memo { white-space: pre-wrap; background: #f6f8f9; border: 1px dashed #cdd8dc; border-radius: 12px; padding: .7rem; margin: .7rem 0 .5rem; font: inherit; font-size: 13px; color: #334155; }
     .navi .nv-row { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; }
     .navi .nv-toast { color: #2e7046; font-size: 11.5px; font-weight: 700; }
     @media (max-width: 360px) { .navi form { grid-template-columns: 1fr; } }
@@ -312,12 +313,13 @@
     .dark .navi .nv-hint { color: #8fa3b3; }
 
     /* 集会予定ページの行 */
-    .sched-row { width: 100%; display: flex; align-items: center; gap: .8rem; text-align: left; padding: .85rem .9rem; margin-bottom: .6rem; border: 1px solid #e2e8ec; border-radius: 18px; background: #fafcfc; cursor: pointer; transition: background .15s; }
+    .sched-row { width: 100%; display: flex; align-items: center; gap: .9rem; text-align: left; padding: .95rem 1rem; margin-bottom: .6rem; border: 1px solid #e2e8ec; border-radius: 18px; background: #fafcfc; cursor: pointer; transition: background .15s; }
+    .sched-row:last-of-type { margin-bottom: 0; }
     .sched-row:active { background: #eef4f3; }
-    .sched-ic { width: 40px; height: 40px; border-radius: 13px; background: #e3f2ef; color: #13685e; display: flex; align-items: center; justify-content: center; font-size: 16px; flex: none; }
-    .sched-tx { flex: 1; min-width: 0; font-size: 14px; font-weight: 800; color: #0e4d45; line-height: 1.3; }
-    .sched-tx small { display: block; font-size: 11px; font-weight: 600; color: #7b8b95; margin-top: 2px; }
-    .sched-go { color: #94a3b8; font-size: 12px; }
+    .sched-ic { width: 2.6rem; height: 2.6rem; border-radius: 13px; background: #e3f2ef; color: #13685e; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex: none; }
+    .sched-tx { flex: 1; min-width: 0; font-size: 1rem; font-weight: 800; color: #0e4d45; line-height: 1.3; }
+    .sched-tx small { display: block; font-size: 12.5px; font-weight: 600; color: #7b8b95; margin-top: 3px; }
+    .sched-go { color: #94a3b8; font-size: .8rem; }
     .sched-note { margin: .8rem .2rem 0; font-size: 11.5px; color: #7b8b95; line-height: 1.6; }
     .dark .sched-row { background: #1a2732; border-color: #2b3b49; }
     .dark .sched-row:active { background: #223341; }
@@ -1325,7 +1327,7 @@
           <i class="fas fa-times text-lg ic-desk"></i><i class="fas fa-chevron-left text-lg ic-mob"></i>
         </button>
       </div>
-      <div class="p-5 sm:p-6 pt-3">
+      <div class="sm:p-6 sm:pt-3">
         <button type="button" class="sched-row" onclick="openSchedule('weekday')">
           <span class="sched-ic"><i class="fas fa-sun"></i></span>
           <span class="sched-tx">週日の集会予定<small>平日の集会の予定表</small></span>
@@ -1336,7 +1338,6 @@
           <span class="sched-tx">週末の集会予定<small>週末の集会の予定表</small></span>
           <i class="fas fa-chevron-right sched-go"></i>
         </button>
-        <p class="sched-note"><i class="fas fa-circle-info"></i> タップすると、予定表をアプリの中で表示します。</p>
       </div>
     </div>
   </div>
@@ -1376,7 +1377,7 @@
           <i class="fas fa-times text-lg ic-desk"></i><i class="fas fa-chevron-left text-lg ic-mob"></i>
         </button>
       </div>
-      <div class="p-5 sm:p-6 pt-3">
+      <div class="sm:p-6 sm:pt-3">
       <div class="pg-guide guide-wrap">
 
         <details class="guide-card" id="guideTerritory">
@@ -1482,7 +1483,7 @@
     const CACHE_KEY = 'konohana_mansion_cache_v2';
     const OLD_CACHE_KEYS = ['konohana_mansion_cache_v1'];   // 旧版（リンクURLが入っていた）は削除する
     const PWHASH_KEY = 'konohana_pw_hash_v1';
-    const APP_VERSION = '2026.11.09-3';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
+    const APP_VERSION = '2026.11.09-4';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
     // オフライン対応：地図の画像とアプリ本体を、端末に保存する（HTTPSで開いたときだけ）
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* 登録できなくても、アプリは通常どおり使えます */ }); });
