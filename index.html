@@ -310,6 +310,20 @@
     .dark .navi .nv-memo { background: #1c2a36; border-color: #2b3b49; color: #d3dde5; }
     .dark .navi .nv-toast { color: #86c99d; }
     .dark .navi .nv-hint { color: #8fa3b3; }
+
+    /* 集会予定ページの行 */
+    .sched-row { width: 100%; display: flex; align-items: center; gap: .8rem; text-align: left; padding: .85rem .9rem; margin-bottom: .6rem; border: 1px solid #e2e8ec; border-radius: 18px; background: #fafcfc; cursor: pointer; transition: background .15s; }
+    .sched-row:active { background: #eef4f3; }
+    .sched-ic { width: 40px; height: 40px; border-radius: 13px; background: #e3f2ef; color: #13685e; display: flex; align-items: center; justify-content: center; font-size: 16px; flex: none; }
+    .sched-tx { flex: 1; min-width: 0; font-size: 14px; font-weight: 800; color: #0e4d45; line-height: 1.3; }
+    .sched-tx small { display: block; font-size: 11px; font-weight: 600; color: #7b8b95; margin-top: 2px; }
+    .sched-go { color: #94a3b8; font-size: 12px; }
+    .sched-note { margin: .8rem .2rem 0; font-size: 11.5px; color: #7b8b95; line-height: 1.6; }
+    .dark .sched-row { background: #1a2732; border-color: #2b3b49; }
+    .dark .sched-row:active { background: #223341; }
+    .dark .sched-ic { background: #12302b; color: #7fe0cb; }
+    .dark .sched-tx { color: #7fe0cb; }
+    .dark .sched-tx small, .dark .sched-note { color: #8fa3b3; }
     .report-hint { display: none; margin-top: .5rem; padding: .55rem .7rem; border-radius: 12px; background: #e9f6f3; color: #0e4d45; font-size: 12px; font-weight: 700; line-height: 1.5; }
     .report-hint button { display: block; margin-top: .25rem; background: none; border: 0; padding: 0; color: #13685e; font-weight: 800; font-size: 12px; text-decoration: underline; cursor: pointer; }
     .dark .guide-wrap { border-top-color: #2b3b49; }
@@ -644,6 +658,16 @@
         <i class="fas fa-sliders text-slate-500 w-4"></i>
         <span>表示設定</span>
         <i class="fas fa-chevron-right menu-chev"></i>
+      </button>
+      <button onclick="openMeetingPage()" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2 transition font-semibold">
+        <i class="fas fa-calendar-days text-indigo-500 w-4"></i>
+        <span>集会予定</span>
+        <i class="fas fa-chevron-right menu-chev"></i>
+      </button>
+      <button onclick="openSchedule('field')" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2 transition font-semibold">
+        <i class="fas fa-person-walking text-teal-600 w-4"></i>
+        <span>野外奉仕予定</span>
+        <i class="fas fa-arrow-up-right-from-square menu-chev" style="font-size:11px;"></i>
       </button>
       <button onclick="openReportModal()" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2 transition font-semibold">
         <i class="fas fa-pen-to-square text-emerald-600 w-4"></i>
@@ -1263,6 +1287,34 @@
     </div>
   </div>
 
+  <!-- 集会予定（週日・週末のどちらかを選ぶ。予定表はGoogleドライブのフォルダで開く） -->
+  <div id="meetingModal" class="page-modal page-anim hidden fixed inset-0 z-[10002] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 max-h-[92dvh] overflow-y-auto">
+      <div class="p-5 sm:p-6 pb-2 flex items-center justify-between btn-touch-ui">
+        <div class="flex items-center gap-2 text-slate-800 font-bold text-lg sm:text-xl">
+          <i class="fas fa-calendar-days text-indigo-500"></i>
+          <span>集会予定</span>
+        </div>
+        <button type="button" onclick="closeMeetingPage()" aria-label="集会予定を閉じる" class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition">
+          <i class="fas fa-times text-lg ic-desk"></i><i class="fas fa-chevron-left text-lg ic-mob"></i>
+        </button>
+      </div>
+      <div class="p-5 sm:p-6 pt-3">
+        <button type="button" class="sched-row" onclick="openSchedule('weekday')">
+          <span class="sched-ic"><i class="fas fa-sun"></i></span>
+          <span class="sched-tx">週日の集会予定<small>平日の集会の予定表</small></span>
+          <i class="fas fa-arrow-up-right-from-square sched-go"></i>
+        </button>
+        <button type="button" class="sched-row" onclick="openSchedule('weekend')">
+          <span class="sched-ic"><i class="fas fa-calendar-week"></i></span>
+          <span class="sched-tx">週末の集会予定<small>週末の集会の予定表</small></span>
+          <i class="fas fa-arrow-up-right-from-square sched-go"></i>
+        </button>
+        <p class="sched-note"><i class="fas fa-circle-info"></i> タップすると、Googleドライブの予定表のフォルダが開きます。</p>
+      </div>
+    </div>
+  </div>
+
   <!-- マニュアル（メニューから開く。報告画面の「項目」から案内されることもある） -->
   <div id="manualModal" class="page-modal page-anim hidden fixed inset-0 z-[10004] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 max-h-[92dvh] overflow-y-auto">
@@ -1381,14 +1433,14 @@
     const CACHE_KEY = 'konohana_mansion_cache_v2';
     const OLD_CACHE_KEYS = ['konohana_mansion_cache_v1'];   // 旧版（リンクURLが入っていた）は削除する
     const PWHASH_KEY = 'konohana_pw_hash_v1';
-    const APP_VERSION = '2026.11.05-1';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
+    const APP_VERSION = '2026.11.09-1';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
     // オフライン対応：地図の画像とアプリ本体を、端末に保存する（HTTPSで開いたときだけ）
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* 登録できなくても、アプリは通常どおり使えます */ }); });
     }
     // 各ページの本文を .pg-body で包む（パソコンでは display:contents で見た目は変わらず、スマホでは白いカードになる）
     document.addEventListener('DOMContentLoaded', () => {
-      ['settingsSheet', 'statsModal', 'adminCheckModal', 'reportModal', 'manualModal', 'adminModal', 'filterSheet'].forEach(id => {
+      ['settingsSheet', 'statsModal', 'adminCheckModal', 'reportModal', 'manualModal', 'meetingModal', 'adminModal', 'filterSheet'].forEach(id => {
         const inner = document.querySelector('#' + id + ' > div');
         if (!inner || inner.querySelector(':scope > .pg-body')) return;
         const kids = Array.from(inner.children).slice(1);
@@ -1903,6 +1955,7 @@
         closeRoomSheet();
         closeRouteSheet();
         closeManual();
+        closeMeetingPage();
         closeReportModal();
         closeFilterSheet();
         closeSettingsSheet();
@@ -3085,6 +3138,7 @@
       closeRoomSheet();
       closeRouteSheet();
       closeManual();
+      closeMeetingPage();
       closeReportModal();
       closeFilterSheet();
       closeSettingsSheet();
@@ -3381,6 +3435,26 @@
       if (!h) { box.style.display = 'none'; box.innerHTML = ''; return; }
       box.innerHTML = esc(h.text) + '<button type="button" onclick="openGuide(\'' + h.id + '\')">' + esc(h.label) + '</button>';
       box.style.display = 'block';
+    }
+
+    // ----- 予定表（Googleドライブのフォルダ）-----
+    const SCHEDULE_LINKS = {
+      field:   'https://drive.google.com/drive/folders/1iyB3maCfrRRtKk33tWOLR-oi-Xm7hRb3?usp=sharing',
+      weekday: 'https://drive.google.com/drive/folders/145vrq4tkefAuLhCa3iU6dXfS7RrGnO_Y?usp=sharing',
+      weekend: 'https://drive.google.com/drive/folders/1aOpzPvx6ORtb62cKxIWnIWo53HB4VKzk?usp=sharing'
+    };
+    function openSchedule(kind) {
+      const url = SCHEDULE_LINKS[kind];
+      if (!url) return;
+      const w = window.open(url, '_blank', 'noopener,noreferrer');
+      if (!w) location.href = url;   // 新しい画面が開けない端末では、そのまま移動する
+    }
+    function openMeetingPage() {
+      closeHamburgerMenu(true);
+      showPage(document.getElementById('meetingModal'));
+    }
+    function closeMeetingPage() {
+      hidePage(document.getElementById('meetingModal'));
     }
 
     // マニュアルのページを開く。id を渡すと、そのカードを開いた状態にする
