@@ -324,6 +324,32 @@
     .dark .sched-ic { background: #12302b; color: #7fe0cb; }
     .dark .sched-tx { color: #7fe0cb; }
     .dark .sched-tx small, .dark .sched-note { color: #8fa3b3; }
+
+    /* 予定表ビューア */
+    #schedViewer > div { overflow: hidden !important; }
+    .sv-tools { display: flex; align-items: center; gap: .4rem; padding: .45rem .9rem; border-bottom: 1px solid #e8eef0; background: #fff; flex-shrink: 0; }
+    .sv-tool { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; min-width: 2.2rem; height: 2.2rem; padding: 0 .55rem; border-radius: 999px; border: 1.5px solid #13685e; background: transparent; color: #13685e; font-size: 12px; font-weight: 800; cursor: pointer; text-decoration: none; }
+    .sv-tool.wide { padding: 0 .85rem; }
+    .sv-tool:disabled { opacity: .35; }
+    .sv-zoom { min-width: 3rem; text-align: center; font-size: 12px; font-weight: 800; color: #475569; }
+    .sv-sp { flex: 1; }
+    .sv-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; background: #e9edef; -webkit-overflow-scrolling: touch; }
+    .sv-pages { display: flex; flex-direction: column; align-items: flex-start; gap: .6rem; padding: .6rem; width: max-content; min-width: 100%; }
+    .sv-pages canvas { background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.18); flex: none; margin: 0 auto; }
+    .sv-msg { padding: 2rem 1.4rem; text-align: center; color: #64748b; font-size: 13px; line-height: 1.8; }
+    .sv-msg:empty { display: none; }
+    .sv-msg b { display: block; color: #334155; font-size: 14px; margin-bottom: .3rem; }
+    .sv-msg .sv-alt { display: inline-flex; align-items: center; gap: .4rem; margin-top: .8rem; padding: .6rem 1rem; border-radius: 999px; background: #13685e; color: #fff; font-weight: 800; font-size: 13px; text-decoration: none; }
+    @media (max-width: 639px) {
+      #schedViewer > div { background: #f4f5f6 !important; padding-bottom: 0 !important; }
+      .sv-tools { background: #f4f5f6; }
+    }
+    .dark .sv-tools { background: #0d141b; border-bottom-color: #2b3b49; }
+    .dark .sv-tool { color: #7fe0cb; border-color: #3aa597; }
+    .dark .sv-zoom { color: #c3d0db; }
+    .dark .sv-scroll { background: #0a1016; }
+    .dark .sv-msg { color: #9db0bf; }
+    .dark .sv-msg b { color: #e6eef4; }
     .report-hint { display: none; margin-top: .5rem; padding: .55rem .7rem; border-radius: 12px; background: #e9f6f3; color: #0e4d45; font-size: 12px; font-weight: 700; line-height: 1.5; }
     .report-hint button { display: block; margin-top: .25rem; background: none; border: 0; padding: 0; color: #13685e; font-weight: 800; font-size: 12px; text-decoration: underline; cursor: pointer; }
     .dark .guide-wrap { border-top-color: #2b3b49; }
@@ -667,7 +693,7 @@
       <button onclick="openSchedule('field')" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2 transition font-semibold">
         <i class="fas fa-person-walking text-teal-600 w-4"></i>
         <span>野外奉仕予定</span>
-        <i class="fas fa-arrow-up-right-from-square menu-chev" style="font-size:11px;"></i>
+        <i class="fas fa-chevron-right menu-chev"></i>
       </button>
       <button onclick="openReportModal()" class="w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex items-center gap-2 transition font-semibold">
         <i class="fas fa-pen-to-square text-emerald-600 w-4"></i>
@@ -1303,15 +1329,38 @@
         <button type="button" class="sched-row" onclick="openSchedule('weekday')">
           <span class="sched-ic"><i class="fas fa-sun"></i></span>
           <span class="sched-tx">週日の集会予定<small>平日の集会の予定表</small></span>
-          <i class="fas fa-arrow-up-right-from-square sched-go"></i>
+          <i class="fas fa-chevron-right sched-go"></i>
         </button>
         <button type="button" class="sched-row" onclick="openSchedule('weekend')">
           <span class="sched-ic"><i class="fas fa-calendar-week"></i></span>
           <span class="sched-tx">週末の集会予定<small>週末の集会の予定表</small></span>
-          <i class="fas fa-arrow-up-right-from-square sched-go"></i>
+          <i class="fas fa-chevron-right sched-go"></i>
         </button>
-        <p class="sched-note"><i class="fas fa-circle-info"></i> タップすると、Googleドライブの予定表のフォルダが開きます。</p>
+        <p class="sched-note"><i class="fas fa-circle-info"></i> タップすると、予定表をアプリの中で表示します。</p>
       </div>
+    </div>
+  </div>
+
+  <!-- 予定表のビューア（PDFをアプリの中で表示する） -->
+  <div id="schedViewer" class="page-modal page-anim hidden fixed inset-0 z-[10005] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden border border-slate-100 h-[92dvh] flex flex-col">
+      <div class="p-4 sm:p-5 pb-2 flex items-center justify-between btn-touch-ui">
+        <div class="flex items-center gap-2 text-slate-800 font-bold text-lg sm:text-xl">
+          <i class="fas fa-file-lines text-indigo-500"></i>
+          <span id="svTitle">予定表</span>
+        </div>
+        <button type="button" onclick="closeSchedViewer()" aria-label="予定表を閉じる" class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition">
+          <i class="fas fa-times text-lg ic-desk"></i><i class="fas fa-chevron-left text-lg ic-mob"></i>
+        </button>
+      </div>
+      <div class="sv-tools">
+        <button type="button" id="svZoomOut" class="sv-tool" onclick="schedZoom(-1)" aria-label="小さく"><i class="fas fa-minus"></i></button>
+        <span id="svZoomLabel" class="sv-zoom">100%</span>
+        <button type="button" id="svZoomIn" class="sv-tool" onclick="schedZoom(1)" aria-label="大きく"><i class="fas fa-plus"></i></button>
+        <span class="sv-sp"></span>
+        <a id="svOpen" class="sv-tool wide" href="#" target="_blank" rel="noopener"><i class="fas fa-arrow-up-right-from-square"></i><span>別画面で開く</span></a>
+      </div>
+      <div id="svScroll" class="sv-scroll"><div id="svPages" class="sv-pages"></div><div id="svMsg" class="sv-msg"></div></div>
     </div>
   </div>
 
@@ -1433,7 +1482,7 @@
     const CACHE_KEY = 'konohana_mansion_cache_v2';
     const OLD_CACHE_KEYS = ['konohana_mansion_cache_v1'];   // 旧版（リンクURLが入っていた）は削除する
     const PWHASH_KEY = 'konohana_pw_hash_v1';
-    const APP_VERSION = '2026.11.09-1';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
+    const APP_VERSION = '2026.11.09-2';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
     // オフライン対応：地図の画像とアプリ本体を、端末に保存する（HTTPSで開いたときだけ）
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* 登録できなくても、アプリは通常どおり使えます */ }); });
@@ -1954,6 +2003,7 @@
         closeRoomPicker();
         closeRoomSheet();
         closeRouteSheet();
+        closeSchedViewer();
         closeManual();
         closeMeetingPage();
         closeReportModal();
@@ -3137,6 +3187,7 @@
       closeRoomPicker();
       closeRoomSheet();
       closeRouteSheet();
+      closeSchedViewer();
       closeManual();
       closeMeetingPage();
       closeReportModal();
@@ -3437,17 +3488,118 @@
       box.style.display = 'block';
     }
 
-    // ----- 予定表（Googleドライブのフォルダ）-----
-    const SCHEDULE_LINKS = {
-      field:   'https://drive.google.com/drive/folders/1iyB3maCfrRRtKk33tWOLR-oi-Xm7hRb3?usp=sharing',
-      weekday: 'https://drive.google.com/drive/folders/145vrq4tkefAuLhCa3iU6dXfS7RrGnO_Y?usp=sharing',
-      weekend: 'https://drive.google.com/drive/folders/1aOpzPvx6ORtb62cKxIWnIWo53HB4VKzk?usp=sharing'
+    // ----- 予定表（PDFを、アプリの中で表示する）-----
+    // PDFは、index.html と同じ場所（GitHub）に、下の名前で置きます。差し替えるだけで更新されます。
+    const SCHEDULES = {
+      field:   { title: '野外奉仕予定',     file: 'schedule-field.pdf',   drive: 'https://drive.google.com/drive/folders/1iyB3maCfrRRtKk33tWOLR-oi-Xm7hRb3?usp=sharing' },
+      weekday: { title: '週日の集会予定',   file: 'schedule-weekday.pdf', drive: 'https://drive.google.com/drive/folders/145vrq4tkefAuLhCa3iU6dXfS7RrGnO_Y?usp=sharing' },
+      weekend: { title: '週末の集会予定',   file: 'schedule-weekend.pdf', drive: 'https://drive.google.com/drive/folders/1aOpzPvx6ORtb62cKxIWnIWo53HB4VKzk?usp=sharing' }
     };
+    const PDFJS_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+    const SV_ZOOMS = [1, 1.5, 2, 3];
+    const sv = { kind: null, doc: null, zoom: 0, token: 0 };
+
+    function loadPdfJs() {
+      if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+      if (window.__pdfjsPromise) return window.__pdfjsPromise;
+      window.__pdfjsPromise = new Promise((resolve, reject) => {
+        const sc = document.createElement('script');
+        sc.src = PDFJS_BASE + 'pdf.min.js';
+        sc.onload = () => {
+          const lib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
+          if (!lib) { reject(new Error('pdfjs missing')); return; }
+          lib.GlobalWorkerOptions.workerSrc = PDFJS_BASE + 'pdf.worker.min.js';
+          window.pdfjsLib = lib;
+          resolve(lib);
+        };
+        sc.onerror = () => { window.__pdfjsPromise = null; reject(new Error('pdfjs load failed')); };
+        document.head.appendChild(sc);
+      });
+      return window.__pdfjsPromise;
+    }
+
+    function svMessage(html) { document.getElementById('svMsg').innerHTML = html; }
+
     function openSchedule(kind) {
-      const url = SCHEDULE_LINKS[kind];
-      if (!url) return;
-      const w = window.open(url, '_blank', 'noopener,noreferrer');
-      if (!w) location.href = url;   // 新しい画面が開けない端末では、そのまま移動する
+      const def = SCHEDULES[kind];
+      if (!def) return;
+      closeHamburgerMenu(true);
+      sv.kind = kind; sv.doc = null; sv.zoom = 0;
+      const token = ++sv.token;
+      document.getElementById('svTitle').textContent = def.title;
+      document.getElementById('svOpen').href = def.file;
+      document.getElementById('svPages').innerHTML = '';
+      document.getElementById('svScroll').scrollTo(0, 0);
+      svUpdateZoomUi();
+      svMessage('<i class="fas fa-spinner fa-spin"></i> 予定表を読み込んでいます…');
+      showPage(document.getElementById('schedViewer'));
+      svLoad(def, token);
+    }
+
+    async function svLoad(def, token) {
+      try {
+        // 常に最新を取りに行く（差し替えた予定表がすぐ反映されるように）
+        const res = await fetch(def.file, { cache: 'no-cache' });
+        if (token !== sv.token) return;
+        if (!res.ok) throw new Error('notfound');
+        const buf = await res.arrayBuffer();
+        if (token !== sv.token) return;
+        const lib = await loadPdfJs();
+        if (token !== sv.token) return;
+        sv.doc = await lib.getDocument({ data: buf }).promise;
+        if (token !== sv.token) return;
+        svMessage('');
+        await svRender(token);
+      } catch (e) {
+        if (token !== sv.token) return;
+        const notFound = e && e.message === 'notfound';
+        svMessage('<b>' + (notFound ? '予定表がまだ登録されていません' : '予定表を表示できませんでした') + '</b>'
+          + (notFound ? '管理者が予定表を登録すると、ここに表示されます。' : '通信の状態を確認して、もう一度開いてください。')
+          + '<br><a class="sv-alt" href="' + def.file + '" target="_blank" rel="noopener"><i class="fas fa-arrow-up-right-from-square"></i>別画面で開く</a>'
+          + (def.drive ? '<br><a class="sv-alt" style="background:transparent;color:#13685e;border:1.5px solid #13685e;" href="' + def.drive + '" target="_blank" rel="noopener"><i class="fab fa-google-drive"></i>Googleドライブで見る</a>' : ''));
+      }
+    }
+
+    async function svRender(token) {
+      if (!sv.doc) return;
+      const box = document.getElementById('svPages');
+      const scroll = document.getElementById('svScroll');
+      const zoom = SV_ZOOMS[sv.zoom] || 1;
+      const width = Math.max(200, (scroll.clientWidth - 24)) * zoom;
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      box.innerHTML = '';
+      for (let i = 1; i <= sv.doc.numPages; i++) {
+        if (token !== sv.token) return;
+        const page = await sv.doc.getPage(i);
+        const base = page.getViewport({ scale: 1 });
+        const scale = width / base.width;
+        const vp = page.getViewport({ scale: scale * ratio });
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.floor(vp.width);
+        canvas.height = Math.floor(vp.height);
+        canvas.style.width = Math.floor(width) + 'px';
+        canvas.style.height = Math.floor(vp.height / ratio) + 'px';
+        box.appendChild(canvas);
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+      }
+    }
+
+    function svUpdateZoomUi() {
+      document.getElementById('svZoomLabel').textContent = Math.round((SV_ZOOMS[sv.zoom] || 1) * 100) + '%';
+      document.getElementById('svZoomOut').disabled = sv.zoom <= 0;
+      document.getElementById('svZoomIn').disabled = sv.zoom >= SV_ZOOMS.length - 1;
+    }
+    function schedZoom(dir) {
+      const next = Math.min(SV_ZOOMS.length - 1, Math.max(0, sv.zoom + dir));
+      if (next === sv.zoom) return;
+      sv.zoom = next;
+      svUpdateZoomUi();
+      const token = ++sv.token;
+      svRender(token).catch(() => { /* 描き直しに失敗したら、そのまま */ });
+    }
+    function closeSchedViewer() {
+      sv.token++;
+      hidePage(document.getElementById('schedViewer'));
     }
     function openMeetingPage() {
       closeHamburgerMenu(true);
