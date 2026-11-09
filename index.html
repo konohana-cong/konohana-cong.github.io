@@ -1313,7 +1313,7 @@
     </div>
   </div>
 
-  <!-- 集会予定（週日・週末のどちらかを選ぶ。予定表はGoogleドライブのフォルダで開く） -->
+  <!-- 集会予定（週日・週末のどちらかを選ぶ。予定表はPDFでアプリの中に表示する） -->
   <div id="meetingModal" class="page-modal page-anim hidden fixed inset-0 z-[10002] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 max-h-[92dvh] overflow-y-auto">
       <div class="p-5 sm:p-6 pb-2 flex items-center justify-between btn-touch-ui">
@@ -1482,7 +1482,7 @@
     const CACHE_KEY = 'konohana_mansion_cache_v2';
     const OLD_CACHE_KEYS = ['konohana_mansion_cache_v1'];   // 旧版（リンクURLが入っていた）は削除する
     const PWHASH_KEY = 'konohana_pw_hash_v1';
-    const APP_VERSION = '2026.11.09-2';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
+    const APP_VERSION = '2026.11.09-3';                 // 画面を更新したら、この番号も変える（古い画面の検出に使う）
     // オフライン対応：地図の画像とアプリ本体を、端末に保存する（HTTPSで開いたときだけ）
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
       window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* 登録できなくても、アプリは通常どおり使えます */ }); });
@@ -3491,9 +3491,9 @@
     // ----- 予定表（PDFを、アプリの中で表示する）-----
     // PDFは、index.html と同じ場所（GitHub）に、下の名前で置きます。差し替えるだけで更新されます。
     const SCHEDULES = {
-      field:   { title: '野外奉仕予定',     file: 'schedule-field.pdf',   drive: 'https://drive.google.com/drive/folders/1iyB3maCfrRRtKk33tWOLR-oi-Xm7hRb3?usp=sharing' },
-      weekday: { title: '週日の集会予定',   file: 'schedule-weekday.pdf', drive: 'https://drive.google.com/drive/folders/145vrq4tkefAuLhCa3iU6dXfS7RrGnO_Y?usp=sharing' },
-      weekend: { title: '週末の集会予定',   file: 'schedule-weekend.pdf', drive: 'https://drive.google.com/drive/folders/1aOpzPvx6ORtb62cKxIWnIWo53HB4VKzk?usp=sharing' }
+      field:   { title: '野外奉仕予定',     file: 'schedule-field.pdf' },
+      weekday: { title: '週日の集会予定',   file: 'schedule-weekday.pdf' },
+      weekend: { title: '週末の集会予定',   file: 'schedule-weekend.pdf' }
     };
     const PDFJS_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
     const SV_ZOOMS = [1, 1.5, 2, 3];
@@ -3555,8 +3555,7 @@
         const notFound = e && e.message === 'notfound';
         svMessage('<b>' + (notFound ? '予定表がまだ登録されていません' : '予定表を表示できませんでした') + '</b>'
           + (notFound ? '管理者が予定表を登録すると、ここに表示されます。' : '通信の状態を確認して、もう一度開いてください。')
-          + '<br><a class="sv-alt" href="' + def.file + '" target="_blank" rel="noopener"><i class="fas fa-arrow-up-right-from-square"></i>別画面で開く</a>'
-          + (def.drive ? '<br><a class="sv-alt" style="background:transparent;color:#13685e;border:1.5px solid #13685e;" href="' + def.drive + '" target="_blank" rel="noopener"><i class="fab fa-google-drive"></i>Googleドライブで見る</a>' : ''));
+          + '<br><a class="sv-alt" href="' + def.file + '" target="_blank" rel="noopener"><i class="fas fa-arrow-up-right-from-square"></i>別画面で開く</a>');
       }
     }
 
